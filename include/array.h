@@ -1,9 +1,13 @@
 #ifndef __ARRAY_H__
 #define __ARRAY_H__
 
+#include <initializer_list>
 #include <iostream>
+#include <type_traits>
+#include <vector>
 #include "vectmac.h"
 #include "misc.h"
+#include "type_utils.h"
 
 template<class T>
 class Array {
@@ -45,6 +49,21 @@ class Array {
 				buf[i]=a.buf[i];
 			}
 		}
+		template<typename Container, typename K = std::decay_t<decltype(*begin(std::declval<Container>()))>, std::enable_if_t<std::is_same<K,T>::value, bool> = true>
+		Array(const Container& container){
+			init(container.size());
+			int i = 0;
+			for (auto iter = container.begin(); iter != container.end(); iter++)
+				buf[i++] = *iter;
+		}
+		Array(const initializer_list<T> list) {
+			if(!empty(list)){
+				init(list.size());
+				int i = 0;
+				for(const T& x : list)
+					buf[i++] = x;
+			}
+		}
 		~Array(void) {
 			delete[] buf;
 		}
@@ -75,11 +94,20 @@ class Array {
 				buf[i]=a.buf[i];
 			}
 		}
+			template<typename Container, typename K = std::decay_t<decltype(*begin(std::declval<Container>()))>>
+		void operator=(const Container& container) {
+			auto bptr = container.begin();
+			for(int i=0; i < size; i++, bptr++)
+				buf[i] = *bptr; 
+		}
+		vector<T> Array2StdVector(){
+			vector<T> retvector;
+			for(int i = 0; i < size; i++)
+				retvector.push_back(buf[i]);
+			return retvector;
+		}
 		void copy(const Array<T> &a) {
-			resize(a.size);
-			for (int i=0; i<a.size; i++) {
-				buf[i]=a.buf[i];
-			}
+			operator=(a);
 		}
 		void resize(int new_size) {
 			if (new_size!=size) {
@@ -619,5 +647,4 @@ void extract_elements(Array<T> *pa, int first_dest, const Array<T> &b, int first
 		i++;
 	}
 }
-
 #endif
