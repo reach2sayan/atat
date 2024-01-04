@@ -49,6 +49,14 @@ class Array {
 				buf[i]=a.buf[i];
 			}
 		}
+		// the move constructor can be equivalently written as a one-liner 
+		// Array(Array<T>&& a) noexcept : buf(nullptr), size(0) { *this = std::move(a); }
+		Array(Array<T>&& a) noexcept {
+			size = a.size;
+			buf = a.buf;
+			a.buf = nullptr;
+			a.size = 0;
+		}
 		template<typename Container, typename K = std::decay_t<decltype(*begin(std::declval<Container>()))>, std::enable_if_t<std::is_same<K,T>::value, bool> = true>
 		Array(const Container& container){
 			init(container.size());
@@ -65,7 +73,8 @@ class Array {
 			}
 		}
 		~Array(void) {
-			delete[] buf;
+			if (buf != nullptr)
+				delete[] buf;
 		}
 		int operator()(void) const {
 			return size;
@@ -92,6 +101,16 @@ class Array {
 			resize(a.size);
 			for (int i=0; i<a.size; i++) {
 				buf[i]=a.buf[i];
+			}
+		}
+		void operator=(Array<T>&& a) noexcept {
+			if(this != &a){
+				delete[] buf;
+				buf = a.buf;
+				size = a.size;
+
+				a.buf = nullptr;
+				a.size = 0;
 			}
 		}
 		template<typename Container, typename K = std::decay_t<decltype(*begin(std::declval<Container>()))>, std::enable_if_t<std::is_same<K,T>::value, bool> = true>
