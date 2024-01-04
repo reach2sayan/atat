@@ -1,4 +1,5 @@
 #include "curvefit.h"
+#include "thermofunctions.h"
 
 Array<double> internal_solve_system(gsl_vector* initial_params, gsl_multifit_nlinear_fdf *fdf, gsl_multifit_nlinear_parameters *params) {
 
@@ -42,8 +43,8 @@ Array<double> internal_solve_system(gsl_vector* initial_params, gsl_multifit_nli
 gsl_vector* internal_make_gsl_vector_ptr(const Array<double>& vec){
 
     auto* result = gsl_vector_alloc(vec.get_size());
-    int i = 0;
     for(int k = 0, i = 0; k < vec.get_size(); i++, k++)
         gsl_vector_set(result, i, vec[k]);
     return result;
 }
+

@@ -7,7 +7,7 @@
 #include <vector>
 #include "vectmac.h"
 #include "misc.h"
-#include "type_utils.h"
+
 
 template<class T>
 class Array {
@@ -94,7 +94,7 @@ class Array {
 				buf[i]=a.buf[i];
 			}
 		}
-			template<typename Container, typename K = std::decay_t<decltype(*begin(std::declval<Container>()))>>
+		template<typename Container, typename K = std::decay_t<decltype(*begin(std::declval<Container>()))>, std::enable_if_t<std::is_same<K,T>::value, bool> = true>
 		void operator=(const Container& container) {
 			auto bptr = container.begin();
 			for(int i=0; i < size; i++, bptr++)

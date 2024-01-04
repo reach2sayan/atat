@@ -68,16 +68,21 @@ ADD_LIBRARY(linearops SHARED
 	${PROJECT_SOURCE_DIR}/src/linalg.c++
 	${PROJECT_SOURCE_DIR}/src/linsolve.c++
 	${PROJECT_SOURCE_DIR}/src/lstsqr.c++
-	${PROJECT_SOURCE_DIR}/src/curvefit.c++
 	)
-TARGET_LINK_LIBRARIES(linearops PUBLIC GSL::gsl	GSL::gslcblas)
+
+ADD_LIBRARY(curvefit SHARED 
+	${PROJECT_SOURCE_DIR}/src/curvefit.c++
+	${PROJECT_SOURCE_DIR}/src/thermofunctions.c++
+	)
+TARGET_LINK_LIBRARIES(curvefit PUBLIC GSL::gsl	GSL::gslcblas)
 
 ADD_LIBRARY(cvm SHARED
 	${PROJECT_SOURCE_DIR}/src/CVMDataHolder.c++
 	${PROJECT_SOURCE_DIR}/src/CVMModel.c++
 	${PROJECT_SOURCE_DIR}/src/CVMLogger.c++
 	)
-TARGET_LINK_LIBRARIES(cvm PUBLIC Eigen3::Eigen findsym calccorr linearops clus_str)
+TARGET_LINK_LIBRARIES(cvm PUBLIC Eigen3::Eigen findsym calccorr linearops
+	clus_str curvefit)
 
 ADD_LIBRARY(parseops SHARED
 	${PROJECT_SOURCE_DIR}/src/stringo.c++
@@ -87,14 +92,19 @@ ADD_LIBRARY(parseops SHARED
 	)
 
 ADD_LIBRARY(xtalutil SHARED ${PROJECT_SOURCE_DIR}/src/xtalutil.c++)
+
 ADD_LIBRARY(findsym SHARED ${PROJECT_SOURCE_DIR}/src/findsym.c++)
+
 ADD_LIBRARY(calccorr SHARED ${PROJECT_SOURCE_DIR}/src/calccorr.c++)
 TARGET_LINK_LIBRARIES(calccorr PUBLIC linearops clus_str)
+
 ADD_LIBRARY(gstate SHARED ${PROJECT_SOURCE_DIR}/src/gstate.c++)
+
 ADD_LIBRARY(refine SHARED ${PROJECT_SOURCE_DIR}/src/refine.c++)
 TARGET_LINK_LIBRARIES(refine PUBLIC calccorr gstate)
 
 ADD_LIBRARY(clus_str SHARED ${PROJECT_SOURCE_DIR}/src/clus_str.c++)
+
 ADD_LIBRARY(lattype SHARED ${PROJECT_SOURCE_DIR}/src/lattype.c++)
 
 ADD_EXECUTABLE(cvmclus ${PROJECT_SOURCE_DIR}/src/cvmclus.c++)
@@ -105,7 +115,6 @@ TARGET_LINK_LIBRARIES(cvmclus PUBLIC
 	parseops
 	xtalutil
 	cvm
-	findsym
 	)
 
 ADD_EXECUTABLE(corrdump ${PROJECT_SOURCE_DIR}/src/corrdump.c++)

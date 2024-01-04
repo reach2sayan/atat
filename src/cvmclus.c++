@@ -1,12 +1,15 @@
 #include <fstream>
+#include <ifopt/ipopt_solver.h>
+#include <ifopt/problem.h>
+#include <memory>
+#include <ostream>
 #include "getvalue.h"
 #include "parse.h"
 #include "version.h"
 #include "CVMModel.h"
 #include "CVMLogger.h"
-#include <ifopt/ipopt_solver.h>
-#include <ifopt/problem.h>
-#include <memory>
+#include "curvefit.h"
+#include "thermofunctions.h"
 
 extern const char *helpstring;
 using namespace ifopt;
@@ -84,8 +87,8 @@ int main(int argc, char *argv[]) {
 	OptimisedModel.AddConstraintSet(rhoConstraintSet);
 	OptimisedModel.AddCostSet(FreeEnergyCost);
 
-	auto normConstraintSet = std::make_shared<CVMNormConstraints>("constraint-norm", disordered_correlation, orderedcorr);
-	OptimisedModel.AddCostSet(normConstraintSet);
+	//auto normConstraintSet = std::make_shared<CVMNormConstraints>("constraint-norm", disordered_correlation, orderedcorr);
+	//OptimisedModel.AddCostSet(normConstraintSet);
 	ipopt_opt.SetOption("linear_solver", "mumps");
 	ipopt_opt.SetOption("jacobian_approximation","exact");
 	ipopt_opt.SetOption("derivative_test","first-order");
@@ -103,6 +106,7 @@ int main(int argc, char *argv[]) {
 		ipopt_opt.Solve(OptimisedModel);
 		VectorXd optcorr = OptimisedModel.GetOptVariables()->GetValues();
 
+
 		cvmdata->addInfo(optcorr,
 				FreeEnergyCost->GetCost(optcorr),
 				FreeEnergyCost->GetCost(orderedcorr),
@@ -111,4 +115,14 @@ int main(int argc, char *argv[]) {
 				);
 		cvmdata->log();
 		}
+
+	Array<double> initvalues({0.1, 0.1, 0.1});
+	vector<double> correction;
+	transform(cvmdata->cvminfo.opt_fe.begin(), cvmdata->cvminfo.opt_fe.end(), cvmdata->cvminfo.disordered_fe.begin(), std::back_inserter(correction),	std::minus<double>());
+	Array<double> ys = correction;
+	Array<double> xs = cvmdata->cvminfo.temperature;
+
+	auto r = curve_fit(sroCorrectionFunction, initvalues,xs,ys);
 }
+
+
