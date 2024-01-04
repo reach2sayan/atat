@@ -37,6 +37,7 @@ Array<double> internal_solve_system(gsl_vector* initial_params, gsl_multifit_nli
 
   gsl_multifit_nlinear_free(work);
   gsl_vector_free(initial_params);
+	cout << result;
   return result;
 }
 

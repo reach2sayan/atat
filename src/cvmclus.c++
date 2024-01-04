@@ -10,6 +10,7 @@
 #include "CVMLogger.h"
 #include "curvefit.h"
 #include "thermofunctions.h"
+#include <random>
 
 extern const char *helpstring;
 using namespace ifopt;
@@ -106,7 +107,6 @@ int main(int argc, char *argv[]) {
 		ipopt_opt.Solve(OptimisedModel);
 		VectorXd optcorr = OptimisedModel.GetOptVariables()->GetValues();
 
-
 		cvmdata->addInfo(optcorr,
 				FreeEnergyCost->GetCost(optcorr),
 				FreeEnergyCost->GetCost(orderedcorr),
@@ -116,13 +116,14 @@ int main(int argc, char *argv[]) {
 		cvmdata->log();
 		}
 
-	Array<double> initvalues({0.1, 0.1, 0.1});
+	Array<double> initvalues({1, 0.0, 1});
 	vector<double> correction;
 	transform(cvmdata->cvminfo.opt_fe.begin(), cvmdata->cvminfo.opt_fe.end(), cvmdata->cvminfo.disordered_fe.begin(), std::back_inserter(correction),	std::minus<double>());
 	Array<double> ys = correction;
 	Array<double> xs = cvmdata->cvminfo.temperature;
 
-	auto r = curve_fit(sroCorrectionFunction, initvalues,xs,ys);
+	auto r = curve_fit(gaussian, initvalues,xs,ys);
+	cout << endl << r;
 }
 
 
