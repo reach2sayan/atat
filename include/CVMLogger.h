@@ -27,7 +27,7 @@ class CVMCorrelationsLogger : public CVMLogger {
 
 class CVMResultsLogger : public CVMLogger {
  public:
-  CVMResultsLogger() : CVMResultsLogger("cvmresult.out", 3, nullptr) {}
+  CVMResultsLogger() : CVMResultsLogger("cvmresult.csv", 3, nullptr) {}
   CVMResultsLogger(const std::string &outfilename, const int sigdig,
 		   std::shared_ptr<CVMOptimizerDataHolder> data);
   void log() override;

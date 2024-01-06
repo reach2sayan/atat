@@ -108,18 +108,18 @@ int main(int argc, char *argv[]) {
   OptimisedModel.AddConstraintSet(rhoConstraintSet);
   OptimisedModel.AddCostSet(FreeEnergyCost);
 
-  // auto normConstraintSet =
-  // std::make_shared<CVMNormConstraints>("constraint-norm",
-  // disordered_correlation, orderedcorr);
-  // OptimisedModel.AddCostSet(normConstraintSet);
+  auto normConstraintSet = std::make_shared<CVMNormConstraints>(
+      "constraint-norm", disordered_correlation, orderedcorr);
+  OptimisedModel.AddConstraintSet(normConstraintSet);
+
   ipopt_opt.SetOption("linear_solver", "mumps");
   ipopt_opt.SetOption("jacobian_approximation", "exact");
   ipopt_opt.SetOption("derivative_test", "first-order");
-  ipopt_opt.SetOption("print_level", 0);
+  // ipopt_opt.SetOption("print_level", 10);
 
   cvmdata->cvminfo.ordered_correlation = orderedcorr;
   cvmdata->cvminfo.disordered_correlation = disordered_correlation;
-  CVMResultsLogger energyresults("cvmresult.out", sigdig, cvmdata);
+  CVMResultsLogger energyresults("cvmresult.csv", sigdig, cvmdata);
   // CVMSolverLogger solverlog("ipopt.log",cvmdata);
   CVMCorrelationsLogger corrresults("cvmsteps.out", sigdig, cvmdata);
 

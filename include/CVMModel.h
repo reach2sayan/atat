@@ -1,13 +1,15 @@
 #ifndef __CVM_PROBLEM_DEFINITION_HPP__
 #define __CVM_PROBLEM_DEFINITION_HPP__
 
-#include "CVMDataHolder.h"
-#include "linklist.h"
-#include "xtalutil.h"
 #include <ifopt/constraint_set.h>
 #include <ifopt/cost_term.h>
 #include <ifopt/variable_set.h>
+
 #include <vector>
+
+#include "CVMDataHolder.h"
+#include "linklist.h"
+#include "xtalutil.h"
 
 namespace ifopt {
 
@@ -21,63 +23,53 @@ const std::string DEFAULT_ENERGY_NAME{"energy"};
 const std::string DEFAULT_FREEENERGY_NAME{"free-energy"};
 
 class CVMCorrelations : public VariableSet {
-
-public:
-  // CVMCorrelations() : CVMCorrelations(DEFAULT_CORRELATIONS_SET_NAME, 0, 0)
-  // {};
+ public:
   CVMCorrelations(const std::string &name, const int num_clusters,
-                  const int num_point_clusters);
+		  const int num_point_clusters);
 
   void SetVariables(const VectorXd &x) override { correlations = x; }
   VectorXd GetValues() const override { return correlations; }
   VecBound GetBounds() const override;
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-private:
+ private:
   VectorXd correlations;
   int num_point_clusters_;
 };
 
 class CVMNormConstraints : public ConstraintSet {
-
-  // CVMNormConstraints() : CVMNormConstraints(DEFAULT_NORM_CONST_NAME, 0, 0,
-  // VectorXd::Zero) {}
-public:
+ public:
   CVMNormConstraints(const std::string &name, const VectorXd &disordered_corr,
-                     const VectorXd &ordered_corr);
+		     const VectorXd &ordered_corr);
   VectorXd GetValues() const override;
   VecBound GetBounds() const override;
   void FillJacobianBlock(std::string var_set,
-                         Jacobian &jac_block) const override{};
+			 Jacobian &jac_block) const override;
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-private:
+ private:
   VectorXd disordered_corr_;
   VectorXd ordered_corr_;
 };
 
 class CVMRhoConstraints : public ConstraintSet {
-
-public:
-  // CVMRhoConstraints() : CVMRhoConstraints(DEFAULT_RHO_CONST_NAME, 0, 0,
-  // MatrixXd::Zero(0,0)) {}
+ public:
   CVMRhoConstraints(const std::string &name, const int num_config,
-                    const int num_point_configs, const MatrixXd &vmatrix);
+		    const int num_point_configs, const MatrixXd &vmatrix);
 
   VectorXd GetValues() const override;
   VecBound GetBounds() const override;
   void FillJacobianBlock(std::string var_set,
-                         Jacobian &jac_block) const override;
+			 Jacobian &jac_block) const override;
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-private:
+ private:
   MatrixXd vmatrix_;
   int num_point_configs_;
 };
 
 class CVMEnergy : public CostTerm {
-
-public:
+ public:
   CVMEnergy() : CVMEnergy(DEFAULT_ENERGY_NAME, VectorXd::Zero(0)) {}
   CVMEnergy(const std::string &name, const VectorXd &mult_eci)
       : CostTerm(name), mult_eci_(mult_eci) {}
@@ -85,36 +77,37 @@ public:
   double GetCost() const override;
   double GetCost(const VectorXd &corrs) const;
   void FillJacobianBlock(std::string var_set,
-                         Jacobian &jac_block) const override;
+			 Jacobian &jac_block) const override;
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-private:
+ private:
   VectorXd mult_eci_;
 };
 
 class CVMFreeEnergy : public CostTerm {
-
-public:
+ public:
   CVMFreeEnergy()
       : CVMFreeEnergy(DEFAULT_FREEENERGY_NAME, VectorXd::Zero(0),
-                      VectorXd::Zero(0), MatrixXd::Zero(0, 0)) {}
+		      VectorXd::Zero(0), MatrixXd::Zero(0, 0)) {}
   CVMFreeEnergy(const std::string &name, const VectorXd &mult_eci,
-                const VectorXd &multconfig_kb, const MatrixXd &vmatrix)
-      : CostTerm(name), mult_eci_(mult_eci), multconfig_kb_(multconfig_kb),
-        vmatrix_(vmatrix) {
+		const VectorXd &multconfig_kb, const MatrixXd &vmatrix)
+      : CostTerm(name),
+	mult_eci_(mult_eci),
+	multconfig_kb_(multconfig_kb),
+	vmatrix_(vmatrix) {
     T = 0;
   }
 
   double GetCost() const override;
   double GetCost(const VectorXd &corrs) const;
   void FillJacobianBlock(std::string var_set,
-                         Jacobian &jac_block) const override;
+			 Jacobian &jac_block) const override;
 
   double getT() const { return T; }
   void setT(const double T_) { T = T_; }
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-private:
+ private:
   VectorXd mult_eci_;
   VectorXd multconfig_kb_;
   MatrixXd vmatrix_;
@@ -122,6 +115,6 @@ private:
   double T;
 };
 
-} // namespace ifopt
+}  // namespace ifopt
 
-#endif // __CVM_PROBLEM__DEFINITION_HPP__
+#endif	// __CVM_PROBLEM__DEFINITION_HPP__

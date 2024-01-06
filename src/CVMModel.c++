@@ -1,19 +1,18 @@
 #include "CVMModel.h"
+
 #include <limits>
 using namespace ifopt;
 
 CVMCorrelations::CVMCorrelations(const std::string &name,
-                                 const int num_clusters,
-                                 const int num_point_clusters)
+				 const int num_clusters,
+				 const int num_point_clusters)
     : VariableSet(num_clusters, name) {
-
   correlations = VectorXd::Zero(num_clusters);
   correlations[0] = 1.;
   num_point_clusters_ = num_point_clusters;
 }
 
 CVMCorrelations::VecBound CVMCorrelations::GetBounds() const {
-
   const int num_rows = GetRows();
   VecBound CorrelationBounds(num_rows);
   for (int i = 0; i < num_rows; i++) {
@@ -27,17 +26,15 @@ CVMCorrelations::VecBound CVMCorrelations::GetBounds() const {
 }
 
 CVMRhoConstraints::CVMRhoConstraints(const std::string &name,
-                                     const int num_config,
-                                     const int num_point_configs,
-                                     const MatrixXd &vmatrix)
+				     const int num_config,
+				     const int num_point_configs,
+				     const MatrixXd &vmatrix)
     : ConstraintSet(num_config, name) {
-
   vmatrix_ = vmatrix;
   num_point_configs_ = num_point_configs;
 }
 
 CVMRhoConstraints::VecBound CVMRhoConstraints::GetBounds() const {
-
   const int num_rows = GetRows();
   VecBound RhoBounds(num_rows);
   RhoBounds[0] = Bounds(1., 1.);
@@ -48,43 +45,50 @@ CVMRhoConstraints::VecBound CVMRhoConstraints::GetBounds() const {
 }
 
 CVMNormConstraints::VectorXd CVMNormConstraints::GetValues() const {
-
   VectorXd g(GetRows());
   VectorXd correlations =
       GetVariables()->GetComponent(DEFAULT_CORRELATIONS_SET_NAME)->GetValues();
-  g(0) = (disordered_corr_ - ordered_corr_).squaredNorm() / 2 -
-         (correlations - disordered_corr_).squaredNorm();
+  g(0) = (disordered_corr_ - ordered_corr_).norm() / 2 -
+	 (correlations - disordered_corr_).norm();
   return g;
 }
 
-CVMNormConstraints::CVMNormConstraints(const std::string &name,
-                                       const VectorXd &disordered_corr,
-                                       const VectorXd &ordered_corr)
-    : ConstraintSet(1, name) {
+void CVMNormConstraints::FillJacobianBlock(std::string var_set,
+					   Jacobian &jac_block) const {
+  VectorXd corrs =
+      GetVariables()->GetComponent(DEFAULT_CORRELATIONS_SET_NAME)->GetValues();
 
+  // VectorXd t0 = corrs - ordered_corr_;
+  VectorXd t1 = corrs - disordered_corr_;
+
+  VectorXd jac = -1 / t1.norm() * t1;
+  for (int i = 0; i < ordered_corr_.size(); i++)
+    jac_block.coeffRef(0, i) = jac[i];
+}
+
+CVMNormConstraints::CVMNormConstraints(const std::string &name,
+				       const VectorXd &disordered_corr,
+				       const VectorXd &ordered_corr)
+    : ConstraintSet(1, name) {
   disordered_corr_ = disordered_corr;
   ordered_corr_ = ordered_corr;
 }
 
 CVMNormConstraints::VecBound CVMNormConstraints::GetBounds() const {
-
   const int num_rows = GetRows();
   VecBound NormBounds(num_rows);
-  NormBounds.at(0) = Bounds(0., 0.);
+  NormBounds.at(0) = Bounds(0., inf);
 
   return NormBounds;
 }
 
 void CVMRhoConstraints::FillJacobianBlock(std::string var_set,
-                                          Jacobian &jac_block) const {
-
+					  Jacobian &jac_block) const {
   if (var_set == DEFAULT_CORRELATIONS_SET_NAME)
     jac_block = vmatrix_.sparseView();
 }
 
 VectorXd CVMRhoConstraints::GetValues() const {
-
-  VectorXd g(GetRows());
   VectorXd correlations =
       GetVariables()->GetComponent(DEFAULT_CORRELATIONS_SET_NAME)->GetValues();
   return vmatrix_ * correlations;
@@ -112,12 +116,11 @@ double CVMFreeEnergy::GetCost(const VectorXd &corrs) const {
     return x * std::log(std::abs(x) + std::numeric_limits<double>::epsilon());
   };
   return mult_eci_.dot(corrs) +
-         T * kB * multconfig_kb_.dot((vmatrix_ * corrs).unaryExpr(rhologrho));
+	 T * kB * multconfig_kb_.dot((vmatrix_ * corrs).unaryExpr(rhologrho));
 };
 
 void CVMEnergy::FillJacobianBlock(std::string var_set,
-                                  Jacobian &jac_block) const {
-
+				  Jacobian &jac_block) const {
   if (var_set == DEFAULT_CORRELATIONS_SET_NAME) {
     for (int i = 0; i < mult_eci_.size(); i++)
       jac_block.coeffRef(0, i) = mult_eci_[i];
@@ -125,8 +128,7 @@ void CVMEnergy::FillJacobianBlock(std::string var_set,
 }
 
 void CVMFreeEnergy::FillJacobianBlock(std::string var_set,
-                                      Jacobian &jac_block) const {
-
+				      Jacobian &jac_block) const {
   VectorXd corrs =
       GetVariables()->GetComponent(DEFAULT_CORRELATIONS_SET_NAME)->GetValues();
   auto onepluslog = [](double x) {
@@ -137,9 +139,9 @@ void CVMFreeEnergy::FillJacobianBlock(std::string var_set,
 
   VectorXd jac =
       mult_eci_ + (vmatrix_.transpose() *
-                   multconfig_kb_.binaryExpr(
-                       (vmatrix_ * corrs).unaryExpr(onepluslog), cwiseMult))
-                      .unaryExpr(mult_T_kB);
+		   multconfig_kb_.binaryExpr(
+		       (vmatrix_ * corrs).unaryExpr(onepluslog), cwiseMult))
+		      .unaryExpr(mult_T_kB);
   if (var_set == DEFAULT_CORRELATIONS_SET_NAME) {
     for (int i = 0; i < mult_eci_.size(); i++)
       jac_block.coeffRef(0, i) = jac[i];

@@ -45,21 +45,13 @@ CVMResultsLogger::CVMResultsLogger(const std::string &outfilename,
     : data_(data) {
   sigdig_ = sigdig;
   outfile.open(outfilename);
-  outfile << "Disordered Correlations : "
-	  << data_->cvminfo.disordered_correlation.transpose() << endl;
-  outfile << "Ordered Correlations : "
-	  << data_->cvminfo.ordered_correlation.transpose() << endl;
-  outfile << "T | " << setw(20) << std::right << " Ordered FE | " << std::right
-	  << setw(20) << " Disordered FE | " << std::right << setw(20)
-	  << " Optimised FE " << endl;
-  outfile << "----------------------------------------------------------------"
-	  << endl;
+  outfile << "T,Ordered FE,Disordered FE,Optimised FE" << endl;
   data_->addLogger(this);
 }
 
 void CVMResultsLogger::log() {
-  outfile << std::right << data_->cvminfo.temperature.back() << setw(15)
-	  << data_->cvminfo.ordered_fe.back() << setw(15)
-	  << data_->cvminfo.disordered_fe.back() << setw(15)
+  outfile << data_->cvminfo.temperature.back() << ","
+	  << data_->cvminfo.ordered_fe.back() << ","
+	  << data_->cvminfo.disordered_fe.back() << ","
 	  << data_->cvminfo.opt_fe.back() << endl;
 }
