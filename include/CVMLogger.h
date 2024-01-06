@@ -1,49 +1,51 @@
-#include <fstream>
 #include <ifopt/ipopt_solver.h>
+
+#include <fstream>
 #include <iostream>
 #include <memory>
 #include <string>
 
 class CVMOptimizerDataHolder;
 class CVMLogger {
-
-public:
+ public:
   virtual ~CVMLogger() {}
   virtual void log() = 0;
 };
 
-class CVMFileLogger : public CVMLogger {
-
-public:
-  CVMFileLogger() : CVMFileLogger("cvm.out", nullptr) {}
-  CVMFileLogger(const std::string &outfilename,
-                std::shared_ptr<CVMOptimizerDataHolder> data);
+class CVMCorrelationsLogger : public CVMLogger {
+ public:
+  CVMCorrelationsLogger() : CVMCorrelationsLogger("cvmsteps.out", 3, nullptr) {}
+  CVMCorrelationsLogger(const std::string &outfilename, const int sigdig,
+			std::shared_ptr<CVMOptimizerDataHolder> data);
   void log() override;
 
-private:
+ private:
   std::shared_ptr<CVMOptimizerDataHolder> data_;
+  int sigdig_;
   std::ofstream outfile;
 };
 
-class CVMConsoleLogger : public CVMLogger {
-
-public:
-  CVMConsoleLogger() : CVMConsoleLogger(nullptr) {}
-  CVMConsoleLogger(std::shared_ptr<CVMOptimizerDataHolder> data);
+class CVMResultsLogger : public CVMLogger {
+ public:
+  CVMResultsLogger() : CVMResultsLogger("cvmresult.out", 3, nullptr) {}
+  CVMResultsLogger(const std::string &outfilename, const int sigdig,
+		   std::shared_ptr<CVMOptimizerDataHolder> data);
   void log() override;
 
-private:
+ private:
   std::shared_ptr<CVMOptimizerDataHolder> data_;
+  int sigdig_;
+  std::ofstream outfile;
 };
 
 class CVMSolverLogger : public CVMLogger {
-public:
+ public:
   CVMSolverLogger() : CVMSolverLogger("ipopt.log", nullptr) {}
   CVMSolverLogger(const std::string &outfilename,
-                  std::shared_ptr<CVMOptimizerDataHolder> data);
+		  std::shared_ptr<CVMOptimizerDataHolder> data);
   void log() override;
 
-private:
+ private:
   std::shared_ptr<CVMOptimizerDataHolder> data_;
   std::ofstream solveroutfile;
 };

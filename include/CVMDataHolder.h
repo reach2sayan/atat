@@ -1,21 +1,25 @@
-#include "clus_str.h"
-#include "findsym.h"
-#include "linklist.h"
-#include "xtalutil.h"
+#ifndef __CVMDATAHOLDER_HPP__
+#define __CVMDATAHOLDER_HPP__
+
 #include <Eigen/Dense>
 #include <list>
 #include <memory>
 #include <vector>
+
+#include "clus_str.h"
+#include "findsym.h"
+#include "linklist.h"
+#include "xtalutil.h"
 
 using VectorXd = Eigen::Matrix<double, Eigen::Dynamic, 1>;
 using MatrixXd = Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>;
 constexpr double evperatom_kJpermole = 96.4915666370759;
 enum UnitType { EVPERATOM, KJPERMOLE };
 
-template <class T> T sum(const Array<T> &a) {
+template <class T>
+T sum(const Array<T> &a) {
   T s = 0;
-  for (int i = 0; i < a.get_size(); i++)
-    s += a(i);
+  for (int i = 0; i < a.get_size(); i++) s += a(i);
   return s;
 }
 
@@ -39,63 +43,62 @@ struct CVMSolverInfoPacket {};
 
 class CVMLogger;
 class CVMOptimizerDataHolder {
-
-public: // logging
+ public:  // logging
   void addLogger(CVMLogger *logger) { loggers.push_back(logger); }
   void removeLogger(CVMLogger *logger) { loggers.remove(logger); }
   void log() const;
   CVMInfoPacket cvminfo;
   CVMSolverInfoPacket solverinfo;
   void addInfo(const VectorXd &optcorr, double optfe, double ordfe,
-               double disordfe, double T);
+	       double disordfe, double T);
 
-private:
+ private:
   std::list<CVMLogger *> loggers;
 
-public:
+ public:
   CVMOptimizerDataHolder(const string &maxclusfilename = "maxclus.in",
-                         const string &latfilename = "lat.in",
-                         const string &ecifilename = "eci.out",
-                         const string &strfilename = "str.in");
+			 const string &latfilename = "lat.in",
+			 const string &ecifilename = "eci.out",
+			 const string &strfilename = "str.in");
 
   static void find_subclusters(LinkedList<MultiCluster> *pcluslist,
-                               const MultiCluster &maxclus,
-                               const SpaceGroup &spacegroup);
-  static void
-  generate_functions_on_clusters(LinkedList<MultiCluster> *pmulticluslist,
-                                 const LinkedList<MultiCluster> &cluslist,
-                                 const SpaceGroup &spacegroup);
+			       const MultiCluster &maxclus,
+			       const SpaceGroup &spacegroup);
+  static void generate_functions_on_clusters(
+      LinkedList<MultiCluster> *pmulticluslist,
+      const LinkedList<MultiCluster> &cluslist, const SpaceGroup &spacegroup);
   static void generate_config_on_clusters(
       LinkedList<LinkedList<MultiCluster>> *pconfiglistlist,
       LinkedList<LinkedList<double>> *pmultlistlist,
       const LinkedList<MultiCluster> &cluslist, const SpaceGroup &spacegroup);
-  static void
-  calc_v_matrix(LinkedList<Array2d<double>> *pvmatlist,
-                const LinkedList<LinkedList<MultiCluster>> &configlistlist,
-                const LinkedList<LinkedList<double>> &configmultlistlist,
-                const LinkedList<MultiCluster> &multicluslist,
-                const SpaceGroup &spacegroup, const CorrFuncTable &corrfunc);
+  static void calc_v_matrix(
+      LinkedList<Array2d<double>> *pvmatlist,
+      const LinkedList<LinkedList<MultiCluster>> &configlistlist,
+      const LinkedList<LinkedList<double>> &configmultlistlist,
+      const LinkedList<MultiCluster> &multicluslist,
+      const SpaceGroup &spacegroup, const CorrFuncTable &corrfunc);
   static void calc_kikuchi_barker(Array<double> *pkbcoef,
-                                  const LinkedList<MultiCluster> &cluslist,
-                                  const SpaceGroup &spacegroup);
+				  const LinkedList<MultiCluster> &cluslist,
+				  const SpaceGroup &spacegroup);
   static void get_structure_from_file(Structure &str, const string &strfilename,
-                                      const Structure &lattice,
-                                      const Array<AutoString> &label,
-                                      const Array<Arrayint> &labellookup);
+				      const Structure &lattice,
+				      const Array<AutoString> &label,
+				      const Array<Arrayint> &labellookup);
 
-  VectorXd GetDisorderedCorrelation();
-  VectorXd GetSampleCorrelation();
-  double GetConvFactor(const UnitType type);
+  VectorXd GetDisorderedCorrelation() const;
+  VectorXd GetSampleCorrelation() const;
+  double GetConvFactor(const UnitType type) const;
 
   void saveClusterInformation(const string &clusterfname = "clusters.out",
-                              const string &clustermultfname = "clusmult.out",
-                              const string &configfname = "config.out",
-                              const string &configmultfname = "configmult.out",
-                              const string &vmatrixfname = "vmat.out",
-                              const string &kbfname = "configkb.out");
+			      const string &clustermultfname = "clusmult.out",
+			      const string &configfname = "config.out",
+			      const string &configmultfname = "configmult.out",
+			      const string &vmatrixfname = "vmat.out",
+			      const string &kbfname = "configkb.out");
 
   void PrintOptimizationVectorsAndMatrices();
-  void PrettyPrintRho(const VectorXd &corrs, ostream &out = std::cout);
+  void PrettyPrintRho(const VectorXd &corrs, ostream &out = std::cout,
+		      const int sigdig = 3);
   int get_num_clusters() const { return ecilist.get_size(); }
   int get_num_configs() const;
   int get_num_point_clusters() const;
@@ -104,7 +107,21 @@ public:
   MatrixXd get_vmatrix() const;
   int get_num_lattice_atoms() const { return lat.atom_pos.get_size(); }
 
-private:
+  LinkedList<MultiCluster> GetClusterList() const { return multicluslist; }
+  Array<double> GetMultList() const { return multlist; }
+  LinkedList<LinkedList<MultiCluster>> GetConfigList() const {
+    return configlistlist;
+  }
+  LinkedList<LinkedList<double>> GetConfigMultList() const {
+    return multlistlist;
+  }
+  LinkedList<Array2d<double>> GetVmatrixList() const { return vmatlist; }
+  LinkedList<Array<MultiCluster>> GetEquivClusterList() const {
+    return equivcluslist;
+  }
+  LinkedList<double> GeetECIList() const { return ecilist; }
+
+ private:
   LinkedList<MultiCluster> multicluslist;
   Array<double> multlist;
   LinkedList<LinkedList<MultiCluster>> configlistlist;
@@ -121,3 +138,5 @@ private:
 
   UnitType UNITTYPE;
 };
+
+#endif	// __CVMDATAHOLDER_HPP__

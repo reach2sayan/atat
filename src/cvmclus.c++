@@ -1,6 +1,7 @@
 #include <ifopt/ipopt_solver.h>
 #include <ifopt/problem.h>
 
+#include <algorithm>
 #include <fstream>
 #include <memory>
 #include <ostream>
@@ -17,6 +18,7 @@
 extern const char *helpstring;
 using namespace ifopt;
 typedef Problem CVMModel;
+typedef std::vector<std::pair<VectorXd, double>> IterMapType;
 
 int main(int argc, char *argv[]) {
   // parsing command line. See getvalue.hh for details;
@@ -29,6 +31,7 @@ int main(int argc, char *argv[]) {
   double Tmin = .0;
   double Tmax = 2000.0;
   double Tinc = 100.0;
+  int nlocal = 1;
 
   AskStruct options[] = {
       {"",
@@ -47,6 +50,8 @@ int main(int argc, char *argv[]) {
       {"-Tmin", "Starting Temperature (default 300 K)", INTVAL, &Tmin},
       {"-Tmax", "Starting Temperature (default 300 K)", INTVAL, &Tmax},
       {"-Tinc", "Starting Temperature (default 300 K)", INTVAL, &Tinc},
+      {"-nlocal", "No. of local searches for global minima search (default 10)",
+       INTVAL, &nlocal},
       {"-d", "Use all default values", BOOLVAL, &dummy}};
   if (!get_values(argc, argv, countof(options), options)) {
     display_help(countof(options), options);
@@ -114,26 +119,38 @@ int main(int argc, char *argv[]) {
 
   cvmdata->cvminfo.ordered_correlation = orderedcorr;
   cvmdata->cvminfo.disordered_correlation = disordered_correlation;
-  CVMConsoleLogger con(cvmdata);
+  CVMResultsLogger energyresults("cvmresult.out", sigdig, cvmdata);
   // CVMSolverLogger solverlog("ipopt.log",cvmdata);
-  CVMFileLogger fout("cvmresult.out", cvmdata);
+  CVMCorrelationsLogger corrresults("cvmsteps.out", sigdig, cvmdata);
 
   for (int T = Tmin; T <= Tmax; T += Tinc) {
     FreeEnergyCost->setT(static_cast<double>(T));
-    ipopt_opt.Solve(OptimisedModel);
-    VectorXd optcorr = OptimisedModel.GetOptVariables()->GetValues();
+    IterMapType mymap;
 
-    cvmdata->addInfo(optcorr, FreeEnergyCost->GetCost(optcorr),
-                     FreeEnergyCost->GetCost(orderedcorr),
-                     FreeEnergyCost->GetCost(disordered_correlation), T);
+    for (int i = 0; i < nlocal; i++) {
+      correlationSet->SetVariables(cvmdata->GetSampleCorrelation());
+      ipopt_opt.Solve(OptimisedModel);
+
+      VectorXd opttemp = OptimisedModel.GetOptVariables()->GetValues();
+      double fetemp = FreeEnergyCost->GetCost(opttemp);
+      mymap.push_back(std::make_pair(std::move(opttemp), fetemp));
+    }
+
+    auto minresult = std::min_element(
+	mymap.begin(), mymap.end(), [](const auto &first, const auto &second) {
+	  return first.second < second.second;
+	});
+    cvmdata->addInfo(minresult->first, minresult->second,
+		     FreeEnergyCost->GetCost(orderedcorr),
+		     FreeEnergyCost->GetCost(disordered_correlation), T);
     cvmdata->log();
   }
 
   Array<double> initvalues({1, 0.0, 1});
   vector<double> correction;
   transform(cvmdata->cvminfo.opt_fe.begin(), cvmdata->cvminfo.opt_fe.end(),
-            cvmdata->cvminfo.disordered_fe.begin(),
-            std::back_inserter(correction), std::minus<double>());
+	    cvmdata->cvminfo.disordered_fe.begin(),
+	    std::back_inserter(correction), std::minus<double>());
   Array<double> ys = correction;
   Array<double> xs = cvmdata->cvminfo.temperature;
 
