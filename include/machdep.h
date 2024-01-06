@@ -2,8 +2,8 @@
 #define __MACHDEP_H__
 
 //#include <values.h>
-#include <limits.h>
 #include <float.h>
+#include <limits.h>
 #define MAXINT INT_MAX
 
 #ifndef MAXFLOAT
@@ -12,13 +12,13 @@
 
 typedef double Real;
 #ifdef OLD_COMPLEX
-  #define Complex complex
+#define Complex complex
 #else
-  #define Complex complex<double>
+#define Complex complex<double>
 #endif
 #define PATHSEP '/'
-#include <unistd.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 #include "fixagg.h"
 

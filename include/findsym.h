@@ -5,78 +5,99 @@
 
 int equivalent_by_symmetry(const rVector3d &a, const rVector3d &b,
                            const rMatrix3d &cell,
-                           const Array<rMatrix3d> &point_op, const Array<rVector3d> &trans);
+                           const Array<rMatrix3d> &point_op,
+                           const Array<rVector3d> &trans);
 int equivalent_by_symmetry(const Array<rVector3d> &a, const Array<rVector3d> &b,
                            const rMatrix3d &cell,
-                           const Array<rMatrix3d> &point_op, const Array<rVector3d> &trans);
+                           const Array<rMatrix3d> &point_op,
+                           const Array<rVector3d> &trans);
 int equivalent_by_symmetry(const MultiCluster &a, const MultiCluster &b,
                            const rMatrix3d &cell,
-                           const Array<rMatrix3d> &point_op, const Array<rVector3d> &trans);
+                           const Array<rMatrix3d> &point_op,
+                           const Array<rVector3d> &trans);
 int equivalent_by_symmetry(const MultiCluster &a, const MultiCluster &b,
-                           const Array<rMatrix3d> &point_op, const Array<rVector3d> &trans);
+                           const Array<rMatrix3d> &point_op,
+                           const Array<rVector3d> &trans);
 
-void calc_concentration(int *pmin_type, int *pmax_type, Array<Real> *pconc, const Array<int> &atom_type);
+void calc_concentration(int *pmin_type, int *pmax_type, Array<Real> *pconc,
+                        const Array<int> &atom_type);
 
 // assumes that the structure with smaller cell is given with the smallest;
 // possible cell;
 int equivalent_by_symmetry(const Structure &a, const Structure &b,
                            const rMatrix3d &cell,
-                           const Array<rMatrix3d> &point_op, const Array<rVector3d> &trans);
+                           const Array<rMatrix3d> &point_op,
+                           const Array<rVector3d> &trans);
 
 class SpaceGroup {
- public:
+public:
   rMatrix3d cell;
   Array<rMatrix3d> point_op;
   Array<rVector3d> trans;
-  SpaceGroup(void): cell(), point_op(), trans() {}
-  SpaceGroup(const SpaceGroup &a): cell(a.cell), point_op(a.point_op), trans(a.trans) {}
-  SpaceGroup(const rMatrix3d &_cell,
-                       const Array<rMatrix3d> &_point_op,
-                       const Array<rVector3d> &_trans):
-    cell(_cell), point_op(_point_op), trans(_trans) {}
-  int operator() (const rVector3d &a, const rVector3d &b) const {
-    return equivalent_by_symmetry(a,b,cell,point_op,trans);
+  SpaceGroup(void) : cell(), point_op(), trans() {}
+  SpaceGroup(const SpaceGroup &a)
+      : cell(a.cell), point_op(a.point_op), trans(a.trans) {}
+  SpaceGroup(const rMatrix3d &_cell, const Array<rMatrix3d> &_point_op,
+             const Array<rVector3d> &_trans)
+      : cell(_cell), point_op(_point_op), trans(_trans) {}
+  int operator()(const rVector3d &a, const rVector3d &b) const {
+    return equivalent_by_symmetry(a, b, cell, point_op, trans);
   }
-  int operator() (const Array<rVector3d> &a, const Array<rVector3d> &b) const {
-    return equivalent_by_symmetry(a,b,cell,point_op,trans);
+  int operator()(const Array<rVector3d> &a, const Array<rVector3d> &b) const {
+    return equivalent_by_symmetry(a, b, cell, point_op, trans);
   }
-  int operator() (const MultiCluster &a, const MultiCluster &b) const {
-    return equivalent_by_symmetry(a,b,cell,point_op,trans);
+  int operator()(const MultiCluster &a, const MultiCluster &b) const {
+    return equivalent_by_symmetry(a, b, cell, point_op, trans);
   }
-  int operator() (const Structure &a, const Structure &b) const {
-    return equivalent_by_symmetry(a,b,cell,point_op,trans);
+  int operator()(const Structure &a, const Structure &b) const {
+    return equivalent_by_symmetry(a, b, cell, point_op, trans);
   }
 };
 
 void find_pointgroup(Array<rMatrix3d> *point_op, const rMatrix3d &cell);
 
-void pointgroup_from_spacegroup(Array<rMatrix3d> *pointgroup, const Array<rMatrix3d> &point_op);
+void pointgroup_from_spacegroup(Array<rMatrix3d> *pointgroup,
+                                const Array<rMatrix3d> &point_op);
 
-void pointgroup_from_spacegroup(const Structure &str, Array<rMatrix3d> *pointgroup,  const rMatrix3d &cell, const Array<rMatrix3d> &point_op, const Array<rVector3d> &trans);
+void pointgroup_from_spacegroup(const Structure &str,
+                                Array<rMatrix3d> *pointgroup,
+                                const rMatrix3d &cell,
+                                const Array<rMatrix3d> &point_op,
+                                const Array<rVector3d> &trans);
 
-void subfactorgroup_from_supercell_and_spacegroup(Array<rMatrix3d> *ppoint_op, Array<rVector3d> *ptrans, const rMatrix3d &supercell, const Array<rMatrix3d> &point_op, const Array<rVector3d> &trans);
+void subfactorgroup_from_supercell_and_spacegroup(
+    Array<rMatrix3d> *ppoint_op, Array<rVector3d> *ptrans,
+    const rMatrix3d &supercell, const Array<rMatrix3d> &point_op,
+    const Array<rVector3d> &trans);
 
 void find_primitive_unit_cell(rMatrix3d *pcell, const Structure &lat);
 
 void find_spacegroup(Array<rMatrix3d> *point_op, Array<rVector3d> *trans,
-                      const rMatrix3d &cell,
-                      const Array<rVector3d> &atom_pos, const Array<int> &atom_type);
+                     const rMatrix3d &cell, const Array<rVector3d> &atom_pos,
+                     const Array<int> &atom_type);
 
 rMatrix3d find_almost_reduced_cell(const rMatrix3d &cell);
 
-void find_all_equivalent_cell(Array<rMatrix3d> *psupercell, const rMatrix3d &cell, Real radius);
+void find_all_equivalent_cell(Array<rMatrix3d> *psupercell,
+                              const rMatrix3d &cell, Real radius);
 
-void find_supercells(Array<rMatrix3d> *supercell, int min_volume, int max_volume, const rMatrix3d &unitcell, const Array<rMatrix3d> &pointgroup);
+void find_supercells(Array<rMatrix3d> *supercell, int min_volume,
+                     int max_volume, const rMatrix3d &unitcell,
+                     const Array<rMatrix3d> &pointgroup);
 
-void find_supercells_2D(Array<rMatrix3d> *supercell, int min_volume, int max_volume, const rMatrix3d &unitcell, const Array<rMatrix3d> &pointgroup);
+void find_supercells_2D(Array<rMatrix3d> *supercell, int min_volume,
+                        int max_volume, const rMatrix3d &unitcell,
+                        const Array<rMatrix3d> &pointgroup);
 
-void sort_supercells(Array<rMatrix3d> *p_supercell, const Array<rMatrix3d> &pointgroup);
+void sort_supercells(Array<rMatrix3d> *p_supercell,
+                     const Array<rMatrix3d> &pointgroup);
 
 int find_point_op_type(rVector3d *pspecial_dir, const rMatrix3d &point_op);
 
 void find_atom_point_group(Array<rMatrix3d> *patom_point_group,
-			   const rVector3d &atom_pos,
-			   const rMatrix3d &cell, const Array<rMatrix3d> &point_op, const Array<rVector3d> &trans);
+                           const rVector3d &atom_pos, const rMatrix3d &cell,
+                           const Array<rMatrix3d> &point_op,
+                           const Array<rVector3d> &trans);
 
 enum PointGroupType {
   pt_grp_none,
@@ -117,13 +138,18 @@ enum PointGroupType {
 PointGroupType find_point_group_type(const Array<rMatrix3d> &point_op);
 const char *point_group_name(PointGroupType pt_grp);
 
-int contains_pure_translations(const Array<rMatrix3d> &point_op, const Array<rVector3d> &trans);
-//int contains_pure_translations(const Structure &str);
+int contains_pure_translations(const Array<rMatrix3d> &point_op,
+                               const Array<rVector3d> &trans);
+// int contains_pure_translations(const Structure &str);
 int contains_pure_translations(const Structure &str, const rMatrix3d &unitcell);
-int contains_pure_translations_or_lexico_successor(const Structure &str, const rMatrix3d &unitcell);
-int equiv_to_lexico_successor(const Structure &str, const rMatrix3d &unitcell, const Array<rMatrix3d> &point_op, const Array<rVector3d> &trans);
+int contains_pure_translations_or_lexico_successor(const Structure &str,
+                                                   const rMatrix3d &unitcell);
+int equiv_to_lexico_successor(const Structure &str, const rMatrix3d &unitcell,
+                              const Array<rMatrix3d> &point_op,
+                              const Array<rVector3d> &trans);
 
 void generate_space_group(SpaceGroup *p_fullgroup, const SpaceGroup &generator);
-void generate_point_group(Array<rMatrix3d> *p_fullgroup, const Array<rMatrix3d> &generator);
+void generate_point_group(Array<rMatrix3d> *p_fullgroup,
+                          const Array<rMatrix3d> &generator);
 
 #endif

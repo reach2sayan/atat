@@ -1,7 +1,9 @@
 #include "curvefit.h"
 #include "thermofunctions.h"
 
-Array<double> internal_solve_system(gsl_vector* initial_params, gsl_multifit_nlinear_fdf *fdf, gsl_multifit_nlinear_parameters *params) {
+Array<double> internal_solve_system(gsl_vector *initial_params,
+                                    gsl_multifit_nlinear_fdf *fdf,
+                                    gsl_multifit_nlinear_parameters *params) {
 
   // This specifies a trust region method
   const gsl_multifit_nlinear_type *T = gsl_multifit_nlinear_trust;
@@ -15,37 +17,38 @@ Array<double> internal_solve_system(gsl_vector* initial_params, gsl_multifit_nli
 
   // initialize solver
   gsl_multifit_nlinear_init(initial_params, fdf, work);
-  //iterate until convergence
-  gsl_multifit_nlinear_driver(max_iter, xtol, gtol, ftol, nullptr, nullptr, &info, work);
+  // iterate until convergence
+  gsl_multifit_nlinear_driver(max_iter, xtol, gtol, ftol, nullptr, nullptr,
+                              &info, work);
 
   // result will be stored here
-  gsl_vector * y    = gsl_multifit_nlinear_position(work);
+  gsl_vector *y = gsl_multifit_nlinear_position(work);
   Array<double> result = Array<double>(initial_params->size);
 
-  for(int i = 0; i < result.get_size(); i++)
+  for (int i = 0; i < result.get_size(); i++)
     result[i] = gsl_vector_get(y, i);
 
   auto niter = gsl_multifit_nlinear_niter(work);
-  auto nfev  = fdf->nevalf;
-  auto njev  = fdf->nevaldf;
-  auto naev  = fdf->nevalfvv;
+  auto nfev = fdf->nevalf;
+  auto njev = fdf->nevaldf;
+  auto naev = fdf->nevalfvv;
 
   // nfev - number of function evaluations
   // njev - number of Jacobian evaluations
   // naev - number of f_vv evaluations
-  //logger::debug("curve fitted after ", niter, " iterations {nfev = ", nfev, "} {njev = ", njev, "} {naev = ", naev, "}");
+  // logger::debug("curve fitted after ", niter, " iterations {nfev = ", nfev,
+  // "} {njev = ", njev, "} {naev = ", naev, "}");
 
   gsl_multifit_nlinear_free(work);
   gsl_vector_free(initial_params);
-	cout << result;
+  cout << result;
   return result;
 }
 
-gsl_vector* internal_make_gsl_vector_ptr(const Array<double>& vec){
+gsl_vector *internal_make_gsl_vector_ptr(const Array<double> &vec) {
 
-    auto* result = gsl_vector_alloc(vec.get_size());
-    for(int k = 0, i = 0; k < vec.get_size(); i++, k++)
-        gsl_vector_set(result, i, vec[k]);
-    return result;
+  auto *result = gsl_vector_alloc(vec.get_size());
+  for (int k = 0, i = 0; k < vec.get_size(); i++, k++)
+    gsl_vector_set(result, i, vec[k]);
+  return result;
 }
-

@@ -2,9 +2,9 @@
 
 /*
 istream& operator >> (istream &file, AutoString &str) {
-	static char buf[1000];
-	file.get(buf,1000);
-	return file;
+        static char buf[1000];
+        file.get(buf,1000);
+        return file;
 }
 */
 
