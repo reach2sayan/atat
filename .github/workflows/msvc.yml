@@ -31,7 +31,10 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-
+      
+      - name: install-dependencies
+        run: sudo apt-get update && sudo apt-get install cmake coinor-libipopt-dev
+      
       - name: Configure CMake
         run: mkdir build && cmake -Bbuild
 
