@@ -2,7 +2,7 @@ CMAKE_MINIMUM_REQUIRED(VERSION 3.17)
 
 SET(CMAKE_C_COMPILER "gcc")
 SET(CMAKE_CXX_COMPILER "clang++")
-PROJECT(CMakeATAT
+PROJECT(ATAT
 	VERSION 1.0
 	LANGUAGES C CXX
 	)
@@ -47,7 +47,6 @@ IF(NOT ifopt_POPULATED)
 	ADD_SUBDIRECTORY(${ifopt_SOURCE_DIR} ${ifopt_BUILD_DIR})
 ENDIF()
 
-MESSAGE(STATUS "This is ${ifopt_SOURCE_DIR}")
 IF( EXISTS "${CMAKE_CURRENT_BINARY_DIR}/compile_commands.json" )
   EXECUTE_PROCESS( COMMAND ${CMAKE_COMMAND} -E copy_if_different
     ${CMAKE_CURRENT_BINARY_DIR}/compile_commands.json
@@ -58,33 +57,44 @@ ENDIF()
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/include ${ifopt_SOURCE_DIR}
 	${ifopt_BUILD_DIR})
 
+
 ADD_LIBRARY(cvmclushelp SHARED ${PROJECT_SOURCE_DIR}/src/cvmclushelp.c++)
 ADD_LIBRARY(corrdumphelp SHARED ${PROJECT_SOURCE_DIR}/src/corrdumphelp.c++)
-ADD_LIBRARY(gensqshelp SHARED ${PROJECT_SOURCE_DIR}/src/gensqshelp.c++)
 ADD_LIBRARY(mcsqshelp SHARED ${PROJECT_SOURCE_DIR}/src/mcsqshelp.c++)
+ADD_LIBRARY(gensqshelp SHARED ${PROJECT_SOURCE_DIR}/src/gensqshelp.c++)
 ADD_LIBRARY(mapshelp SHARED ${PROJECT_SOURCE_DIR}/src/mapshelp.c++)
-ADD_LIBRARY(phbhelp SHARED ${PROJECT_SOURCE_DIR}/src/phbhelp.c++)
-ADD_LIBRARY(apbhelp SHARED ${PROJECT_SOURCE_DIR}/src/apbhelp.c++)
+ADD_LIBRARY(phbhelp SHARED	${PROJECT_SOURCE_DIR}/src/phbhelp.c++)
+ADD_LIBRARY(apbhelp SHARED	${PROJECT_SOURCE_DIR}/src/apbhelp.c++)
+ADD_LIBRARY(mmapshelp SHARED ${PROJECT_SOURCE_DIR}/src/mmapshelp.c++)
+ADD_LIBRARY(emc2help SHARED ${PROJECT_SOURCE_DIR}/src/emc2help.c++)
+ADD_LIBRARY(gcehelp SHARED ${PROJECT_SOURCE_DIR}/src/gcehelp.c++)
 
-ADD_LIBRARY(linearops SHARED 
+ADD_LIBRARY(linearops SHARED
 	${PROJECT_SOURCE_DIR}/src/linalg.c++
 	${PROJECT_SOURCE_DIR}/src/linsolve.c++
 	${PROJECT_SOURCE_DIR}/src/lstsqr.c++
 	)
 
-ADD_LIBRARY(curvefit SHARED 
+ADD_LIBRARY(curvefit SHARED
 	${PROJECT_SOURCE_DIR}/src/curvefit.c++
 	${PROJECT_SOURCE_DIR}/src/thermofunctions.c++
 	)
-TARGET_LINK_LIBRARIES(curvefit PUBLIC GSL::gsl	GSL::gslcblas)
+TARGET_LINK_LIBRARIES(curvefit PUBLIC GSL::gsl GSL::gslcblas)
 
 ADD_LIBRARY(cvm SHARED
 	${PROJECT_SOURCE_DIR}/src/CVMDataHolder.c++
 	${PROJECT_SOURCE_DIR}/src/CVMModel.c++
 	${PROJECT_SOURCE_DIR}/src/CVMLogger.c++
 	)
-TARGET_LINK_LIBRARIES(cvm PUBLIC Eigen3::Eigen ifopt_core ifopt_ipopt findsym calccorr linearops
-	clus_str curvefit)
+TARGET_LINK_LIBRARIES(cvm PUBLIC 
+	Eigen3::Eigen
+	ifopt_core
+	ifopt_ipopt
+	findsym
+	calccorr
+	linearops
+	clus_str
+	curvefit)
 
 ADD_LIBRARY(parseops SHARED
 	${PROJECT_SOURCE_DIR}/src/stringo.c++
@@ -105,9 +115,31 @@ ADD_LIBRARY(gstate SHARED ${PROJECT_SOURCE_DIR}/src/gstate.c++)
 ADD_LIBRARY(refine SHARED ${PROJECT_SOURCE_DIR}/src/refine.c++)
 TARGET_LINK_LIBRARIES(refine PUBLIC calccorr gstate)
 
+ADD_LIBRARY(mrefine SHARED ${PROJECT_SOURCE_DIR}/src/mrefine.c++)
+
 ADD_LIBRARY(clus_str SHARED ${PROJECT_SOURCE_DIR}/src/clus_str.c++)
 
 ADD_LIBRARY(lattype SHARED ${PROJECT_SOURCE_DIR}/src/lattype.c++)
+
+ADD_LIBRARY(chull SHARED ${PROJECT_SOURCE_DIR}/src/chull.c++)
+
+ADD_LIBRARY(mpiinterf SHARED ${PROJECT_SOURCE_DIR}/src/mpiinterf.c++)
+
+ADD_LIBRARY(eci SHARED ${PROJECT_SOURCE_DIR}/src/teci.c++
+	${PROJECT_SOURCE_DIR}/src/keci.c++)
+
+ADD_LIBRARY(drawpd SHARED ${PROJECT_SOURCE_DIR}/src/drawpd.c++)
+ADD_LIBRARY(mclib SHARED ${PROJECT_SOURCE_DIR}/src/mclib.c++)
+ADD_LIBRARY(fft SHARED ${PROJECT_SOURCE_DIR}/src/anyfft.c++
+	${PROJECT_SOURCE_DIR}/src/fftn.c++)
+
+ADD_LIBRARY(kspacees SHARED ${PROJECT_SOURCE_DIR}/src/kspacees.c++)
+
+ADD_LIBRARY(pred SHARED
+	${PROJECT_SOURCE_DIR}/src/predcs.c++
+	${PROJECT_SOURCE_DIR}/src/predes.c++
+	${PROJECT_SOURCE_DIR}/src/predrs.c++
+	)
 
 ADD_EXECUTABLE(cvmclus ${PROJECT_SOURCE_DIR}/src/cvmclus.c++)
 TARGET_LINK_LIBRARIES(cvmclus PUBLIC 
@@ -138,6 +170,16 @@ TARGET_LINK_LIBRARIES(gensqs PUBLIC
 	lattype
 	)
 
+ADD_EXECUTABLE(genstr ${PROJECT_SOURCE_DIR}/src/genstr.c++)
+TARGET_LINK_LIBRARIES(genstr PUBLIC 
+	parseops
+	xtalutil
+	findsym
+	clus_str
+	lattype
+	mpiinterf
+	)
+
 ADD_EXECUTABLE(mcsqs ${PROJECT_SOURCE_DIR}/src/mcsqs.c++)
 TARGET_LINK_LIBRARIES(mcsqs PUBLIC 
 	mcsqshelp
@@ -157,7 +199,25 @@ TARGET_LINK_LIBRARIES(maps PUBLIC
 	lattype
 	calccorr
 	refine
+	mpiinterf
 	)
+
+ADD_EXECUTABLE(mmaps ${PROJECT_SOURCE_DIR}/src/mmaps.c++)
+TARGET_LINK_LIBRARIES(mmaps PUBLIC
+	mmapshelp
+	chull
+	parseops
+	xtalutil
+	calccorr
+	lattype
+	mrefine
+	clus_str
+	linearops
+	pred
+	findsym
+	mpiinterf
+	)
+
 	
 ADD_EXECUTABLE(checkcell ${PROJECT_SOURCE_DIR}/src/checkcell.c++)
 TARGET_LINK_LIBRARIES(checkcell PUBLIC parseops xtalutil)
@@ -179,6 +239,54 @@ TARGET_LINK_LIBRARIES(apb PUBLIC apbhelp parseops xtalutil)
 
 ADD_EXECUTABLE(plotcurv ${PROJECT_SOURCE_DIR}/src/plotcurv.c++)
 TARGET_LINK_LIBRARIES(plotcurv PUBLIC linearops parseops xtalutil)
+
+
+ADD_EXECUTABLE(emc2 ${PROJECT_SOURCE_DIR}/src/emc2.c++)
+TARGET_LINK_LIBRARIES(emc2 PUBLIC
+	emc2help
+	parseops
+	findsym
+	linearops
+	clus_str
+	lattype
+	xtalutil
+	calccorr
+	drawpd
+	mclib
+	eci
+	fft
+	kspacees
+	)
+
+ADD_LIBRARY(gceutil SHARED ${PROJECT_SOURCE_DIR}/src/gceutil.c++
+	${PROJECT_SOURCE_DIR}/src/tensorsym.c++
+	${PROJECT_SOURCE_DIR}/src/phonlib.c++
+	${PROJECT_SOURCE_DIR}/src/multipoly.c++
+	)
+
+ADD_EXECUTABLE(viewgce ${PROJECT_SOURCE_DIR}/src/viewgce.c++)
+TARGET_LINK_LIBRARIES(viewgce PUBLIC
+	corrdumphelp
+	parseops
+	linearops
+	gceutil
+	xtalutil
+	findsym
+	calccorr
+	clus_str
+	)
+
+ADD_EXECUTABLE(gce ${PROJECT_SOURCE_DIR}/src/gce.c++)
+TARGET_LINK_LIBRARIES(gce PUBLIC
+	gcehelp
+	linearops
+	gceutil
+	parseops
+	xtalutil
+	calccorr
+	findsym
+	clus_str)
+
 
 ENABLE_TESTING()
 
