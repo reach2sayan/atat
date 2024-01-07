@@ -2,7 +2,6 @@ CMAKE_MINIMUM_REQUIRED(VERSION 3.17)
 
 SET(CMAKE_C_COMPILER "gcc")
 SET(CMAKE_CXX_COMPILER "clang++")
-
 PROJECT(CMakeATAT
 	VERSION 1.0
 	LANGUAGES C CXX
@@ -48,6 +47,7 @@ IF(NOT ifopt_POPULATED)
 	ADD_SUBDIRECTORY(${ifopt_SOURCE_DIR} ${ifopt_BUILD_DIR})
 ENDIF()
 
+MESSAGE(STATUS "This is ${ifopt_SOURCE_DIR}")
 IF( EXISTS "${CMAKE_CURRENT_BINARY_DIR}/compile_commands.json" )
   EXECUTE_PROCESS( COMMAND ${CMAKE_COMMAND} -E copy_if_different
     ${CMAKE_CURRENT_BINARY_DIR}/compile_commands.json
@@ -55,7 +55,8 @@ IF( EXISTS "${CMAKE_CURRENT_BINARY_DIR}/compile_commands.json" )
   )
 ENDIF()
 
-INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/include)
+INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/include ${ifopt_SOURCE_DIR}
+	${ifopt_BUILD_DIR})
 
 ADD_LIBRARY(cvmclushelp SHARED ${PROJECT_SOURCE_DIR}/src/cvmclushelp.c++)
 ADD_LIBRARY(corrdumphelp SHARED ${PROJECT_SOURCE_DIR}/src/corrdumphelp.c++)
@@ -82,7 +83,7 @@ ADD_LIBRARY(cvm SHARED
 	${PROJECT_SOURCE_DIR}/src/CVMModel.c++
 	${PROJECT_SOURCE_DIR}/src/CVMLogger.c++
 	)
-TARGET_LINK_LIBRARIES(cvm PUBLIC Eigen3::Eigen findsym calccorr linearops
+TARGET_LINK_LIBRARIES(cvm PUBLIC Eigen3::Eigen ifopt_core ifopt_ipopt findsym calccorr linearops
 	clus_str curvefit)
 
 ADD_LIBRARY(parseops SHARED
@@ -178,4 +179,6 @@ TARGET_LINK_LIBRARIES(apb PUBLIC apbhelp parseops xtalutil)
 
 ADD_EXECUTABLE(plotcurv ${PROJECT_SOURCE_DIR}/src/plotcurv.c++)
 TARGET_LINK_LIBRARIES(plotcurv PUBLIC linearops parseops xtalutil)
+
+ENABLE_TESTING()
 

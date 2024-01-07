@@ -30,8 +30,9 @@ int main(int argc, char *argv[]) {
   int dummy = 0;
   double Tmin = .0;
   double Tmax = 2000.0;
-  double Tinc = 100.0;
-  int nlocal = 1;
+  double Tinc = 500.0;
+  int nlocal = 10;
+  int verbosity = 5;
 
   AskStruct options[] = {
       {"",
@@ -52,6 +53,8 @@ int main(int argc, char *argv[]) {
       {"-Tinc", "Starting Temperature (default 300 K)", INTVAL, &Tinc},
       {"-nlocal", "No. of local searches for global minima search (default 10)",
        INTVAL, &nlocal},
+      {"-v", "verbosity level of IPOPT solver 1--20 (default 5)", INTVAL,
+       &verbosity},
       {"-d", "Use all default values", BOOLVAL, &dummy}};
   if (!get_values(argc, argv, countof(options), options)) {
     display_help(countof(options), options);
@@ -96,7 +99,7 @@ int main(int argc, char *argv[]) {
 
   ipopt_ordered.SetOption("linear_solver", "mumps");
   ipopt_ordered.SetOption("jacobian_approximation", "exact");
-  ipopt_ordered.SetOption("print_level", 0);
+  ipopt_ordered.SetOption("print_level", verbosity);
   ipopt_ordered.SetOption("derivative_test", "first-order");
   ipopt_ordered.Solve(OrderedStateModel);
 
@@ -115,12 +118,11 @@ int main(int argc, char *argv[]) {
   ipopt_opt.SetOption("linear_solver", "mumps");
   ipopt_opt.SetOption("jacobian_approximation", "exact");
   ipopt_opt.SetOption("derivative_test", "first-order");
-  // ipopt_opt.SetOption("print_level", 10);
+  ipopt_opt.SetOption("print_level", verbosity);
 
   cvmdata->cvminfo.ordered_correlation = orderedcorr;
   cvmdata->cvminfo.disordered_correlation = disordered_correlation;
   CVMResultsLogger energyresults("cvmresult.csv", sigdig, cvmdata);
-  // CVMSolverLogger solverlog("ipopt.log",cvmdata);
   CVMCorrelationsLogger corrresults("cvmsteps.out", sigdig, cvmdata);
 
   for (int T = Tmin; T <= Tmax; T += Tinc) {
@@ -146,14 +148,16 @@ int main(int argc, char *argv[]) {
     cvmdata->log();
   }
 
-  Array<double> initvalues({1, 0.0, 1});
+  Array<double> initvalues({0.5, -0.5, 0.1});
   vector<double> correction;
-  transform(cvmdata->cvminfo.opt_fe.begin(), cvmdata->cvminfo.opt_fe.end(),
-	    cvmdata->cvminfo.disordered_fe.begin(),
-	    std::back_inserter(correction), std::minus<double>());
+  std::transform(cvmdata->cvminfo.opt_fe.begin(), cvmdata->cvminfo.opt_fe.end(),
+		 cvmdata->cvminfo.disordered_fe.begin(),
+		 std::back_inserter(correction), std::minus<double>());
   Array<double> ys = correction;
   Array<double> xs = cvmdata->cvminfo.temperature;
 
-  auto r = curve_fit(gaussian, initvalues, xs, ys);
-  cout << endl << r;
+  Array<double> sroparams =
+      curve_fit(sroCorrectionFunction, initvalues, xs, ys);
+  std::ofstream fsroparams("sro_params.out");
+  fsroparams << sroparams;
 }

@@ -536,7 +536,7 @@ void CVMOptimizerDataHolder::get_structure_from_file(
 }
 
 VectorXd CVMOptimizerDataHolder::GetSampleCorrelation() const {
-  static Structure mystructure = str;
+  Structure mystructure = str;
   VectorXd corrs = VectorXd::Zero(get_num_clusters());
   int ieci = 0;
 
