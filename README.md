@@ -1,5 +1,7 @@
 # Alloy Theoretic Automated Toolkit (ATAT)
 
+![build-status](https://github.com/reach2sayan/atat/actions/workflows/cmake-single-platform.yml/badge.svg)
+
 ![alt text](https://www.brown.edu/Departments/Engineering/Labs/avdw/atat/atat.gif)
 
 ATAT is a generic name that refers to a collection of alloy theory tools developped by [Axel van de Walle](http://alum.mit.edu/www/avdw), in collaboration with various [research groups](https://www.brown.edu/Departments/Engineering/Labs/avdw/atat/manual/node3.html) and with various sources of [financial support](https://www.brown.edu/Departments/Engineering/Labs/avdw/atat/manual/node4.html).
