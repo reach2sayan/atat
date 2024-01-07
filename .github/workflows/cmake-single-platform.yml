@@ -18,7 +18,7 @@ jobs:
       run: sudo apt-get update && sudo apt-get install cmake coinor-libipopt-dev
       
     - name: Build
-      run: mkdir build && cmake -Bbuild -H
+      run: mkdir build && cmake -Bbuild -H.
     
     - name: Make
       run: cmake --build build/
