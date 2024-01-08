@@ -1,10 +1,10 @@
-#include "curvefit.h"
+#include "gslcurvefit.h"
+
 #include "thermofunctions.h"
 
 Array<double> internal_solve_system(gsl_vector *initial_params,
-                                    gsl_multifit_nlinear_fdf *fdf,
-                                    gsl_multifit_nlinear_parameters *params) {
-
+				    gsl_multifit_nlinear_fdf *fdf,
+				    gsl_multifit_nlinear_parameters *params) {
   // This specifies a trust region method
   const gsl_multifit_nlinear_type *T = gsl_multifit_nlinear_trust;
   const size_t max_iter = 200;
@@ -19,14 +19,13 @@ Array<double> internal_solve_system(gsl_vector *initial_params,
   gsl_multifit_nlinear_init(initial_params, fdf, work);
   // iterate until convergence
   gsl_multifit_nlinear_driver(max_iter, xtol, gtol, ftol, nullptr, nullptr,
-                              &info, work);
+			      &info, work);
 
   // result will be stored here
   gsl_vector *y = gsl_multifit_nlinear_position(work);
   Array<double> result = Array<double>(initial_params->size);
 
-  for (int i = 0; i < result.get_size(); i++)
-    result[i] = gsl_vector_get(y, i);
+  for (int i = 0; i < result.get_size(); i++) result[i] = gsl_vector_get(y, i);
 
   auto niter = gsl_multifit_nlinear_niter(work);
   auto nfev = fdf->nevalf;
@@ -46,7 +45,6 @@ Array<double> internal_solve_system(gsl_vector *initial_params,
 }
 
 gsl_vector *internal_make_gsl_vector_ptr(const Array<double> &vec) {
-
   auto *result = gsl_vector_alloc(vec.get_size());
   for (int k = 0, i = 0; k < vec.get_size(); i++, k++)
     gsl_vector_set(result, i, vec[k]);

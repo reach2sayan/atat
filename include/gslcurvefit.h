@@ -1,5 +1,5 @@
-#ifndef __ATAT_CURVE_FIT_HPP__
-#define __ATAT_CURVE_FIT_HPP__
+#ifndef __ATAT_GSLCURVE_FIT_HPP__
+#define __ATAT_GSLCURVE_FIT_HPP__
 
 #include <gsl/gsl_multifit_nlinear.h>
 #include <gsl/gsl_vector.h>
@@ -10,11 +10,13 @@
 
 #include "array.h"
 
-template <class R, class... ARGS> struct function_ripper {
+template <class R, class... ARGS>
+struct function_ripper {
   static constexpr size_t n_args = sizeof...(ARGS);
 };
 
-template <class R, class... ARGS> auto constexpr n_params(R(ARGS...)) {
+template <class R, class... ARGS>
+auto constexpr n_params(R(ARGS...)) {
   return function_ripper<R, ARGS...>();
 }
 
@@ -23,11 +25,13 @@ auto gen_tuple_impl(F func, std::index_sequence<Is...>) {
   return std::make_tuple(func(Is)...);
 }
 
-template <size_t N, typename F> auto gen_tuple(F func) {
+template <size_t N, typename F>
+auto gen_tuple(F func) {
   return gen_tuple_impl(func, std::make_index_sequence<N>{});
 }
 
-template <typename C> struct fit_data {
+template <typename C>
+struct fit_data {
   const Array<double> &t;
   const Array<double> &y;
   C f;
@@ -54,16 +58,16 @@ int internal_f(const gsl_vector *x, void *params, gsl_vector *f) {
 using func_f_type = int (*)(const gsl_vector *, void *, gsl_vector *);
 using func_df_type = int (*)(const gsl_vector *, void *, gsl_matrix *);
 using func_fvv_type = int (*)(const gsl_vector *, const gsl_vector *, void *,
-                              gsl_vector *);
+			      gsl_vector *);
 
 gsl_vector *internal_make_gsl_vector_ptr(const Array<double> &vec);
 Array<double> internal_solve_system(gsl_vector *initial_params,
-                                    gsl_multifit_nlinear_fdf *fdf,
-                                    gsl_multifit_nlinear_parameters *params);
+				    gsl_multifit_nlinear_fdf *fdf,
+				    gsl_multifit_nlinear_parameters *params);
 
 template <typename C>
 Array<double> curve_fit_impl(func_f_type f, func_df_type df, func_fvv_type fvv,
-                             gsl_vector *initial_params, fit_data<C> &fd) {
+			     gsl_vector *initial_params, fit_data<C> &fd) {
   assert(fd.t.get_size() == fd.y.get_size());
 
   auto fdf = gsl_multifit_nlinear_fdf();
@@ -95,7 +99,7 @@ Array<double> curve_fit_impl(func_f_type f, func_df_type df, func_fvv_type fvv,
  */
 template <typename Callable>
 Array<double> curve_fit(Callable f, const Array<double> &initial_params,
-                        const Array<double> &x, const Array<double> &y) {
+			const Array<double> &x, const Array<double> &y) {
   // We can't pass lambdas without convert to std::function.
   constexpr auto n = decltype(n_params(f))::n_args - 1;
   assert(initial_params.get_size() == n);
@@ -103,6 +107,6 @@ Array<double> curve_fit(Callable f, const Array<double> &initial_params,
   auto params = internal_make_gsl_vector_ptr(initial_params);
   auto fd = fit_data<Callable>{x, y, f};
   return curve_fit_impl(internal_f<decltype(fd), n>, nullptr, nullptr, params,
-                        fd);
+			fd);
 }
-#endif //__ATAT_CURVE_FIT_HPP__
+#endif	//__ATAT_GSLCURVE_FIT_HPP__

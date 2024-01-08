@@ -1,16 +1,23 @@
 #include <ifopt/ipopt_solver.h>
 #include <ifopt/problem.h>
+#include <pybind11/embed.h>
+#include <pybind11/functional.h>
+#include <pybind11/gil.h>
+#include <pybind11/numpy.h>
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>  // mandatory for myPyObject.cast<std::vector<T>>()
 
 #include <algorithm>
 #include <fstream>
 #include <memory>
 #include <ostream>
 #include <random>
+#include <vector>
 
 #include "CVMLogger.h"
 #include "CVMModel.h"
-#include "curvefit.h"
 #include "getvalue.h"
+#include "gslcurvefit.h"
 #include "parse.h"
 #include "thermofunctions.h"
 #include "version.h"
@@ -19,7 +26,12 @@ extern const char *helpstring;
 using namespace ifopt;
 typedef Problem CVMModel;
 typedef std::vector<std::pair<VectorXd, double>> IterMapType;
+namespace py = pybind11;
 
+double mygaussian(double x, double a, double b, double c) {
+  const double z = (x - b) / c;
+  return a * std::exp(-0.5 * z * z);
+}
 int main(int argc, char *argv[]) {
   // parsing command line. See getvalue.hh for details;
   const char *latfilename = "lat.in";
@@ -28,9 +40,9 @@ int main(int argc, char *argv[]) {
   const char *corrfunc_label = "trigo";
   int dohelp = 0;
   int dummy = 0;
-  double Tmin = .0;
-  double Tmax = 2000.0;
-  double Tinc = 500.0;
+  double Tmin = 100.0;
+  double Tmax = 1000.0;
+  double Tinc = 100.0;
   int nlocal = 10;
   int verbosity = 5;
 
@@ -148,16 +160,24 @@ int main(int argc, char *argv[]) {
     cvmdata->log();
   }
 
-  Array<double> initvalues({0.5, -0.5, 0.1});
   vector<double> correction;
   std::transform(cvmdata->cvminfo.opt_fe.begin(), cvmdata->cvminfo.opt_fe.end(),
 		 cvmdata->cvminfo.disordered_fe.begin(),
 		 std::back_inserter(correction), std::minus<double>());
-  Array<double> ys = correction;
-  Array<double> xs = cvmdata->cvminfo.temperature;
 
-  Array<double> sroparams =
-      curve_fit(sroCorrectionFunction, initvalues, xs, ys);
+  py::scoped_interpreter guard{};
+
+  py::module np = py::module::import("numpy");
+  py::module scipy = py::module::import("scipy.optimize");
+  py::module functions = py::module::import("pythonfunctions");
+
+  py::array_t<double> pyys = py::cast(correction);
+  py::array_t<double> pyxs = py::cast(cvmdata->cvminfo.temperature);
+
+  py::function pytarget = functions.attr("srocorrection");
+  py::object curvefit = scipy.attr("curve_fit");
+
+  py::tuple retval = curvefit(pytarget, pyxs, pyys);
   std::ofstream fsroparams("sro_params.out");
-  fsroparams << sroparams;
+  fsroparams << (Array<double>)(retval.begin()->cast<std::vector<double>>());
 }
