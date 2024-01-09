@@ -83,7 +83,7 @@ class Array {
       for (const T &x : list) buf[i++] = x;
     }
   }
-  ~Array(void) {
+  ~Array(void) noexcept {
     if (buf != nullptr) delete[] buf;
   }
   int operator()(void) const { return size; }
