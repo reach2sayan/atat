@@ -3,6 +3,7 @@
 
 #include <initializer_list>
 #include <iostream>
+#include <iterator>
 #include <type_traits>
 #include <vector>
 
@@ -12,6 +13,13 @@
 
 template <class T>
 class Array {
+ public:
+  using iterator = ArrayIterator<T>;
+  using const_iterator = ArrayIterator<T>;
+
+  using reverse_iterator = std::reverse_iterator<ArrayIterator<T>>;
+  using const_reverse_iterator = std::reverse_iterator<ArrayIterator<const T>>;
+
  protected:
   int size;
   T *buf;
@@ -42,8 +50,6 @@ class Array {
   }
 
  public:
-  ArrayIterator<T> begin() { return buf; }
-  ArrayIterator<T> end() { return &buf[size]; }
   Array(int new_size = 0) { init(new_size); }
   Array(const Array<T> &a) {
     init(a.size);
@@ -125,6 +131,22 @@ class Array {
   }
   T *get_buf(void) { return buf; }
   const T *get_buf_c(void) const { return buf; }
+
+  ArrayIterator<T> begin() { return buf; }
+  ArrayIterator<T> end() { return &buf[size]; }
+  ArrayIterator<T> cbegin() const { return buf; }
+  ArrayIterator<T> cend() const { return &buf[size]; }
+
+  std::reverse_iterator<ArrayIterator<T>> rbegin() {
+    return std::make_reverse_iterator(end());
+  }
+  ArrayIterator<T> rend() { return std::make_reverse_iterator(begin()); }
+  ArrayIterator<T> crbegin() const {
+    return std::make_reverse_iterator(cend());
+  }
+  ArrayIterator<T> crend() const {
+    return std::make_reverse_iterator(cbegin());
+  }
 
   void shuffle(void);
   /*
