@@ -1,27 +1,38 @@
 #ifndef __ARRAY_H__
 #define __ARRAY_H__
 
-#include "misc.h"
-#include "vectmac.h"
 #include <initializer_list>
 #include <iostream>
+#include <iterator>
 #include <type_traits>
 #include <vector>
 
-template <class T> class Array {
-protected:
+#include "arrayiterator.h"
+#include "misc.h"
+#include "vectmac.h"
+
+template <class T>
+class Array {
+ public:
+  using iterator = ArrayIterator<T>;
+  using const_iterator = ArrayIterator<T>;
+
+  using reverse_iterator = std::reverse_iterator<ArrayIterator<T>>;
+  using const_reverse_iterator = std::reverse_iterator<ArrayIterator<const T>>;
+
+ protected:
   int size;
   T *buf;
 
-protected:
+ protected:
   void init(int new_size) {
     size = new_size;
     if (new_size != 0) {
       buf = new T[size];
 #ifdef DEBUG
       if (buf == NULL) {
-        cerr << "Unable to allocate Array of size " << size << endl;
-        COREDUMP
+	cerr << "Unable to allocate Array of size " << size << endl;
+	COREDUMP
       }
 #endif
     } else
@@ -38,7 +49,7 @@ protected:
       return buf[i];
   }
 
-public:
+ public:
   Array(int new_size = 0) { init(new_size); }
   Array(const Array<T> &a) {
     init(a.size);
@@ -57,7 +68,7 @@ public:
   }
   template <
       typename Container,
-      typename K = std::decay_t<decltype(*begin(std::declval<Container>()))>,
+      typename K = std::decay_t<decltype(*::begin(std::declval<Container>()))>,
       std::enable_if_t<std::is_same<K, T>::value, bool> = true>
   Array(const Container &container) {
     init(container.size());
@@ -69,13 +80,11 @@ public:
     if (!empty(list)) {
       init(list.size());
       int i = 0;
-      for (const T &x : list)
-        buf[i++] = x;
+      for (const T &x : list) buf[i++] = x;
     }
   }
-  ~Array(void) {
-    if (buf != nullptr)
-      delete[] buf;
+  ~Array(void) noexcept {
+    if (buf != nullptr) delete[] buf;
   }
   int operator()(void) const { return size; }
   int getSize(void) const { return size; }
@@ -102,17 +111,15 @@ public:
   }
   template <
       typename Container,
-      typename K = std::decay_t<decltype(*begin(std::declval<Container>()))>,
+      typename K = std::decay_t<decltype(*::begin(std::declval<Container>()))>,
       std::enable_if_t<std::is_same<K, T>::value, bool> = true>
   void operator=(const Container &container) {
     auto bptr = container.begin();
-    for (int i = 0; i < size; i++, bptr++)
-      buf[i] = *bptr;
+    for (int i = 0; i < size; i++, bptr++) buf[i] = *bptr;
   }
   vector<T> Array2StdVector() {
     vector<T> retvector;
-    for (int i = 0; i < size; i++)
-      retvector.push_back(buf[i]);
+    for (int i = 0; i < size; i++) retvector.push_back(buf[i]);
     return retvector;
   }
   void copy(const Array<T> &a) { operator=(a); }
@@ -125,18 +132,35 @@ public:
   T *get_buf(void) { return buf; }
   const T *get_buf_c(void) const { return buf; }
 
+  ArrayIterator<T> begin() { return buf; }
+  ArrayIterator<T> end() { return &buf[size]; }
+  ArrayIterator<T> cbegin() const { return buf; }
+  ArrayIterator<T> cend() const { return &buf[size]; }
+
+  std::reverse_iterator<ArrayIterator<T>> rbegin() {
+    return std::make_reverse_iterator(end());
+  }
+  ArrayIterator<T> rend() { return std::make_reverse_iterator(begin()); }
+  ArrayIterator<T> crbegin() const {
+    return std::make_reverse_iterator(cend());
+  }
+  ArrayIterator<T> crend() const {
+    return std::make_reverse_iterator(cbegin());
+  }
+
   void shuffle(void);
   /*
-           operator T* () {
-           return buf;
-           }
-           operator const T* () const {
-           return buf;
-           }
-           */
+	   operator T* () {
+	   return buf;
+	   }
+	   operator const T* () const {
+	   return buf;
+	   }
+	   */
 };
 
-template <class T> void Array<T>::shuffle() {
+template <class T>
+void Array<T>::shuffle() {
   srand(time(NULL));
   for (int i = size - 1; i > 0; i--) {
     int j = rand() % (i + 1);
@@ -144,45 +168,47 @@ template <class T> void Array<T>::shuffle() {
   }
 }
 
-template <class T> void zero_array(Array<T> *a) {
+template <class T>
+void zero_array(Array<T> *a) {
   for (int i = 0; i < a->getSize(); i++) {
     (*a)(i) = (T)0;
   }
 }
 
-template <class T> void one_array(Array<T> *a) {
+template <class T>
+void one_array(Array<T> *a) {
   for (int i = 0; i < a->getSize(); i++) {
     (*a)(i) = (T)1;
   }
 }
 
-template <class T> void fill_array(Array<T> *a, const T &val) {
+template <class T>
+void fill_array(Array<T> *a, const T &val) {
   for (int i = 0; i < a->getSize(); i++) {
     (*a)(i) = val;
   }
 }
 
-template <class T> int operator==(const Array<T> &a, const Array<T> &b) {
-  if (a.get_size() != b.get_size())
-    return 0;
+template <class T>
+int operator==(const Array<T> &a, const Array<T> &b) {
+  if (a.get_size() != b.get_size()) return 0;
   for (int i = 0; i < a.get_size(); i++) {
-    if (a(i) != b(i))
-      return 0;
+    if (a(i) != b(i)) return 0;
   }
   return 1;
 }
 
-template <class T> int operator!=(const Array<T> &a, const Array<T> &b) {
-  if (a.get_size() != b.get_size())
-    return 1;
+template <class T>
+int operator!=(const Array<T> &a, const Array<T> &b) {
+  if (a.get_size() != b.get_size()) return 1;
   for (int i = 0; i < a.get_size(); i++) {
-    if (a(i) != b(i))
-      return 1;
+    if (a(i) != b(i)) return 1;
   }
   return 0;
 }
 
-template <class T> T &robust_access(Array<T> *pa, int i) {
+template <class T>
+T &robust_access(Array<T> *pa, int i) {
   if (i >= pa->get_size()) {
     Array<T> tmp(*pa);
     int s = pa->get_size();
@@ -198,14 +224,16 @@ template <class T> T &robust_access(Array<T> *pa, int i) {
   return (*pa)(i);
 }
 
-template <class T> void tracev(const Array<T> &v) {
+template <class T>
+void tracev(const Array<T> &v) {
   for (int i = 0; i < v.get_size(); i++) {
     cout << v(i) << " ";
   }
   cout << endl;
 }
 
-template <class T> void tracevl(const Array<T> &v) {
+template <class T>
+void tracevl(const Array<T> &v) {
   for (int i = 0; i < v.get_size(); i++) {
     cout << v(i) << " ";
   }
@@ -213,12 +241,13 @@ template <class T> void tracevl(const Array<T> &v) {
 
 class Array2dIterator;
 
-template <class T> class Array2d {
-protected:
+template <class T>
+class Array2d {
+ protected:
   iVector2d size;
   T *buf;
 
-protected:
+ protected:
   void init(const iVector2d &new_size) {
     size = new_size;
     int surface = size(0) * size(1);
@@ -226,8 +255,8 @@ protected:
       buf = new T[surface];
 #ifdef DEBUG
       if (buf == NULL) {
-        cerr << "Unable to allocate Array2d of size " << surface << endl;
-        COREDUMP
+	cerr << "Unable to allocate Array2d of size " << surface << endl;
+	COREDUMP
       }
 #endif
 
@@ -238,7 +267,7 @@ protected:
 #ifdef DEBUG
     if (x < 0 || x >= size(0) || y < 0 || y >= size(1)) {
       cerr << "Array2d out of range: " << x << " " << y << " / " << size(0)
-           << " " << size(1) << endl;
+	   << " " << size(1) << endl;
       COREDUMP
       return buf[0];
     } else
@@ -246,7 +275,7 @@ protected:
       return buf[y * size(0) + x];
   }
 
-public:
+ public:
   Array2d(void) { init(iVector2d(0, 0)); }
   Array2d(const iVector2d &new_size) { init(new_size); }
   Array2d(int new_size_x, int new_size_y) {
@@ -273,13 +302,13 @@ public:
   const T &operator()(iVector2d i) const { return access(i(0), i(1)); }
   const T &operator()(int x, int y) const { return access(x, y); }
   /*  void copy(const Array2d<T> &a) {
-                  resize(a.getSize());
-                  Array2dIterator i(a.getSize());
-                  while (i) {
-                  (*this)(i)=a(i);
-                  i++;
-                  }
-                  } */
+		  resize(a.getSize());
+		  Array2dIterator i(a.getSize());
+		  while (i) {
+		  (*this)(i)=a(i);
+		  i++;
+		  }
+		  } */
   void resize(iVector2d new_size) {
     if (new_size != size) {
       delete[] buf;
@@ -292,20 +321,20 @@ public:
   T *get_buf(void) { return buf; }
   const T *get_buf_c(void) const { return buf; }
   /*
-           operator T* () {
-           return buf;
-           }
-           operator const T* () const {
-           return buf;
-           }
-           */
+	   operator T* () {
+	   return buf;
+	   }
+	   operator const T* () const {
+	   return buf;
+	   }
+	   */
 };
 
 class Array2dIterator {
   iVector2d i;
   iVector2d size;
 
-public:
+ public:
   Array2dIterator(iVector2d _size) { init(_size); }
   void init(iVector2d _size) {
     i = iVector2d(0, 0);
@@ -318,8 +347,8 @@ public:
       i(0) = 0;
       i(1)++;
       if (i(1) == size(1)) {
-        // i(1)=0;
-        return 0;
+	// i(1)=0;
+	return 0;
       }
     }
     return 1;
@@ -330,8 +359,8 @@ public:
       i(0) = 0;
       i(1) += step(1);
       if (i(1) >= size(1)) {
-        // i(1)=0;
-        return 0;
+	// i(1)=0;
+	return 0;
       }
     }
     return 1;
@@ -346,7 +375,8 @@ public:
   int eol(void) { return (i(0) == (size(0) - 1)); }
 };
 
-template <class T> void zero_array(Array2d<T> *a) {
+template <class T>
+void zero_array(Array2d<T> *a) {
   Array2dIterator i(a->getSize());
   while (i) {
     (*a)(i) = (T)0;
@@ -354,7 +384,8 @@ template <class T> void zero_array(Array2d<T> *a) {
   }
 }
 
-template <class T> void identity_matrix(Array2d<T> *a) {
+template <class T>
+void identity_matrix(Array2d<T> *a) {
   zero_array(a);
   int d = (a->getSize())(0);
   for (int i = 0; i < d; i++) {
@@ -362,7 +393,8 @@ template <class T> void identity_matrix(Array2d<T> *a) {
   }
 }
 
-template <class T> ostream &operator<<(ostream &s, const Array<T> &a) {
+template <class T>
+ostream &operator<<(ostream &s, const Array<T> &a) {
   s << a.get_size() << endl;
   for (int i = 0; i < a.get_size(); i++) {
     s << a(i) << endl;
@@ -370,7 +402,8 @@ template <class T> ostream &operator<<(ostream &s, const Array<T> &a) {
   return s;
 }
 
-template <class T> istream &operator>>(istream &s, Array<T> &a) {
+template <class T>
+istream &operator>>(istream &s, Array<T> &a) {
   int size = 0;
   s >> size;
   a.resize(size);
@@ -380,7 +413,8 @@ template <class T> istream &operator>>(istream &s, Array<T> &a) {
   return s;
 }
 
-template <class T> ostream &operator<<(ostream &s, const Array2d<T> &a) {
+template <class T>
+ostream &operator<<(ostream &s, const Array2d<T> &a) {
   iVector2d size = a.get_size();
   s << size << endl;
   for (int i = 0; i < size(0); i++) {
@@ -392,7 +426,8 @@ template <class T> ostream &operator<<(ostream &s, const Array2d<T> &a) {
   return s;
 }
 
-template <class T> istream &operator>>(istream &s, Array2d<T> &a) {
+template <class T>
+istream &operator>>(istream &s, Array2d<T> &a) {
   iVector2d size(0, 0);
   s >> size;
   a.resize(size);
@@ -404,7 +439,8 @@ template <class T> istream &operator>>(istream &s, Array2d<T> &a) {
   return s;
 }
 
-template <class T> int find_value(const Array<T> &a, const T &x) {
+template <class T>
+int find_value(const Array<T> &a, const T &x) {
   int minj = -1;
   Real mind = MAXFLOAT;
   for (int j = 0; j < a.get_size(); j++) {
@@ -417,25 +453,26 @@ template <class T> int find_value(const Array<T> &a, const T &x) {
   return minj;
 }
 
-template <class T> inline T max(const Array<T> &a) {
+template <class T>
+inline T max(const Array<T> &a) {
   T m = a(0);
   for (int i = 1; i < a.get_size(); i++) {
-    if (a(i) > m)
-      m = a(i);
+    if (a(i) > m) m = a(i);
   }
   return m;
 }
 
-template <class T> inline T min(const Array<T> &a) {
+template <class T>
+inline T min(const Array<T> &a) {
   T m = a(0);
   for (int i = 1; i < a.get_size(); i++) {
-    if (a(i) < m)
-      m = a(i);
+    if (a(i) < m) m = a(i);
   }
   return m;
 }
 
-template <class T> inline int index_max(const Array<T> &a) {
+template <class T>
+inline int index_max(const Array<T> &a) {
   T m = a(0);
   int idx = 0;
   for (int i = 1; i < a.get_size(); i++) {
@@ -447,7 +484,8 @@ template <class T> inline int index_max(const Array<T> &a) {
   return idx;
 }
 
-template <class T> inline int index_min(const Array<T> &a) {
+template <class T>
+inline int index_min(const Array<T> &a) {
   T m = a(0);
   int idx = 0;
   for (int i = 1; i < a.get_size(); i++) {
@@ -459,33 +497,35 @@ template <class T> inline int index_min(const Array<T> &a) {
   return idx;
 }
 
-template <class T> int is_in_array(const Array<T> &a, const T &x) {
+template <class T>
+int is_in_array(const Array<T> &a, const T &x) {
   for (int i = 0; i < a.get_size(); i++) {
-    if (x == a(i))
-      return 1;
+    if (x == a(i)) return 1;
   }
   return 0;
 }
 
-template <class T> int index_in_array(const Array<T> &a, const T &x) {
+template <class T>
+int index_in_array(const Array<T> &a, const T &x) {
   for (int i = 0; i < a.get_size(); i++) {
-    if ((T)x == (T)(a(i)))
-      return i;
+    if ((T)x == (T)(a(i))) return i;
   }
   return -1;
 }
 
-template <class T> void sort_array(Array<T> *a) {
+template <class T>
+void sort_array(Array<T> *a) {
   for (int i = 0; i < a->get_size() - 1; i++) {
     for (int j = i; j < a->get_size() - 1; j++) {
       if ((*a)(j) > (*a)(j + 1)) {
-        swap(&(*a)(j), &(*a)(j + 1));
+	swap(&(*a)(j), &(*a)(j + 1));
       }
     }
   }
 }
 
-template <class T> void resize(Array<Array<T>> *a, int n1, int n2) {
+template <class T>
+void resize(Array<Array<T>> *a, int n1, int n2) {
   a->resize(n1);
   for (int i1 = 0; i1 < n1; i1++) {
     (*a)(i1).resize(n2);
@@ -494,19 +534,19 @@ template <class T> void resize(Array<Array<T>> *a, int n1, int n2) {
 
 template <class T>
 void ArrayArray_to_Array2d(Array2d<T> *pa2d, const Array<Array<T>> &a,
-                           int permute) {
+			   int permute) {
   if (permute) {
     pa2d->resize(a(0).get_size(), a.get_size());
     for (int i = 0; i < pa2d->get_size()(0); i++) {
       for (int j = 0; j < pa2d->get_size()(1); j++) {
-        (*pa2d)(j, i) = a(i)(j);
+	(*pa2d)(j, i) = a(i)(j);
       }
     }
   } else {
     pa2d->resize(a.get_size(), a(0).get_size());
     for (int i = 0; i < pa2d->get_size()(0); i++) {
       for (int j = 0; j < pa2d->get_size()(1); j++) {
-        (*pa2d)(i, j) = a(i)(j);
+	(*pa2d)(i, j) = a(i)(j);
       }
     }
   }
@@ -517,8 +557,9 @@ typedef Array<int> Arrayint;
 typedef Array<Arrayint> ArrayArrayint;
 typedef Array<ArrayReal> ArrayArrayReal;
 
-template <class T> class ArrayFunctionArray {
-public:
+template <class T>
+class ArrayFunctionArray {
+ public:
   virtual void eval(Array<T> *py, const Array<T> &x) {}
   virtual int read(istream &file) { return 0; }
 };
@@ -544,7 +585,7 @@ void convert_matrix(Array2d<T> *pa, const FixedMatrix<T, D> &m) {
 
 template <class T>
 void extract_columns(Array2d<T> *pa, const Array2d<T> &b,
-                     const Array<int> &cols, int nb_cols = -1) {
+		     const Array<int> &cols, int nb_cols = -1) {
   if (nb_cols == -1) {
     nb_cols = cols.get_size();
   }
@@ -552,7 +593,7 @@ void extract_columns(Array2d<T> *pa, const Array2d<T> &b,
   for (int i = 0; i < nb_cols; i++) {
     if (cols(i) >= 0) {
       for (int j = 0; j < b.get_size()(0); j++) {
-        (*pa)(j, i) = b(j, cols(i));
+	(*pa)(j, i) = b(j, cols(i));
       }
     }
   }
@@ -566,7 +607,8 @@ void extract_column(Array<T> *pa, const Array2d<T> &b, int col) {
   }
 }
 
-template <class T> void set_column(Array2d<T> *pa, const Array<T> &b, int col) {
+template <class T>
+void set_column(Array2d<T> *pa, const Array<T> &b, int col) {
   for (int i = 0; i < b.get_size(); i++) {
     (*pa)(i, col) = b(i);
   }
@@ -580,7 +622,8 @@ void extract_row(Array<T> *pa, const Array2d<T> &b, int row) {
   }
 }
 
-template <class T> void set_row(Array2d<T> *pa, const Array<T> &b, int row) {
+template <class T>
+void set_row(Array2d<T> *pa, const Array<T> &b, int row) {
   for (int i = 0; i < b.get_size(); i++) {
     (*pa)(row, i) = b(i);
   }
@@ -588,7 +631,7 @@ template <class T> void set_row(Array2d<T> *pa, const Array<T> &b, int row) {
 
 template <class T>
 void extract_elements(Array<T> *pa, const Array<T> &b, const Array<int> &cols,
-                      int nb_cols = -1) {
+		      int nb_cols = -1) {
   if (nb_cols == -1) {
     nb_cols = cols.get_size();
   }
@@ -612,7 +655,7 @@ void extract_elements(Array<T> *pa, const Array<T> &b, int first, int lastp1) {
 
 template <class T>
 void extract_elements(Array<T> *pa, int first_dest, const Array<T> &b,
-                      int first, int lastp1) {
+		      int first, int lastp1) {
   int i = first_dest;
   for (int j = first; j < lastp1; j++) {
     (*pa)(i) = b(j);
