@@ -165,6 +165,16 @@ int main(int argc, char *argv[]) {
 		 cvmdata->cvminfo.disordered_fe.begin(),
 		 std::back_inserter(correction), std::minus<double>());
 
+  Array<double> sroparams;
+
+#ifdef USE_GSL
+  Array<double> initvalues({0.5, -0.5, 0.1});
+  Array<double> ys = correction;
+  Array<double> xs = cvmdata->cvminfo.temperature;
+  sroparams = curve_fit(sroCorrectionFunction, initvalues, xs, ys);
+#endif
+
+#ifdef USE_PYTHON
   py::scoped_interpreter guard{};
 
   py::module np = py::module::import("numpy");
@@ -178,6 +188,8 @@ int main(int argc, char *argv[]) {
   py::object curvefit = scipy.attr("curve_fit");
 
   py::tuple retval = curvefit(pytarget, pyxs, pyys);
+  sroparams = retval.begin()->cast<std::vector<double>>();
+#endif
   std::ofstream fsroparams("sro_params.out");
-  fsroparams << (Array<double>)(retval.begin()->cast<std::vector<double>>());
+  fsroparams << sroparams;
 }
