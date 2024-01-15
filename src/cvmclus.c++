@@ -1,11 +1,14 @@
 #include <ifopt/ipopt_solver.h>
 #include <ifopt/problem.h>
+
+#if defined(USE_PYTHON)
 #include <pybind11/embed.h>
 #include <pybind11/functional.h>
 #include <pybind11/gil.h>
 #include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>  // mandatory for myPyObject.cast<std::vector<T>>()
+#endif
 
 #include <algorithm>
 #include <fstream>
@@ -17,7 +20,9 @@
 #include "CVMLogger.h"
 #include "CVMModel.h"
 #include "getvalue.h"
+#if defined(USE_GSL)
 #include "gslcurvefit.h"
+#endif
 #include "parse.h"
 #include "thermofunctions.h"
 #include "version.h"
@@ -26,7 +31,10 @@ extern const char *helpstring;
 using namespace ifopt;
 typedef Problem CVMModel;
 typedef std::vector<std::pair<VectorXd, double>> IterMapType;
+
+#ifdef USE_PYTHON
 namespace py = pybind11;
+#endif
 
 double mygaussian(double x, double a, double b, double c) {
   const double z = (x - b) / c;

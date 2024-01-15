@@ -22,30 +22,37 @@ SET(FETCHCONTENT_QUIET FALSE)
 
 FIND_PACKAGE(Git REQUIRED)
 
-FIND_PACKAGE(GSL REQUIRED)
-
-FIND_PACKAGE(PythonLibs REQUIRED)
-FIND_PACKAGE(Python COMPONENTS Interpreter Development)
-INCLUDE_DIRECTORIES(${PYTHON_INCLUDE_DIRS})
-FIND_PROGRAM(PYTHON "python")
-
-IF(PYTHON)
- SET(SETUP_PY_IN "${PROJECT_SOURCE_DIR}/python/setup.py")
- SET(SETUP_PY    "${CMAKE_CURRENT_BINARY_DIR}/setup.py")
- SET(DEPS        "${PROJECT_SOURCE_DIR}/python/__init__.py")
- SET(OUTPUT      "${CMAKE_BINARY_DIR}")
-
- CONFIGURE_FILE(${SETUP_PY_IN} ${SETUP_PY})
-
- ADD_CUSTOM_COMMAND(OUTPUT ${OUTPUT}
-	 COMMAND ${PYTHON}
-	 ARGS setup.py
-	 build DEPENDS ${DEPS})
-
- EXECUTE_PROCESS(COMMAND ${PYTHON} ${SETUP_PY} install)
+OPTION(USEGSL "Build with Python" OFF)
+IF(USEGSL)
+	ADD_DEFINITIONS(-DUSE_GSL)
+	FIND_PACKAGE(GSL REQUIRED)
 ENDIF()
 
-FIND_PACKAGE(pybind11 CONFIG REQUIRED)
+OPTION(USEPYTHON "Build with Python" OFF)
+IF(USEPYTHON)
+	ADD_DEFINITIONS(-DUSE_PYTHON)
+	FIND_PACKAGE(PythonLibs REQUIRED)
+	FIND_PACKAGE(Python COMPONENTS Interpreter Development)
+	INCLUDE_DIRECTORIES(${PYTHON_INCLUDE_DIRS})
+	FIND_PROGRAM(PYTHON "python")
+
+	IF(PYTHON)
+		SET(SETUP_PY_IN "${PROJECT_SOURCE_DIR}/python/setup.py")
+		SET(SETUP_PY    "${CMAKE_CURRENT_BINARY_DIR}/setup.py")
+		SET(DEPS        "${PROJECT_SOURCE_DIR}/python/__init__.py")
+		SET(OUTPUT      "${CMAKE_BINARY_DIR}")
+		
+		CONFIGURE_FILE(${SETUP_PY_IN} ${SETUP_PY})
+		ADD_CUSTOM_COMMAND(OUTPUT ${OUTPUT}
+			COMMAND ${PYTHON}
+			ARGS setup.py
+			build DEPENDS ${DEPS})
+
+		EXECUTE_PROCESS(COMMAND ${PYTHON} ${SETUP_PY} install)
+	ENDIF()
+
+	FIND_PACKAGE(pybind11 CONFIG REQUIRED)
+ENDIF()
 
 FIND_PACKAGE(Eigen3 NO_MODULE)
 IF(${Eigen3_FOUND})
@@ -102,11 +109,12 @@ ADD_LIBRARY(linearops SHARED
 	${PROJECT_SOURCE_DIR}/src/lstsqr.c++
 	)
 
-ADD_LIBRARY(curvefit SHARED
-	${PROJECT_SOURCE_DIR}/src/gslcurvefit.c++
-	${PROJECT_SOURCE_DIR}/src/thermofunctions.c++
-	)
-TARGET_LINK_LIBRARIES(curvefit PUBLIC GSL::gsl GSL::gslcblas)
+IF(USEGSL)
+	ADD_LIBRARY(gslcurvefit SHARED
+		${PROJECT_SOURCE_DIR}/src/gslcurvefit.c++
+		${PROJECT_SOURCE_DIR}/src/thermofunctions.c++
+		)
+	TARGET_LINK_LIBRARIES(gslcurvefit PUBLIC GSL::gsl GSL::gslcblas)
 
 ADD_LIBRARY(cvm SHARED
 	${PROJECT_SOURCE_DIR}/src/CVMDataHolder.c++
@@ -121,7 +129,8 @@ TARGET_LINK_LIBRARIES(cvm PUBLIC
 	calccorr
 	linearops
 	clus_str
-	curvefit)
+	gslcurvefit)
+ENDIF()
 
 ADD_LIBRARY(parseops SHARED
 	${PROJECT_SOURCE_DIR}/src/stringo.c++
@@ -157,8 +166,7 @@ ADD_LIBRARY(eci SHARED ${PROJECT_SOURCE_DIR}/src/teci.c++
 
 ADD_LIBRARY(drawpd SHARED ${PROJECT_SOURCE_DIR}/src/drawpd.c++)
 ADD_LIBRARY(mclib SHARED ${PROJECT_SOURCE_DIR}/src/mclib.c++)
-ADD_LIBRARY(fft SHARED ${PROJECT_SOURCE_DIR}/src/anyfft.c++
-	${PROJECT_SOURCE_DIR}/src/fftn.c++)
+ADD_LIBRARY(fft SHARED ${PROJECT_SOURCE_DIR}/src/anyfft.c++ ${PROJECT_SOURCE_DIR}/src/fftn.c++)
 
 ADD_LIBRARY(kspacees SHARED ${PROJECT_SOURCE_DIR}/src/kspacees.c++)
 
@@ -169,15 +177,11 @@ ADD_LIBRARY(pred SHARED
 	)
 
 ADD_EXECUTABLE(cvmclus ${PROJECT_SOURCE_DIR}/src/cvmclus.c++)
-TARGET_LINK_LIBRARIES(cvmclus PUBLIC 
-	cvmclushelp
-	ifopt_core
-	ifopt_ipopt
-	parseops
-	xtalutil
-	pybind11::embed
-	cvm
-	)
+SET(CVMCLUSLIBS cvmclushelp ifopt_core ifopt_ipopt parseops xtalutil cvm)
+IF(USEPYTHON)
+	LIST(APPEND CVMCLUSLIBS pybind11::embed)
+ENDIF()
+TARGET_LINK_LIBRARIES(cvmclus PUBLIC ${CVMCLUSLIBS})
 
 ADD_EXECUTABLE(corrdump ${PROJECT_SOURCE_DIR}/src/corrdump.c++)
 TARGET_LINK_LIBRARIES(corrdump PUBLIC
