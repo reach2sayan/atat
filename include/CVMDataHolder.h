@@ -13,8 +13,8 @@
 
 using VectorXd = Eigen::Matrix<double, Eigen::Dynamic, 1>;
 using MatrixXd = Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>;
-constexpr double evperatom_kJpermole = 96.4915666370759;
-enum UnitType { EVPERATOM, KJPERMOLE };
+constexpr double evperatom_Jpermole = 96491.5666370759;
+enum UnitType { EVPERATOM, JPERMOLE };
 
 template <class T>
 T sum(const Array<T> &a) {

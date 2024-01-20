@@ -49,7 +49,7 @@ int main(int argc, char *argv[]) {
   int dohelp = 0;
   int dummy = 0;
   double Tmin = 100.0;
-  double Tmax = 1000.0;
+  double Tmax = 3000.0;
   double Tinc = 100.0;
   int nlocal = 10;
   int verbosity = 5;
@@ -176,7 +176,8 @@ int main(int argc, char *argv[]) {
   Array<double> sroparams;
 
 #ifdef USE_GSL
-  Array<double> initvalues({0.5, -0.5, 0.1});
+  double guess = -cvmdata->cvminfo.ordered_fe.front();
+  Array<double> initvalues({guess, guess, guess});
   Array<double> ys = correction;
   Array<double> xs = cvmdata->cvminfo.temperature;
   sroparams = curve_fit(sroCorrectionFunction, initvalues, xs, ys);

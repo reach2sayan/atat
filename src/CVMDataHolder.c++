@@ -35,8 +35,8 @@ double CVMOptimizerDataHolder::GetConvFactor(const UnitType type) const {
     case EVPERATOM:
       retval = 1. / lat.atom_pos.get_size();
       break;
-    case KJPERMOLE:
-      retval = evperatom_kJpermole / lat.atom_pos.get_size();
+    case JPERMOLE:
+      retval = evperatom_Jpermole / lat.atom_pos.get_size();
       break;
   }
   return retval;
@@ -510,7 +510,7 @@ CVMOptimizerDataHolder::CVMOptimizerDataHolder(const string &maxclusfilename,
   cvminfo.disordered_correlation = VectorXd::Zero(multicluslist.get_size());
   cvminfo.ordered_correlation = VectorXd::Zero(multicluslist.get_size());
 
-  UNITTYPE = KJPERMOLE;
+  UNITTYPE = JPERMOLE;
 }
 
 void CVMOptimizerDataHolder::get_structure_from_file(
