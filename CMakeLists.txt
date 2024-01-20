@@ -22,7 +22,7 @@ SET(FETCHCONTENT_QUIET FALSE)
 
 FIND_PACKAGE(Git REQUIRED)
 
-OPTION(USEGSL "Build with Python" OFF)
+OPTION(USEGSL "Build with GSL" OFF)
 IF(USEGSL)
 	ADD_DEFINITIONS(-DUSE_GSL)
 	FIND_PACKAGE(GSL REQUIRED)
@@ -93,6 +93,7 @@ INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/include ${ifopt_SOURCE_DIR}
 
 
 ADD_LIBRARY(cvmclushelp SHARED ${PROJECT_SOURCE_DIR}/src/cvmclushelp.c++)
+ADD_LIBRARY(cvhelp SHARED ${PROJECT_SOURCE_DIR}/src/cvhelp.c++)
 ADD_LIBRARY(corrdumphelp SHARED ${PROJECT_SOURCE_DIR}/src/corrdumphelp.c++)
 ADD_LIBRARY(mcsqshelp SHARED ${PROJECT_SOURCE_DIR}/src/mcsqshelp.c++)
 ADD_LIBRARY(gensqshelp SHARED ${PROJECT_SOURCE_DIR}/src/gensqshelp.c++)
@@ -101,7 +102,14 @@ ADD_LIBRARY(phbhelp SHARED	${PROJECT_SOURCE_DIR}/src/phbhelp.c++)
 ADD_LIBRARY(apbhelp SHARED	${PROJECT_SOURCE_DIR}/src/apbhelp.c++)
 ADD_LIBRARY(mmapshelp SHARED ${PROJECT_SOURCE_DIR}/src/mmapshelp.c++)
 ADD_LIBRARY(emc2help SHARED ${PROJECT_SOURCE_DIR}/src/emc2help.c++)
+ADD_LIBRARY(memc2help SHARED ${PROJECT_SOURCE_DIR}/src/memc2help.c++)
 ADD_LIBRARY(gcehelp SHARED ${PROJECT_SOURCE_DIR}/src/gcehelp.c++)
+ADD_LIBRARY(fitsvslhelp SHARED ${PROJECT_SOURCE_DIR}/src/fitsvslhelp.c++)
+ADD_LIBRARY(svslhelp SHARED ${PROJECT_SOURCE_DIR}/src/svslhelp.c++)
+ADD_LIBRARY(fitfchelp SHARED ${PROJECT_SOURCE_DIR}/src/fitfchelp.c++)
+ADD_LIBRARY(felechelp SHARED ${PROJECT_SOURCE_DIR}/src/felechelp.c++)
+ADD_LIBRARY(fempmaghelp SHARED ${PROJECT_SOURCE_DIR}/src/fempmaghelp.c++)
+ADD_LIBRARY(predcshelp SHARED ${PROJECT_SOURCE_DIR}/src/predcshelp.c++)
 
 ADD_LIBRARY(linearops SHARED
 	${PROJECT_SOURCE_DIR}/src/linalg.c++
@@ -166,9 +174,18 @@ ADD_LIBRARY(eci SHARED ${PROJECT_SOURCE_DIR}/src/teci.c++
 
 ADD_LIBRARY(drawpd SHARED ${PROJECT_SOURCE_DIR}/src/drawpd.c++)
 ADD_LIBRARY(mclib SHARED ${PROJECT_SOURCE_DIR}/src/mclib.c++)
+ADD_LIBRARY(mmclib SHARED ${PROJECT_SOURCE_DIR}/src/mmclib.c++)
+ADD_LIBRARY(calcmf SHARED ${PROJECT_SOURCE_DIR}/src/calcmf.c++)
+ADD_LIBRARY(equil SHARED ${PROJECT_SOURCE_DIR}/src/equil.c++)
 ADD_LIBRARY(fft SHARED ${PROJECT_SOURCE_DIR}/src/anyfft.c++ ${PROJECT_SOURCE_DIR}/src/fftn.c++)
 
 ADD_LIBRARY(kspacees SHARED ${PROJECT_SOURCE_DIR}/src/kspacees.c++)
+ADD_LIBRARY(morsepot SHARED ${PROJECT_SOURCE_DIR}/src/morsepot.c++
+	${PROJECT_SOURCE_DIR}/src/morsepotc3.c++)
+TARGET_LINK_LIBRARIES(morsepot PUBLIC linearops)
+ADD_LIBRARY(kspacecs SHARED ${PROJECT_SOURCE_DIR}/src/kspacecs.c++)
+ADD_LIBRARY(tlambda SHARED ${PROJECT_SOURCE_DIR}/src/tlambda.c++)
+ADD_LIBRARY(ridge SHARED ${PROJECT_SOURCE_DIR}/src/ridge.c++)
 
 ADD_LIBRARY(pred SHARED
 	${PROJECT_SOURCE_DIR}/src/predcs.c++
@@ -182,6 +199,44 @@ IF(USEPYTHON)
 	LIST(APPEND CVMCLUSLIBS pybind11::embed)
 ENDIF()
 TARGET_LINK_LIBRARIES(cvmclus PUBLIC ${CVMCLUSLIBS})
+
+ADD_EXECUTABLE(fitsvsl ${PROJECT_SOURCE_DIR}/src/fitsvsl.c++)
+TARGET_LINK_LIBRARIES(fitsvsl PUBLIC
+	fitsvslhelp
+	xtalutil
+	linearops
+	findsym
+	parseops
+	clus_str
+	lattype
+	gceutil
+	calccorr
+	)
+
+ADD_EXECUTABLE(svsl ${PROJECT_SOURCE_DIR}/src/svsl.c++)
+TARGET_LINK_LIBRARIES(svsl PUBLIC
+	morsepot
+	svslhelp
+	xtalutil
+	linearops
+	parseops
+	calccorr
+	findsym
+	clus_str
+	gceutil
+	)
+
+
+ADD_EXECUTABLE(fitfc ${PROJECT_SOURCE_DIR}/src/fitfc.c++)
+TARGET_LINK_LIBRARIES(fitfc PUBLIC
+	fitfchelp
+	xtalutil
+	linearops
+	parseops
+	gceutil
+	findsym
+	lattype
+	)
 
 ADD_EXECUTABLE(corrdump ${PROJECT_SOURCE_DIR}/src/corrdump.c++)
 TARGET_LINK_LIBRARIES(corrdump PUBLIC
@@ -232,6 +287,9 @@ TARGET_LINK_LIBRARIES(maps PUBLIC
 	calccorr
 	refine
 	mpiinterf
+	pred
+	tlambda
+	ridge
 	)
 
 ADD_EXECUTABLE(mmaps ${PROJECT_SOURCE_DIR}/src/mmaps.c++)
@@ -254,6 +312,9 @@ TARGET_LINK_LIBRARIES(mmaps PUBLIC
 ADD_EXECUTABLE(checkcell ${PROJECT_SOURCE_DIR}/src/checkcell.c++)
 TARGET_LINK_LIBRARIES(checkcell PUBLIC parseops xtalutil)
 
+ADD_EXECUTABLE(analrelax ${PROJECT_SOURCE_DIR}/src/analrelax.c++)
+TARGET_LINK_LIBRARIES(analrelax PUBLIC parseops xtalutil linearops)
+
 ADD_EXECUTABLE(fixcell ${PROJECT_SOURCE_DIR}/src/fixcell.c++)
 TARGET_LINK_LIBRARIES(fixcell PUBLIC parseops xtalutil lattype)
 
@@ -262,6 +323,9 @@ TARGET_LINK_LIBRARIES(nntouch PUBLIC parseops xtalutil)
 
 ADD_EXECUTABLE(cellcvrt ${PROJECT_SOURCE_DIR}/src/nntouch.c++)
 TARGET_LINK_LIBRARIES(cellcvrt PUBLIC parseops xtalutil lattype findsym)
+
+ADD_EXECUTABLE(csfit ${PROJECT_SOURCE_DIR}/src/csfit.c++)
+TARGET_LINK_LIBRARIES(csfit PUBLIC predcshelp parseops xtalutil linearops)
 
 ADD_EXECUTABLE(calces ${PROJECT_SOURCE_DIR}/src/calces.c++)
 TARGET_LINK_LIBRARIES(calces PUBLIC parseops xtalutil)
@@ -272,6 +336,8 @@ TARGET_LINK_LIBRARIES(apb PUBLIC apbhelp parseops xtalutil)
 ADD_EXECUTABLE(plotcurv ${PROJECT_SOURCE_DIR}/src/plotcurv.c++)
 TARGET_LINK_LIBRARIES(plotcurv PUBLIC linearops parseops xtalutil)
 
+ADD_EXECUTABLE(cv ${PROJECT_SOURCE_DIR}/src/cv.c++)
+TARGET_LINK_LIBRARIES(cv PUBLIC cvhelp xtalutil linearops parseops)
 
 ADD_EXECUTABLE(emc2 ${PROJECT_SOURCE_DIR}/src/emc2.c++)
 TARGET_LINK_LIBRARIES(emc2 PUBLIC
@@ -290,11 +356,69 @@ TARGET_LINK_LIBRARIES(emc2 PUBLIC
 	kspacees
 	)
 
+ADD_EXECUTABLE(memc2 ${PROJECT_SOURCE_DIR}/src/memc2.c++)
+TARGET_LINK_LIBRARIES(memc2 PUBLIC
+	memc2help
+	parseops
+	linearops
+	equil
+	eci
+	drawpd
+	clus_str
+	gceutil
+	chull
+	calcmf
+	fft
+	calccorr
+	findsym
+	mmclib
+	xtalutil
+	)
+
+
+ADD_EXECUTABLE(phb ${PROJECT_SOURCE_DIR}/src/phb.c++)
+TARGET_LINK_LIBRARIES(phb PUBLIC
+	phbhelp
+	parseops
+	linearops
+	kspacees
+	calccorr
+	xtalutil
+	drawpd
+	fft
+	eci
+	mclib
+	findsym
+	clus_str
+	)
+
+ADD_EXECUTABLE(kmesh ${PROJECT_SOURCE_DIR}/src/kmesh.c++)
+TARGET_LINK_LIBRARIES(kmesh PUBLIC
+	findsym
+	parseops
+	xtalutil
+	)
+
 ADD_LIBRARY(gceutil SHARED ${PROJECT_SOURCE_DIR}/src/gceutil.c++
 	${PROJECT_SOURCE_DIR}/src/tensorsym.c++
 	${PROJECT_SOURCE_DIR}/src/phonlib.c++
 	${PROJECT_SOURCE_DIR}/src/multipoly.c++
 	)
+
+#
+#ADD_EXECUTABLE(skelread ${PROJECT_SOURCE_DIR}/src/skelread.c++)
+#TARGET_LINK_LIBRARIES(skelread PUBLIC
+#	parseops
+#	xtalutil
+#	findsym
+#	calccorr
+#	clus_str
+#	linearops
+#	)
+#
+
+ADD_EXECUTABLE(skelreadstr ${PROJECT_SOURCE_DIR}/src/skelreadstr.c++)
+TARGET_LINK_LIBRARIES(skelreadstr PUBLIC xtalutil parseops)
 
 ADD_EXECUTABLE(viewgce ${PROJECT_SOURCE_DIR}/src/viewgce.c++)
 TARGET_LINK_LIBRARIES(viewgce PUBLIC
@@ -327,6 +451,21 @@ TARGET_LINK_LIBRARIES(gencs PUBLIC
 	findsym
 	gceutil
 	)
+
+ADD_EXECUTABLE(nnshell ${PROJECT_SOURCE_DIR}/src/nnshell.c++)
+TARGET_LINK_LIBRARIES(nnshell PUBLIC xtalutil parseops)
+
+ADD_EXECUTABLE(pdef ${PROJECT_SOURCE_DIR}/src/pdef.c++)
+TARGET_LINK_LIBRARIES(pdef PUBLIC xtalutil findsym linearops parseops lattype)
+
+ADD_EXECUTABLE(felec ${PROJECT_SOURCE_DIR}/src/felec.c++)
+TARGET_LINK_LIBRARIES(felec PUBLIC felechelp xtalutil parseops)
+
+ADD_EXECUTABLE(fmag ${PROJECT_SOURCE_DIR}/src/fmag.c++)
+TARGET_LINK_LIBRARIES(fmag PUBLIC xtalutil parseops)
+
+ADD_EXECUTABLE(fempmag ${PROJECT_SOURCE_DIR}/src/fempmag.c++)
+TARGET_LINK_LIBRARIES(fempmag PUBLIC fempmaghelp xtalutil parseops)
 
 ENABLE_TESTING()
 
