@@ -16,6 +16,10 @@ SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 SET(CMAKE_PYTHON_DIRECTORY ${PROJECT_SOURCE_DIR}/python)
 
+FIND_PACKAGE(OpenGL REQUIRED)
+FIND_PACKAGE(GLUT REQUIRED)
+INCLUDE_DIRECTORIES( ${OPENGL_INCLUDE_DIRS}  ${GLUT_INCLUDE_DIRS} )
+
 
 INCLUDE(FetchContent)
 SET(FETCHCONTENT_QUIET FALSE)
@@ -110,6 +114,9 @@ ADD_LIBRARY(fitfchelp SHARED ${PROJECT_SOURCE_DIR}/src/fitfchelp.c++)
 ADD_LIBRARY(felechelp SHARED ${PROJECT_SOURCE_DIR}/src/felechelp.c++)
 ADD_LIBRARY(fempmaghelp SHARED ${PROJECT_SOURCE_DIR}/src/fempmaghelp.c++)
 ADD_LIBRARY(predcshelp SHARED ${PROJECT_SOURCE_DIR}/src/predcshelp.c++)
+ADD_LIBRARY(infdethelp SHARED ${PROJECT_SOURCE_DIR}/src/infdethelp.c++)
+ADD_LIBRARY(mindisthelp SHARED ${PROJECT_SOURCE_DIR}/src/mindisthelp.c++)
+ADD_LIBRARY(epichelp SHARED ${PROJECT_SOURCE_DIR}/src/epichelp.c++)
 
 ADD_LIBRARY(linearops SHARED
 	${PROJECT_SOURCE_DIR}/src/linalg.c++
@@ -147,9 +154,16 @@ ADD_LIBRARY(parseops SHARED
 	${PROJECT_SOURCE_DIR}/src/getvalue.c++
 	)
 
+ADD_LIBRARY(strinterf SHARED ${PROJECT_SOURCE_DIR}/src/strinterf.c++)
+
 ADD_LIBRARY(xtalutil SHARED ${PROJECT_SOURCE_DIR}/src/xtalutil.c++)
 
+ADD_LIBRARY(mesh SHARED ${PROJECT_SOURCE_DIR}/src/meshutil.c++
+	${PROJECT_SOURCE_DIR}/src/meshcalc.c++)
+
 ADD_LIBRARY(findsym SHARED ${PROJECT_SOURCE_DIR}/src/findsym.c++)
+
+ADD_LIBRARY(opti SHARED ${PROJECT_SOURCE_DIR}/src/opti.c++)
 
 ADD_LIBRARY(calccorr SHARED ${PROJECT_SOURCE_DIR}/src/calccorr.c++)
 TARGET_LINK_LIBRARIES(calccorr PUBLIC linearops clus_str)
@@ -173,6 +187,7 @@ ADD_LIBRARY(eci SHARED ${PROJECT_SOURCE_DIR}/src/teci.c++
 	${PROJECT_SOURCE_DIR}/src/keci.c++)
 
 ADD_LIBRARY(drawpd SHARED ${PROJECT_SOURCE_DIR}/src/drawpd.c++)
+ADD_LIBRARY(normal SHARED ${PROJECT_SOURCE_DIR}/src/normal.c++)
 ADD_LIBRARY(mclib SHARED ${PROJECT_SOURCE_DIR}/src/mclib.c++)
 ADD_LIBRARY(mmclib SHARED ${PROJECT_SOURCE_DIR}/src/mmclib.c++)
 ADD_LIBRARY(calcmf SHARED ${PROJECT_SOURCE_DIR}/src/calcmf.c++)
@@ -432,6 +447,36 @@ TARGET_LINK_LIBRARIES(viewgce PUBLIC
 	clus_str
 	)
 
+ADD_EXECUTABLE(calcelas ${PROJECT_SOURCE_DIR}/src/calcelas.c++)
+TARGET_LINK_LIBRARIES(calcelas PUBLIC
+	xtalutil
+	linearops
+	findsym
+	parseops
+	gceutil
+	)
+
+ADD_EXECUTABLE(strainder ${PROJECT_SOURCE_DIR}/src/strainder.c++)
+TARGET_LINK_LIBRARIES(strainder PUBLIC
+	xtalutil
+	linearops
+	findsym
+	parseops
+	gceutil
+	)
+
+ADD_EXECUTABLE(loctst ${PROJECT_SOURCE_DIR}/src/loctst.c++)
+TARGET_LINK_LIBRARIES(loctst PUBLIC xtalutil parseops)
+
+ADD_EXECUTABLE(iwulff ${PROJECT_SOURCE_DIR}/src/iwulff.c++)
+TARGET_LINK_LIBRARIES(iwulff PUBLIC xtalutil parseops)
+
+#ADD_EXECUTABLE(clusover ${PROJECT_SOURCE_DIR}/src/clusover.c++)
+#TARGET_LINK_LIBRARIES(clusover PUBLIC parseops linearops)
+
+ADD_EXECUTABLE(tryclus ${PROJECT_SOURCE_DIR}/src/tryclus.c++)
+TARGET_LINK_LIBRARIES(tryclus PUBLIC xtalutil parseops)
+
 ADD_EXECUTABLE(gce ${PROJECT_SOURCE_DIR}/src/gce.c++)
 TARGET_LINK_LIBRARIES(gce PUBLIC
 	gcehelp
@@ -452,6 +497,12 @@ TARGET_LINK_LIBRARIES(gencs PUBLIC
 	gceutil
 	)
 
+ADD_EXECUTABLE(csl ${PROJECT_SOURCE_DIR}/src/csl.c++)
+TARGET_LINK_LIBRARIES(csl PUBLIC xtalutil parseops findsym)
+
+ADD_EXECUTABLE(testatat ${PROJECT_SOURCE_DIR}/src/test.c++)
+TARGET_LINK_LIBRARIES(testatat PUBLIC linearops parseops chull xtalutil)
+
 ADD_EXECUTABLE(nnshell ${PROJECT_SOURCE_DIR}/src/nnshell.c++)
 TARGET_LINK_LIBRARIES(nnshell PUBLIC xtalutil parseops)
 
@@ -466,6 +517,88 @@ TARGET_LINK_LIBRARIES(fmag PUBLIC xtalutil parseops)
 
 ADD_EXECUTABLE(fempmag ${PROJECT_SOURCE_DIR}/src/fempmag.c++)
 TARGET_LINK_LIBRARIES(fempmag PUBLIC fempmaghelp xtalutil parseops)
+
+ADD_EXECUTABLE(cna ${PROJECT_SOURCE_DIR}/src/cna.c++)
+TARGET_LINK_LIBRARIES(cna PUBLIC xtalutil parseops)
+
+ADD_EXECUTABLE(cmpstr ${PROJECT_SOURCE_DIR}/src/cmpstr.c++)
+TARGET_LINK_LIBRARIES(cmpstr PUBLIC xtalutil parseops)
+
+ADD_EXECUTABLE(ehmass ${PROJECT_SOURCE_DIR}/src/ehmass.c++)
+TARGET_LINK_LIBRARIES(ehmass PUBLIC xtalutil parseops linearops findsym)
+
+ADD_EXECUTABLE(seebeck ${PROJECT_SOURCE_DIR}/src/seebeck.c++)
+TARGET_LINK_LIBRARIES(seebeck PUBLIC xtalutil parseops linearops findsym)
+
+ADD_EXECUTABLE(bgsdqmc ${PROJECT_SOURCE_DIR}/src/bgsdqmc.c++)
+TARGET_LINK_LIBRARIES(bgsdqmc PUBLIC normal)
+
+ADD_EXECUTABLE(vctriv ${PROJECT_SOURCE_DIR}/src/vctriv.c++)
+TARGET_LINK_LIBRARIES(vctriv PUBLIC normal xtalutil parseops)
+
+ADD_EXECUTABLE(hessian ${PROJECT_SOURCE_DIR}/src/hessian.c++)
+TARGET_LINK_LIBRARIES(hessian PUBLIC xtalutil linearops parseops)
+
+ADD_EXECUTABLE(triph ${PROJECT_SOURCE_DIR}/src/triph.c++)
+TARGET_LINK_LIBRARIES(triph PUBLIC xtalutil parseops)
+
+ADD_EXECUTABLE(simplexize ${PROJECT_SOURCE_DIR}/src/simplexize.c++)
+TARGET_LINK_LIBRARIES(simplexize PUBLIC xtalutil linearops parseops mesh)
+
+ADD_EXECUTABLE(mkaxes ${PROJECT_SOURCE_DIR}/src/mkaxes.c++)
+TARGET_LINK_LIBRARIES(mkaxes PUBLIC xtalutil linearops parseops mesh)
+
+ADD_EXECUTABLE(pathint ${PROJECT_SOURCE_DIR}/src/pathint.c++)
+TARGET_LINK_LIBRARIES(pathint PUBLIC xtalutil linearops parseops)
+
+ADD_EXECUTABLE(greadyneb ${PROJECT_SOURCE_DIR}/src/greadyneb.c++)
+TARGET_LINK_LIBRARIES(greadyneb PUBLIC linearops parseops xtalutil)
+
+ADD_EXECUTABLE(mpitest ${PROJECT_SOURCE_DIR}/src/mpitest.c++)
+TARGET_LINK_LIBRARIES(mpitest PUBLIC parseops xtalutil mpiinterf)
+
+ADD_EXECUTABLE(equivclus ${PROJECT_SOURCE_DIR}/src/equivclus.c++)
+TARGET_LINK_LIBRARIES(equivclus PUBLIC parseops findsym xtalutil)
+
+ADD_EXECUTABLE(3d2gnu ${PROJECT_SOURCE_DIR}/src/3d2gnu.c++)
+TARGET_LINK_LIBRARIES(3d2gnu PUBLIC xtalutil linearops parseops mesh)
+
+ADD_EXECUTABLE(infdet ${PROJECT_SOURCE_DIR}/src/infdet.c++)
+TARGET_LINK_LIBRARIES(infdet PUBLIC 
+	infdethelp
+	xtalutil
+	linearops
+	parseops
+	opti
+	strinterf
+	)
+
+ADD_EXECUTABLE(mindist ${PROJECT_SOURCE_DIR}/src/mindist.c++)
+TARGET_LINK_LIBRARIES(mindist PUBLIC 
+	mindisthelp
+	xtalutil
+	parseops
+	)
+
+ADD_EXECUTABLE(epic ${PROJECT_SOURCE_DIR}/src/epic.c++)
+TARGET_LINK_LIBRARIES(epic PUBLIC 
+	epichelp
+	strinterf
+	opti
+	parseops
+	xtalutil
+	linearops
+	)
+
+ADD_EXECUTABLE(ndviewer ${PROJECT_SOURCE_DIR}/src/ndviewer.c++)
+TARGET_LINK_LIBRARIES(ndviewer PUBLIC 
+	parseops
+	mesh
+	linearops
+	xtalutil
+	${OPENGL_LIBRARIES}
+	${GLUT_LIBRARY}
+	)
 
 ENABLE_TESTING()
 
