@@ -183,7 +183,7 @@ int main(int argc, char *argv[]) {
   sroparams = curve_fit(sroCorrectionFunction, initvalues, xs, ys);
 #endif
 
-#ifdef USE_PYTHON
+#ifdef USE_PYTHON && !USE_GSL
   py::scoped_interpreter guard{};
 
   py::module np = py::module::import("numpy");
