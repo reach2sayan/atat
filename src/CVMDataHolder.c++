@@ -5,6 +5,12 @@
 #include "CVMLogger.h"
 #include "parse.h"
 
+#if defined(USE_PYTHON)
+#include <pybind11/eigen.h>
+#include <pybind11/pybind11.h>
+namespace py = pybind11;
+#endif
+
 ostream &operator<<(ostream &s, const MultiCluster &multiclus) {
   s << multiclus.clus.get_size() << endl;
   for (int i = 0; i < multiclus.clus.get_size(); i++) {
@@ -591,3 +597,14 @@ VectorXd CVMOptimizerDataHolder::GetDisorderedCorrelation() const {
   corrs(0) = 1.;
   return corrs;
 }
+
+#if defined(USE_PYTHON)
+PYBIND11_MODULE(pycvm, handle) {
+  py::class_<CVMOptimizerDataHolder>(handle, "cvmdata")
+      .def(py::init<const string &, const string &, const string &,
+		    const string &>())
+  // .def("getVMatrix", &CVMOptimizerDataHolder::get_vmatrix)
+  // .def("get_mults_eci", &CVMOptimizerDataHolder::get_mults_eci);
+}
+#endif
+

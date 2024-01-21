@@ -138,5 +138,4 @@ class CVMOptimizerDataHolder {
 
   UnitType UNITTYPE;
 };
-
 #endif	// __CVMDATAHOLDER_HPP__
