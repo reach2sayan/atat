@@ -99,6 +99,15 @@ INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/include ${ifopt_SOURCE_DIR}
 	${ifopt_BUILD_DIR})
 
 
+file(GLOB CPP_LIST "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp")
+
+ADD_LIBRARY(itertools INTERFACE)
+TARGET_INCLUDE_DIRECTORIES(itertools INTERFACE
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/itertools>
+	$<INSTALL_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/lib>)
+ADD_EXECUTABLE(itertools-example ${PROJECT_SOURCE_DIR}/src/itertoolstest.c++)
+target_link_libraries(itertools-example itertools)
+
 ADD_LIBRARY(cvmclushelp SHARED ${PROJECT_SOURCE_DIR}/src/cvmclushelp.c++)
 ADD_LIBRARY(cvhelp SHARED ${PROJECT_SOURCE_DIR}/src/cvhelp.c++)
 ADD_LIBRARY(corrdumphelp SHARED ${PROJECT_SOURCE_DIR}/src/corrdumphelp.c++)
