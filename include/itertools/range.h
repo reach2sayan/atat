@@ -15,36 +15,36 @@ template <typename T>
 constexpr Range<T> range(T, T, T) noexcept;
 
 template <typename T, bool IsFloat = std::is_floating_point<T>::value>
-class RangeIterData;
+class RangeIteratorData;
 
 // everything except floats
 template <typename T>
-class RangeIterData<T, false> {
+class RangeIteratorData<T, false> {
  private:
   T _value{};
   T _step{};
 
  public:
-  constexpr RangeIterData() noexcept = default;
-  constexpr RangeIterData(T value, T step) noexcept
+  constexpr RangeIteratorData() noexcept = default;
+  constexpr RangeIteratorData(T value, T step) noexcept
       : _value{value}, _step{step} {}
 
   constexpr T value() const noexcept { return _value; }
   constexpr T step() const noexcept { return _step; }
 
-  void inc() noexcept { _value += _step; }
+  void operator++() noexcept { _value += _step; }
 
-  constexpr bool operator==(const RangeIterData& other) const noexcept {
+  constexpr bool operator==(const RangeIteratorData& other) const noexcept {
     return _value == other._value;
   }
-  constexpr bool operator!=(const RangeIterData& other) const noexcept {
+  constexpr bool operator!=(const RangeIteratorData& other) const noexcept {
     return !(*this == other);
   }
 };
 
 // float data
 template <typename T>
-class RangeIterData<T, true> {
+class RangeIteratorData<T, true> {
  private:
   T _start{};
   T _value{};
@@ -52,27 +52,27 @@ class RangeIterData<T, true> {
   std::size_t _steps_taken{};
 
  public:
-  constexpr RangeIterData() noexcept = default;
-  constexpr RangeIterData(T start, T step) noexcept
+  constexpr RangeIteratorData() noexcept = default;
+  constexpr RangeIteratorData(T start, T step) noexcept
       : _start{start}, _value{start}, _step{step} {}
 
   constexpr T value() const noexcept { return _value; }
 
   constexpr T step() const noexcept { return _step; }
 
-  void inc() noexcept {
+  void operator++() noexcept {
     ++_steps_taken;
     _value = _start + (_step * _steps_taken);
   }
 
-  constexpr bool operator==(const RangeIterData& other) const noexcept {
+  constexpr bool operator==(const RangeIteratorData& other) const noexcept {
     // if the difference between the two values is less than the
     // step_ size, they are considered equal
     return (_value < other._value ? other._value - _value
 				  : _value - other._value) < _step;
   }
 
-  constexpr bool operator!=(const RangeIterData& other) const noexcept {
+  constexpr bool operator!=(const RangeIteratorData& other) const noexcept {
     return !(*this == other);
   }
 };
@@ -115,18 +115,18 @@ class itertools::Range {
   constexpr T stop() const noexcept { return _stop; }
   constexpr T step() const noexcept { return _step; }
   constexpr T operator[](std::size_t index) const noexcept {
-    return start() + (step() * index);
+    return _start + (_step * index);
   }
 
   constexpr std::size_t size() const noexcept {
     static_assert(!std::is_floating_point_v<T>,
 		  "range size() not supperted with floating point types");
-    if (!is_within_range(start(), stop(), step())) {
+    if (!is_within_range(_start, _stop, _step)) {
       return 0;
     }
 
-    auto diff = stop() - start();
-    auto res = diff / step();
+    auto diff = _stop - _start;
+    auto res = (_stop - _start) / _step;
     assert(res >= 0);
     auto result = static_cast<std::size_t>(res);
     if (diff % step()) {
@@ -139,24 +139,24 @@ class itertools::Range {
   // of the rules, but std::vector<bool>::iterator::reference isn't
   // a reference type either, this isn't any worse
 
-  class Iterator {
+  class RangeIterator {
    private:
-    itertools::RangeIterData<T> data;
-    bool is_end{};
+    itertools::RangeIteratorData<T> data;
+    bool _is_end{};
 
     // first argument must be regular iterator
     // second argument must be end iterator
-    static bool not_equal_to_impl(const Iterator& lhs,
-				  const Iterator& rhs) noexcept {
-      assert(!lhs.is_end);
-      assert(rhs.is_end);
+    static bool not_equal_to_impl(const RangeIterator& lhs,
+				  const RangeIterator& rhs) noexcept {
+      assert(!lhs._is_end);
+      assert(rhs._is_end);
       return is_within_range(lhs.data.value(), rhs.data.value(),
 			     lhs.data.step());
     }
 
-    static bool not_equal_to_end(const Iterator& lhs,
-				 const Iterator& rhs) noexcept {
-      if (rhs.is_end) {
+    static bool not_equal_to_end(const RangeIterator& lhs,
+				 const RangeIterator& rhs) noexcept {
+      if (rhs._is_end) {
 	return not_equal_to_impl(lhs, rhs);
       }
       return not_equal_to_impl(rhs, lhs);
@@ -169,23 +169,23 @@ class itertools::Range {
     using pointer = value_type*;
     using reference = value_type;
 
-    constexpr Iterator() noexcept = default;
+    constexpr RangeIterator() noexcept = default;
 
-    constexpr Iterator(T in_value, T in_step, bool in_is_end) noexcept
-	: data(in_value, in_step), is_end{in_is_end} {}
+    constexpr RangeIterator(T value, T step, bool is_end) noexcept
+	: data(value, step), _is_end{is_end} {}
 
     constexpr T operator*() const noexcept { return data.value(); }
 
     constexpr ArrowProxy<T> operator->() const noexcept { return {**this}; }
 
-    Iterator& operator++() noexcept {
-      data.inc();
+    RangeIterator& operator++() noexcept {
+      data.operator++();
       return *this;
     }
 
-    Iterator operator++(int) noexcept {
+    RangeIterator operator++(int) noexcept {
       auto ret = *this;
-      ++*this;
+      ++(*this);
       return ret;
     }
     // This operator would more accurately read as "in bounds"
@@ -209,40 +209,42 @@ class itertools::Range {
     // Two end iterators will compare equal
     //
     // Two non-end iterators will compare by their stored values
-    bool operator!=(const Iterator& other) const noexcept {
-      if (is_end && other.is_end) {
+    bool operator!=(const RangeIterator& other) const noexcept {
+      if (_is_end && other._is_end) {
 	return false;
       }
 
-      if (!is_end && !other.is_end) {
+      if (!_is_end && !other._is_end) {
 	return data != other.data;
       }
       return not_equal_to_end(*this, other);
     }
 
-    bool operator==(const Iterator& other) const noexcept {
+    bool operator==(const RangeIterator& other) const noexcept {
       return !(*this != other);
     }
   };
 
-  constexpr Iterator begin() const noexcept { return {_start, _step, false}; }
-  constexpr Iterator end() const noexcept { return {_stop, _step, true}; }
+  constexpr RangeIterator begin() const noexcept {
+    return {_start, _step, false};
+  }
+  constexpr RangeIterator end() const noexcept { return {_stop, _step, true}; }
 };
 
 template <typename T>
-constexpr itertools::Range<T> itertools::range(T stop_) noexcept {
-  return {stop_};
+constexpr itertools::Range<T> itertools::range(T stop) noexcept {
+  return {stop};
 }
 
 template <typename T>
-constexpr itertools::Range<T> itertools::range(T start_, T stop_) noexcept {
-  return {start_, stop_};
+constexpr itertools::Range<T> itertools::range(T start, T stop) noexcept {
+  return {start, stop};
 }
 
 template <typename T>
-constexpr itertools::Range<T> itertools::range(T start_, T stop_,
-					       T step_) noexcept {
-  return step_ == T(0) ? Range<T>{0} : Range<T>{start_, stop_, step_};
+constexpr itertools::Range<T> itertools::range(T start, T stop,
+					       T step) noexcept {
+  return step == T(0) ? Range<T>{0} : Range<T>{start, stop, step};
 }
 #endif	//__ITERTOOLS_RANGE_HPP__
 

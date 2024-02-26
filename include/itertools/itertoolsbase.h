@@ -31,7 +31,7 @@ I begin_impl(T& r, long) {
 }
 
 template <typename T>
-auto begin(T& t) -> decltype(get_begin_impl(std::declval<T&>(), 42)) {
+auto begin(T& t) -> decltype(begin_impl(std::declval<T&>(), 42)) {
   return begin_impl(t, 42);
 }
 
@@ -54,7 +54,7 @@ I end_impl(T& r, long) {
 }
 
 template <typename T>
-auto end(T& t) -> decltype(get_end_impl(std::declval<T&>(), 42)) {
+auto end(T& t) -> decltype(end_impl(std::declval<T&>(), 42)) {
   return end_impl(t, 42);
 }
 
@@ -151,12 +151,12 @@ template <typename T>
 class ArrowProxy {
  private:
   using TPlain = typename std::remove_reference<T>::type;
-  T obj;
+  T _obj;
 
  public:
-  constexpr ArrowProxy(T&& in_obj) : obj(std::forward<T>(in_obj)) {}
+  constexpr ArrowProxy(T&& obj) : _obj(std::forward<T>(obj)) {}
 
-  TPlain* operator->() { return &obj; }
+  TPlain* operator->() { return &_obj; }
 };
 
 template <typename, typename = void>
@@ -302,6 +302,156 @@ class DerefHolder<T&> {
   void reset(reference item) { pItem = &item; }
 
   explicit operator bool() const { return pItem != nullptr; }
+};
+
+// Pipeable Callable generator, where IteratorImpl is templated on the first
+// argument to the call.
+template <template <typename> class IteratorImpl>
+struct IterToolFn {
+  template <typename T, typename... Ts>
+  IteratorImpl<T> operator()(T&& t, Ts... ts) const {
+    return {std::forward<T>(t), std::move(ts)...};
+  }
+};
+
+template <typename F>
+struct BindFirst {
+ protected:
+  template <typename T>
+  struct FnPartial {
+    mutable T stored_arg;
+    constexpr FnPartial(T in_t) : stored_arg(in_t) {}
+
+    template <typename Container>
+    auto operator()(Container&& container) const {
+      return F{}(stored_arg, std::forward<Container>(container));
+    }
+  };
+
+ public:
+  template <typename T, typename = std::enable_if_t<!is_iterable<T>>>
+  FnPartial<std::decay_t<T>> operator()(T&& t) const {
+    return {std::forward<T>(t)};
+  }
+};
+
+template <typename F, typename DefaultT>
+struct BindOptionalSecond {
+ protected:
+  template <typename T>
+  struct FnPartial {
+    mutable T stored_arg;
+    constexpr FnPartial(T in_t) : stored_arg(in_t) {}
+
+    template <typename Container>
+    auto operator()(Container&& container) const {
+      return F{}(std::forward<Container>(container), stored_arg);
+    }
+  };
+
+ public:
+  template <typename T, typename = std::enable_if_t<!is_iterable<T>>>
+  FnPartial<std::decay_t<T>> operator()(T&& t) const {
+    return {std::forward<T>(t)};
+  }
+
+  template <typename Container,
+	    typename = std::enable_if_t<is_iterable<Container>>>
+  auto operator()(Container&& container) const {
+    return static_cast<const F&>(*this)(std::forward<Container>(container),
+					DefaultT{});
+  }
+};
+
+// This is a complicated class to generate a callable that can work:
+//  (1) with just a single (iterable) passed, and DefaultT substituted
+//  (2) with an iterable and a callable
+//  (3) with just a callable, to have the iterable passed later via pipe
+template <template <typename, typename> class IteratorImpl, typename DefaultT>
+struct IterToolFnOptionalBindFirst
+    : BindFirst<IterToolFnOptionalBindFirst<IteratorImpl, DefaultT>> {
+ private:
+  using Base = BindFirst<IterToolFnOptionalBindFirst<IteratorImpl, DefaultT>>;
+
+ protected:
+  template <typename Container>
+  auto operator()(Container&& container, std::false_type) const {
+    return static_cast<const Base&>(*this)(std::forward<Container>(container));
+  }
+  template <typename Container>
+  auto operator()(Container&& container, std::true_type) const {
+    return (*this)(DefaultT{}, std::forward<Container>(container));
+  }
+
+ public:
+  template <typename T>
+  auto operator()(T&& t) const {
+    return (*this)(std::forward<T>(t), IsIterable<T>{});
+  }
+  template <typename T, typename Container,
+	    typename = std::enable_if_t<is_iterable<Container>>>
+  IteratorImpl<T, Container> operator()(T func, Container&& container) const {
+    return {std::move(func), std::forward<Container>(container)};
+  }
+};
+
+template <template <typename, typename> class IteratorImpl, typename DefaultT>
+struct IterToolFnOptionalBindSecond {
+ private:
+  // T is whatever is being held for later use
+  template <typename T>
+  struct FnPartial {
+    mutable T stored_arg;
+    constexpr FnPartial(T in_t) : stored_arg(in_t) {}
+
+    template <typename Container>
+    auto operator()(Container&& container) const {
+      return IterToolFnOptionalBindSecond{}(std::forward<Container>(container),
+					    stored_arg);
+    }
+  };
+
+ public:
+  template <typename Container, typename T>
+  IteratorImpl<Container, T> operator()(Container&& container, T func) const {
+    return {std::forward<Container>(container), std::move(func)};
+  }
+
+  template <typename T, typename = std::enable_if_t<!is_iterable<T>>>
+  FnPartial<std::decay_t<T>> operator()(T&& func) const {
+    return {std::forward<T>(func)};
+  }
+
+  template <typename Container,
+	    typename = std::enable_if_t<is_iterable<Container>>>
+  auto operator()(Container&& container) const {
+    return (*this)(std::forward<Container>(container), DefaultT{});
+  }
+};
+
+template <template <typename> class IteratorImpl>
+struct IterToolFnBindSizeTSecond {  // NOTE not pipeable
+ private:
+  using Size = std::size_t;
+  struct FnPartial {
+    Size sz{};
+    constexpr FnPartial(Size in_sz) : sz{in_sz} {}
+
+    template <typename Container>
+    auto operator()(Container&& container) const {
+      return IterToolFnBindSizeTSecond{}(std::forward<Container>(container),
+					 sz);
+    }
+  };
+
+ public:
+  FnPartial operator()(Size sz) const { return {sz}; }
+
+  template <typename Container,
+	    typename = std::enable_if_t<is_iterable<Container>>>
+  IteratorImpl<Container> operator()(Container&& container, Size sz) const {
+    return {std::forward<Container>(container), sz};
+  }
 };
 
 }  // namespace itertools
