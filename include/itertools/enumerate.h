@@ -21,7 +21,7 @@ template <typename Container, typename Index>
 class Enumerable;
 
 template <typename Container>
-constexpr decltype(auto) enumerate = [](Container&& container) {
+constexpr auto enumerate = [](Container&& container) {
   return Enumerable<Container, std::size_t>(std::forward<Container>(container));
 };
 
@@ -44,6 +44,7 @@ class ATATIteratorTools::Enumerable {
   Container container_;
   const Index start_;
 
+ protected:
   // private Value constructor
   Enumerable(Container&& container, Index start)
       : container_(std::forward<Container>(container)), start_{start} {}
