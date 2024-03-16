@@ -602,7 +602,7 @@ VectorXd CVMOptimizerDataHolder::GetDisorderedCorrelation() const {
 PYBIND11_MODULE(pycvm, handle) {
   py::class_<CVMOptimizerDataHolder>(handle, "cvmdata")
       .def(py::init<const string &, const string &, const string &,
-		    const string &>())
+		    const string &>());
   // .def("getVMatrix", &CVMOptimizerDataHolder::get_vmatrix)
   // .def("get_mults_eci", &CVMOptimizerDataHolder::get_mults_eci);
 }
