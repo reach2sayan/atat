@@ -41,12 +41,12 @@ auto end(T& t) -> decltype(end_impl(std::declval<T&>(), 42)) {
 }  // namespace fancy_getters
 
 template <typename T>
-using make_const_t = std::add_const_t<decltype(std::declval<T&>())>;
+using make_const_t = decltype(std::as_const(std::declval<T&>()));
 
 // iterator_t<C> and const_iterator_t<C> is the type of C and const C' iterators
 // respectively
-template <typename T>
-using iterator_t = decltype(fancy_getters::begin(std::declval<T&>()));
+template <typename Container>
+using iterator_t = decltype(fancy_getters::begin(std::declval<Container&>()));
 
 template <typename Container>
 using const_iterator_t = decltype(fancy_getters::begin(
@@ -76,14 +76,46 @@ template <typename Container>
 using iterator_end_t = decltype(fancy_getters::end(std::declval<Container&>()));
 
 template <typename T, typename = void>
-struct is_iterable_type : std::false_type {};
+struct is_iterable_t : std::false_type {};
 
 // if the type works with begin(), it is an iterable
 template <typename T>
-struct is_iterable_type<T, std::void_t<iterator_t<T>>> : std::true_type {};
+struct is_iterable_t<T, std::void_t<iterator_t<T>>> : std::true_type {};
 
 template <typename T>
-constexpr bool is_iterable_t = is_iterable_type<T>::value;
+constexpr bool is_iterable_v = is_iterable_t<T>::value;
+
+template <typename, typename = void>
+struct is_iterator_t : std::false_type {};
+
+template <typename T>
+struct is_iterator_t<
+    T,
+    std::void_t<
+	decltype(T(std::declval<const T&>())),			  // copyctor
+	decltype(std::declval<T&>() = std::declval<const T&>()),  // copy =
+	decltype(*std::declval<T&>()),				  // operator*
+	decltype(std::declval<T&>().operator->()),		  // operator->
+	decltype(++std::declval<T&>()),				  // prefix ++
+	decltype(std::declval<T&>()++),				  // postfix ++
+	decltype(std::declval<const T&>() != std::declval<const T&>()),	 //  !=
+	decltype(std::declval<const T&>() == std::declval<const T&>())	 //  ==
+	>> : std::true_type {};
+
+template <typename T>
+constexpr bool is_iterator_v = is_iterator_t<T>::value;
+
+template <typename T>
+struct is_forward_iterator_type
+    : std::integral_constant<bool, is_iterator_v<T> &&
+				       std::is_default_constructible_v<T>> {};
+
+template <typename T>
+struct is_move_constructible_only
+    : std::integral_constant<bool, !std::is_copy_constructible_v<T> &&
+				       !std::is_copy_assignable_v<T> &&
+				       !std::is_move_assignable_v<T> &&
+				       std::is_move_constructible_v<T>> {};
 
 template <typename... Ts>
 struct are_same : std::true_type {};
@@ -132,8 +164,11 @@ arrow_t<T> apply_arrow(T& t) {
 template <typename T>
 class ArrowProxy {
  public:
+  // can't be explicit since returning an initializer list where a object is
+  // expected is equivalent copy-assignment which can't use the copy ctor if
+  // explicit
   template <typename I>
-  constexpr explicit ArrowProxy(I&& obj) : obj(std::forward<I>(obj)) {}
+  constexpr /*explicit*/ ArrowProxy(I&& obj) : obj(std::forward<I>(obj)) {}
   std::remove_reference_t<T>* operator->() { return &obj; }
 
  private:
@@ -199,8 +234,7 @@ class DerefDataHolder {
   // it could still be an rvalue reference
   using TType = std::remove_reference_t<T>;
 
-  std::optional<TType>
-      data;  // hold the real-data, could be nullptr so std::optional
+  TType data;  // hold the real-data, could be nullptr so std::optional
 
  public:
   using reference = TType&;
@@ -211,7 +245,7 @@ class DerefDataHolder {
   DerefDataHolder() = default;
 
   reference operator*() const {
-    assert(data.has_value());
+    assert(data);
     return *data;
   }
 
@@ -220,8 +254,8 @@ class DerefDataHolder {
     return &data.value();
   }
 
-  void reset(T&& item) { data.emplace(std::move(item)); }
-  explicit operator bool() const { return static_cast<bool>(data); }
+  void reset(T&& item) { data(std::move(item)); }
+  // explicit operator bool() const { return static_cast<bool>(data); }
 };
 
 // Specialization for when T is an lvalue ref
@@ -282,6 +316,102 @@ class Not {
   template <typename T>
   bool operator()(const T& item) const {
     return !bool(std::invoke(predFn, item));
+  }
+};
+
+// Pipeable Callable generator, where ItImpl is templated on the first
+// argument to the call.
+template <template <typename> class ItImpl>
+struct IteratorToolFnAdapter {
+  template <typename T, typename... Ts>
+  ItImpl<T> operator()(T&& t, Ts... ts) const {
+    return {std::forward<T>(t), std::move(ts)...};
+  }
+};
+
+template <template <typename, typename> class ItImpl, typename DefaultT>
+struct IterToolFnOptionalBindSecond {
+ private:
+  // T is whatever is being held for later use
+  template <typename T>
+  struct FnPartial {
+    mutable T stored_arg;
+    constexpr FnPartial(T in_t) : stored_arg(in_t) {}
+
+    template <typename Container>
+    auto operator()(Container&& container) const {
+      return IterToolFnOptionalBindSecond{}(std::forward<Container>(container),
+					    stored_arg);
+    }
+  };
+
+ public:
+  template <typename Container, typename T>
+  ItImpl<Container, T> operator()(Container&& container, T func) const {
+    return {std::forward<Container>(container), std::move(func)};
+  }
+
+  template <typename T, typename = std::enable_if_t<!is_iterable_v<T>>>
+  FnPartial<std::decay_t<T>> operator()(T&& func) const {
+    return {std::forward<T>(func)};
+  }
+
+  template <typename Container,
+	    typename = std::enable_if_t<is_iterable_v<Container>>>
+  auto operator()(Container&& container) const {
+    return (*this)(std::forward<Container>(container), DefaultT{});
+  }
+};
+
+template <typename F>
+struct PipeableAndBindFirst {
+ protected:
+  template <typename T>
+  struct FnPartial {
+    mutable T stored_arg;
+    constexpr FnPartial(T in_t) : stored_arg(in_t) {}
+
+    template <typename Container>
+    auto operator()(Container&& container) const {
+      return F{}(stored_arg, std::forward<Container>(container));
+    }
+  };
+
+ public:
+  template <typename T, typename = std::enable_if_t<!is_iterable_v<T>>>
+  FnPartial<std::decay_t<T>> operator()(T&& t) const {
+    return {std::forward<T>(t)};
+  }
+};
+
+template <template <typename, typename> class ItImpl, typename DefaultT>
+struct IterToolFnOptionalBindFirst
+    : PipeableAndBindFirst<IterToolFnOptionalBindFirst<ItImpl, DefaultT>> {
+ private:
+  using Base =
+      PipeableAndBindFirst<IterToolFnOptionalBindFirst<ItImpl, DefaultT>>;
+
+ protected:
+  template <typename Container>
+  auto operator()(Container&& container, std::false_type) const {
+    return static_cast<const Base&>(*this)(std::forward<Container>(container));
+  }
+
+  template <typename Container>
+  auto operator()(Container&& container, std::true_type) const {
+    return (*this)(DefaultT{}, std::forward<Container>(container));
+  }
+
+ public:
+  template <typename T>
+  auto operator()(T&& t) const {
+    return (*this)(std::forward<T>(t), is_iterable_t<T>{});
+  }
+
+  template <typename T, typename Container,
+	    typename = std::enable_if_t<is_iterable_v<Container>>>
+  ItImpl<T, Container> operator()(T func, Container&& container) const {
+    return {std::move(func), std::forward<Container>(container)};
   }
 };
 

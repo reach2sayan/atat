@@ -31,7 +31,7 @@ class RangeDataHolder<T, false> {
   constexpr T value() const noexcept { return _value; }
   constexpr T step() const noexcept { return _step; }
 
-  void inc() noexcept { _value += _step; }
+  void operator++() noexcept { _value += _step; }
 
   constexpr bool operator==(const RangeDataHolder& other) const noexcept {
     return _value == other.value();
@@ -55,8 +55,8 @@ class RangeDataHolder<T, true> {
   constexpr RangeDataHolder(T sta, T ste) noexcept
       : _start{sta}, _value{sta}, _step{ste} {}
 
-  constexpr T value() const noexcept { return value; }
-  constexpr T step() const noexcept { return step; }
+  constexpr T value() const noexcept { return _value; }
+  constexpr T step() const noexcept { return _step; }
 
   void operator++() noexcept {
     ++_steps_taken;
@@ -124,7 +124,7 @@ class ATATIteratorTools::Range {
     if (!is_within_range(_start, _stop, _step)) return 0;
 
     auto res = (_stop - _start) / _step;
-    HASSERT(res >= 0);
+    assert(res >= 0);
     auto result = static_cast<std::size_t>(res);
     if ((_stop - _start) % _step) ++result;
 

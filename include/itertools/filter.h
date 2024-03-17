@@ -18,16 +18,11 @@ struct Boolean {
   }
 };
 
-template <typename Container, typename Predicate>
-constexpr auto filter = [](Container&& container, Predicate&& predFn,
-			   bool filter_false = false) {
-  if (filter_false == false)
-    return Filtered<Container, Predicate>(std::forward<Container>(container),
-					  std::forward<Predicate>(predFn));
-  else
-    return FilteredFalse<Container, Predicate>(
-	std::forward<Container>(container), std::forward<Predicate>(predFn));
-};
+using FilterFn = IterToolFnOptionalBindFirst<Filtered, Boolean>;
+using FilterFalseFn = IterToolFnOptionalBindFirst<FilteredFalse, Boolean>;
+
+constexpr FilterFn filter{};
+constexpr FilterFalseFn filterfalse_impl{};
 
 }  // namespace ATATIteratorTools
 

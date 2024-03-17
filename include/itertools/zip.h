@@ -11,7 +11,7 @@ template <typename TupleType, std::size_t... Is>
 Zipped<TupleType, Is...> zip_impl(TupleType&&, std::index_sequence<Is...>);
 
 template <typename... Containers>
-decltype(auto) zip(Containers&&... containers);
+auto zip(Containers&&... containers);
 }  // namespace ATATIteratorTools
 
 template <typename TupleType, std::size_t... Is>
@@ -107,7 +107,7 @@ ATATIteratorTools::Zipped<TupleType, Is...> ATATIteratorTools::zip_impl(
 }
 
 template <typename... Containers>
-decltype(auto) ATATIteratorTools::zip(Containers&&... containers) {
+auto ATATIteratorTools::zip(Containers&&... containers) {
   return zip_impl(
       std::tuple<Containers...>{std::forward<Containers>(containers)...},
       std::index_sequence_for<Containers...>{});

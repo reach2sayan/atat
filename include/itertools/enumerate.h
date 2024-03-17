@@ -20,10 +20,9 @@ class EnumeratorDataHolder : public std::pair<Index, Elem> {
 template <typename Container, typename Index>
 class Enumerable;
 
-template <typename Container>
-constexpr auto enumerate = [](Container&& container) {
-  return Enumerable<Container, std::size_t>(std::forward<Container>(container));
-};
+// using EnumerateFn = IteratorToolFnAdapter<Enumerable>;
+using EnumerateFn = IterToolFnOptionalBindSecond<Enumerable, std::size_t>;
+constexpr EnumerateFn enumerate{};
 
 }  // namespace ATATIteratorTools
 
@@ -43,6 +42,8 @@ class ATATIteratorTools::Enumerable {
  private:
   Container container_;
   const Index start_;
+
+  friend EnumerateFn;
 
  protected:
   // private Value constructor
