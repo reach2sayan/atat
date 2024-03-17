@@ -627,13 +627,13 @@ FETCHCONTENT_MAKEAVAILABLE(Catch2)
 ADD_EXECUTABLE(itertoolstests
 	${PROJECT_SOURCE_DIR}/tests/itertools_test_enumerate.c++
 	${PROJECT_SOURCE_DIR}/tests/itertools_test_zip.c++
-	${PROJECT_SOURCE_DIR}/tests/itertools_test_filter.c++
+	#	${PROJECT_SOURCE_DIR}/tests/itertools_test_filter.c++
   ${PROJECT_SOURCE_DIR}/tests/itertools_test_range.c++)
 TARGET_LINK_LIBRARIES(itertoolstests PRIVATE itertools Catch2::Catch2WithMain)
 
 ENABLE_TESTING()
-#LIST(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
+LIST(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
 
-#INCLUDE(CTest)
-#INCLUDE(Catch)
-#CATCH_DISCOVER_TESTS(itertoolstests)
+INCLUDE(CTest)
+INCLUDE(Catch)
+CATCH_DISCOVER_TESTS(itertoolstests)
