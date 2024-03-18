@@ -99,8 +99,6 @@ INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/include ${ifopt_SOURCE_DIR}
 	${ifopt_BUILD_DIR})
 
 
-file(GLOB CPP_LIST "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp")
-
 ADD_LIBRARY(itertools INTERFACE)
 TARGET_INCLUDE_DIRECTORIES(itertools INTERFACE
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/itertools>
@@ -627,7 +625,7 @@ FETCHCONTENT_MAKEAVAILABLE(Catch2)
 ADD_EXECUTABLE(itertoolstests
 	${PROJECT_SOURCE_DIR}/tests/itertools_test_enumerate.c++
 	${PROJECT_SOURCE_DIR}/tests/itertools_test_zip.c++
-	#	${PROJECT_SOURCE_DIR}/tests/itertools_test_filter.c++
+	${PROJECT_SOURCE_DIR}/tests/itertools_test_filter.c++
   ${PROJECT_SOURCE_DIR}/tests/itertools_test_range.c++)
 TARGET_LINK_LIBRARIES(itertoolstests PRIVATE itertools Catch2::Catch2WithMain)
 

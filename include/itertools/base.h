@@ -241,21 +241,19 @@ class DerefDataHolder {
   using pointer = TType*;
 
   static constexpr bool stores_value = true;
-
   DerefDataHolder() = default;
 
   reference operator*() const {
     assert(data);
     return *data;
   }
-
   pointer operator->() const {
     assert(data.has_value());
     return &data.value();
   }
 
   void reset(T&& item) { data(std::move(item)); }
-  // explicit operator bool() const { return static_cast<bool>(data); }
+  explicit operator bool() const { return static_cast<bool>(data); }
 };
 
 // Specialization for when T is an lvalue ref
@@ -270,14 +268,12 @@ class DerefDataHolder<T&> {
 
  public:
   static constexpr bool stores_value = false;
-
   DerefDataHolder() = default;
 
   reference operator*() {
     assert(data);
     return *data;
   }
-
   pointer operator->() {
     assert(data);
     return data;
@@ -286,15 +282,6 @@ class DerefDataHolder<T&> {
   void reset(reference _data) { data = &_data; }
   explicit operator bool() const { return data != nullptr; }
 };
-
-template <typename T, typename I>
-struct has_T_return : std::false_type {};
-
-template <typename Ret, typename... Args, typename T>
-struct has_T_return<Ret(Args...), T> : std::is_same<Ret, T> {};
-
-template <typename Ret, typename... Args, typename T>
-struct has_T_return<Ret (*)(Args...), T> : std::is_same<Ret, T> {};
 
 // Makes a new function which inverts the result of the passed function (works
 // only if bool

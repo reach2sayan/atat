@@ -76,6 +76,26 @@ TEST_CASE("zip: Modify sequence through zip", "[zip]") {
   REQUIRE(iv2 == vc2);
 }
 
+TEST_CASE("zip: binds reference when it should", "[zip]") {
+  tt::IterableType<char> bi{'x', 'y', 'z'};
+  it::zip(bi);
+  REQUIRE_FALSE(bi.was_moved_from());
+}
+
+TEST_CASE("zip: moves rvalues", "[zip]") {
+  tt::IterableType<char> bi{'x', 'y', 'z'};
+  it::zip(std::move(bi));
+  REQUIRE(bi.was_moved_from());
+}
+
+TEST_CASE("zip: Can bind ref and move in single zip", "[zip]") {
+  tt::IterableType<char> b1{'x', 'y', 'z'};
+  tt::IterableType<char> b2{'a', 'b'};
+  it::zip(b1, std::move(b2));
+  REQUIRE_FALSE(b1.was_moved_from());
+  REQUIRE(b2.was_moved_from());
+}
+
 TEST_CASE("zip: doesn't move or copy elements of iterable", "[zip]") {
   constexpr tt::MonolithObject<int> arr[] = {{6}, {7}, {8}};
   for (auto&& t : it::zip(arr)) {
