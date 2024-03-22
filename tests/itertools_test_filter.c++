@@ -107,7 +107,6 @@ TEST_CASE("filter: skips null pointers", "[filter]") {
   REQUIRE(v == vc);
 }
 
-/*
 TEST_CASE("filter: binds to lvalues, moves rvales", "[filter]") {
   tt::IterableType<int> bi{1, 2, 3, 4};
 
@@ -131,7 +130,7 @@ TEST_CASE("filter: binds to lvalues, moves rvales", "[filter]") {
     REQUIRE(bi.was_moved_from());
   }
 }
-*/
+
 TEST_CASE("filter: operator->", "[filter]") {
   std::vector<std::string> vs = {"ab", "abc", "abcdef"};
   auto f =

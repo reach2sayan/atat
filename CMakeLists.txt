@@ -624,6 +624,7 @@ FETCHCONTENT_MAKEAVAILABLE(Catch2)
 
 ADD_EXECUTABLE(itertoolstests
 	${PROJECT_SOURCE_DIR}/tests/itertools_test_enumerate.c++
+	${PROJECT_SOURCE_DIR}/tests/testtools_test.c++
 	${PROJECT_SOURCE_DIR}/tests/itertools_test_zip.c++
 	${PROJECT_SOURCE_DIR}/tests/itertools_test_filter.c++
   ${PROJECT_SOURCE_DIR}/tests/itertools_test_range.c++)

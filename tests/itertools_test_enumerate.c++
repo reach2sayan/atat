@@ -163,7 +163,6 @@ TEST_CASE("Works with const iterable", "[enumerate]") {
   REQUIRE(v == vc);
 }
 
-/*
 TEST_CASE("binds reference when it should", "[enumerate]") {
   tt::IterableType<char> bi{'x', 'y', 'z'};
   auto e = it::enumerate(bi);
@@ -178,7 +177,6 @@ TEST_CASE("moves rvalues into enumerable object", "[enumerate]") {
   REQUIRE(bi.was_moved_from());
   (void)e;
 }
-*/
 
 TEST_CASE("Doesn't move or copy elements of iterable", "[enumerate]") {
   constexpr tt::MonolithObject<int> arr[] = {{6}, {7}, {8}};

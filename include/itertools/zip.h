@@ -1,6 +1,10 @@
 #ifndef __ITERATORTOOLS_ZIPPER_HPP__
 #define __ITERATORTOOLS_ZIPPER_HPP__
 
+// This algorithm utilises std::index_sequence to extract out each input
+// container (interpreted as a collection of N-tuple set), the ith container and
+// its associated iterators are obtained through the std::get<index>(tuple)
+
 #include "base.h"
 
 namespace ATATIteratorTools {
@@ -31,11 +35,11 @@ class ATATIteratorTools::Zipped {
   // passed in the actual types of the tuples of iterators and the type for
   // deref they'd need to be known in the function declarations below.
 
-  template <typename TupleTypeT, template <typename> class IteratorTuple,
+  template <typename TupleTypeT, template <typename> class TupleIteratorType,
 	    template <typename> class TupleDeref>
   class Iterator {
    public:
-    IteratorTuple<TupleTypeT> iters_;
+    TupleIteratorType<TupleTypeT> iters_;
 
    public:
     using iterator_category = std::input_iterator_tag;
@@ -44,7 +48,8 @@ class ATATIteratorTools::Zipped {
     using pointer = value_type*;
     using reference = value_type;
 
-    Iterator(IteratorTuple<TupleTypeT>&& iters) : iters_(std::move(iters)) {}
+    Iterator(TupleIteratorType<TupleTypeT>&& iters)
+	: iters_(std::move(iters)) {}
 
     Iterator& operator++() {
       blackhole(++std::get<Is>(iters_)...);
@@ -52,9 +57,8 @@ class ATATIteratorTools::Zipped {
     }
 
     Iterator operator++(int) {
-      auto ret = *this;
-      ++*this;
-      return ret;
+      blackhole(++std::get<Is>(iters_)...);
+      return *this;
     }
 
     template <typename T, template <typename> class IT,
@@ -110,6 +114,6 @@ template <typename... Containers>
 auto ATATIteratorTools::zip(Containers&&... containers) {
   return zip_impl(
       std::tuple<Containers...>{std::forward<Containers>(containers)...},
-      std::index_sequence_for<Containers...>{});
+      std::make_index_sequence<sizeof...(Containers)>{});
 }
 #endif	//__ITERATORTOOLS_ZIPPER_HPP__

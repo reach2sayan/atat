@@ -41,6 +41,7 @@ class IterableType {
   mutable bool was_copied_from_ = false;
 
  public:
+  IterableType() = default;
   IterableType(std::initializer_list<T> il)
       : data{new T[il.size()]}, size{il.size()} {
     std::size_t i = 0;
@@ -52,7 +53,10 @@ class IterableType {
 
   IterableType& operator=(IterableType&&) = delete;
   IterableType& operator=(const IterableType&) = delete;
-#ifdef DEFINE_BASIC_ITERABLE_COPY_CTOR
+
+#ifndef DEFINE_BASIC_ITERABLE_COPY_CTOR
+  IterableType(const IterableType&) = delete;
+#else
   IterableType(const IterableType& other)
       : data{new T[other.size]}, size{other.size} {
     other.was_copied_from_ = true;
@@ -61,8 +65,6 @@ class IterableType {
       *it = *o_it;
     }
   }
-#else
-  IterableType(const IterableType&) = delete;
 #endif
 
   IterableType(IterableType&& other) : data{other.data}, size{other.size} {
@@ -91,17 +93,15 @@ class IterableType {
     U& operator*() { return *this->p; }
   };
 
-  friend IterableType::Iterator<T> begin(IterableType& b) { return {b.data}; }
-  friend IterableType::Iterator<T> end(IterableType& b) {
-    return {b.data + b.size};
-  }
+  IterableType::Iterator<T> begin() { return {data}; }
+  IterableType::Iterator<T> end() { return {data + size}; }
 
 #ifdef DEFINE_BASIC_ITERABLE_CONST_BEGIN_AND_END
-  friend IterableType::Iterator<const T> begin(const IterableType& b) {
+  IterableType::Iterator<const T> begin(const IterableType& b) {
     return {b.data};
   }
 
-  friend IterableType::Iterator<const T> end(const IterableType& b) {
+  IterableType::Iterator<const T> end(const IterableType& b) {
     return {b.data + b.size};
   }
 #endif

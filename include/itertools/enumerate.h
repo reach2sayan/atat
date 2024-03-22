@@ -20,9 +20,7 @@ class EnumeratorDataHolder : public std::pair<Index, Elem> {
 template <typename Container, typename Index>
 class Enumerable;
 
-// using EnumerateFn = IteratorToolFnAdapter<Enumerable>;
-using EnumerateFn = IterToolFnOptionalBindSecond<Enumerable, std::size_t>;
-constexpr EnumerateFn enumerate{};
+constexpr IteratorToolClosureObject<Enumerable> enumerate{};
 
 }  // namespace ATATIteratorTools
 
@@ -43,7 +41,7 @@ class ATATIteratorTools::Enumerable {
   Container container_;
   const Index start_;
 
-  friend EnumerateFn;
+  friend IteratorToolClosureObject<Enumerable>;
 
  protected:
   // private Value constructor

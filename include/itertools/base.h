@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <cassert>
 #include <functional>
+#include <iostream>
 #include <optional>
 #include <tuple>
 #include <type_traits>
@@ -45,8 +46,8 @@ using make_const_t = decltype(std::as_const(std::declval<T&>()));
 
 // iterator_t<C> and const_iterator_t<C> is the type of C and const C' iterators
 // respectively
-template <typename Container>
-using iterator_t = decltype(fancy_getters::begin(std::declval<Container&>()));
+template <typename T>
+using iterator_t = decltype(fancy_getters::begin(std::declval<T&>()));
 
 template <typename Container>
 using const_iterator_t = decltype(fancy_getters::begin(
@@ -306,47 +307,19 @@ class Not {
   }
 };
 
-// Pipeable Callable generator, where ItImpl is templated on the first
-// argument to the call.
-template <template <typename> class ItImpl>
-struct IteratorToolFnAdapter {
-  template <typename T, typename... Ts>
-  ItImpl<T> operator()(T&& t, Ts... ts) const {
-    return {std::forward<T>(t), std::move(ts)...};
-  }
-};
-
-template <template <typename, typename> class ItImpl, typename DefaultT>
-struct IterToolFnOptionalBindSecond {
- private:
-  // T is whatever is being held for later use
-  template <typename T>
-  struct FnPartial {
-    mutable T stored_arg;
-    constexpr FnPartial(T in_t) : stored_arg(in_t) {}
-
-    template <typename Container>
-    auto operator()(Container&& container) const {
-      return IterToolFnOptionalBindSecond{}(std::forward<Container>(container),
-					    stored_arg);
-    }
-  };
-
+template <template <typename, typename> class ItImpl>
+struct IteratorToolClosureObject {
  public:
-  template <typename Container, typename T>
-  ItImpl<Container, T> operator()(Container&& container, T func) const {
+  template <typename Container>
+  ItImpl<Container, std::size_t> operator()(Container&& container,
+					    std::size_t func) const {
     return {std::forward<Container>(container), std::move(func)};
-  }
-
-  template <typename T, typename = std::enable_if_t<!is_iterable_v<T>>>
-  FnPartial<std::decay_t<T>> operator()(T&& func) const {
-    return {std::forward<T>(func)};
   }
 
   template <typename Container,
 	    typename = std::enable_if_t<is_iterable_v<Container>>>
   auto operator()(Container&& container) const {
-    return (*this)(std::forward<Container>(container), DefaultT{});
+    return (*this)(std::forward<Container>(container), std::size_t{});
   }
 };
 
