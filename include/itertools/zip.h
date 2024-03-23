@@ -52,20 +52,21 @@ class ATATIteratorTools::Zipped {
 	: iters_(std::move(iters)) {}
 
     Iterator& operator++() {
+      // the blackhole function essentially ignores the return value
+      // of the operator++(), but it regardless has to expand the parameters
+      // nonetheless, this executes operator++() for the individual iterators
       blackhole(++std::get<Is>(iters_)...);
       return *this;
     }
 
-    Iterator operator++(int) {
-      blackhole(++std::get<Is>(iters_)...);
-      return *this;
-    }
+    Iterator operator++(int) { return operator++(); }
 
+    // funny - usually it's the other way around
     template <typename T, template <typename> class IT,
 	      template <typename> class TD>
     bool operator!=(const Iterator<T, IT, TD>& other) const {
       if constexpr (sizeof...(Is) == 0) {
-	return false;
+	return false;  // empty is equal, hence this construction
       } else {
 	return (... && (std::get<Is>(iters_) != std::get<Is>(other.iters_)));
       }

@@ -1,5 +1,6 @@
 #include <catch2/catch_test_macros.hpp>
 
+#include "array.h"
 #include "base.h"
 #include "enumerate.h"
 #include "testtools.h"

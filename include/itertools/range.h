@@ -105,8 +105,11 @@ class ATATIteratorTools::Range {
     if constexpr (std::is_unsigned<T>{})
       return val < stop_val;
     else
-      return !(step_val > 0 && val >= stop_val) &&
-	     !(step_val < 0 && val <= stop_val);
+      return !(step_val > 0 &&
+	       val >= stop_val)	 // have exceeded stop moving +ve direction
+	     && !(step_val < 0 &&
+		  val <= stop_val);  // have reduced below stop while moving in
+				     // the -ve direction
   }
 
  public:

@@ -6,7 +6,7 @@ PROJECT(ATAT
 	VERSION 1.0
 	LANGUAGES C CXX
 	)
-ADD_COMPILE_OPTIONS(-Wall -Wpedantic)
+ADD_COMPILE_OPTIONS(-Wall -Wpedantic -Wfatal-errors)
 
 SET(CMAKE_CXX_STANDARD 17)
 SET(CMAKE_EXPORT_COMPILE_COMMANDS ON )
@@ -627,6 +627,7 @@ ADD_EXECUTABLE(itertoolstests
 	${PROJECT_SOURCE_DIR}/tests/testtools_test.c++
 	${PROJECT_SOURCE_DIR}/tests/itertools_test_zip.c++
 	${PROJECT_SOURCE_DIR}/tests/itertools_test_filter.c++
+	${PROJECT_SOURCE_DIR}/tests/itertools_test_filterfalse.c++
   ${PROJECT_SOURCE_DIR}/tests/itertools_test_range.c++)
 TARGET_LINK_LIBRARIES(itertoolstests PRIVATE itertools Catch2::Catch2WithMain)
 

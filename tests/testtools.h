@@ -9,7 +9,6 @@ namespace ATATTestTools {
 template <typename T>
 struct reference_t_matches_deref_t
     : std::is_same<typename T::reference, decltype(*std::declval<T&>())> {};
-
 // Can't be momoved, assigned, copied or default constructed
 template <typename T>
 class MonolithObject {

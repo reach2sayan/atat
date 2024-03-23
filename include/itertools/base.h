@@ -126,40 +126,6 @@ struct are_same<T, U, Ts...>
     : std::integral_constant<bool, std::is_same<T, U>::value &&
 				       are_same<T, Ts...>::value> {};
 
-template <typename T, typename = void>
-struct ArrowOperatorType {
-  using type = void;
-  void operator()(T&) const noexcept {}
-};  // if no operator->()
-
-template <typename T>
-struct ArrowOperatorType<T*, void> {
-  using type = T*;
-  constexpr type operator()(T* t) const noexcept { return t; }
-};  // if obj is pointer
-
-template <typename T>
-struct ArrowOperatorType<
-    T, std::void_t<decltype(std::declval<T&>().operator->())>> {
-  using type = decltype(std::declval<T&>().operator->());
-  type operator()(T& t) const { return t.operator->(); }
-};  // if it has a operator->()
-
-template <typename T>
-using arrow_t = typename ArrowOperatorType<T>::type;
-
-// type of C::iterator::operator->
-// void if no such operator
-template <typename Container>
-using iterator_arrow_t = arrow_t<iterator_t<Container>>;
-
-// apply operator-> to an object
-// returns the pointer if
-template <typename T>
-arrow_t<T> apply_arrow(T& t) {
-  return ArrowOperatorType<T>{}(t);
-}
-
 // This is used a return-type object to hold the value which was
 // returned by the iterator operator*()
 template <typename T>
@@ -218,17 +184,17 @@ using const_iterator_deref_tuple =
 // applying a function to a parameter pack but not passing the evaluated
 // results anywhere
 template <typename... Ts>
-inline void blackhole(Ts&&...) {}
+inline constexpr void blackhole(Ts&&...) {}
 
-// DerefDataHolder holds the value gotten from an iterator dereference
-// rather hold a pointer : if dereferences to an lvalue references
-// a copy otherwise : but no worries, it is moved
+// DereferencedDataHolder holds the value gotten from an iterator dereference
+// hold a pointer : if dereferences to an lvalue references
+// own a object : it is moved in to
 // operator*() returns a reference to the held item
 // operator->() returns a pointer to the held item
 // reset() replaces the currently held item with a new one
 
 template <typename T>
-class DerefDataHolder {
+class DereferencedDataHolder {
  private:
   static_assert(!std::is_lvalue_reference<T>::value,
 		"Non-lvalue-ref specialization used for lvalue ref type");
@@ -242,24 +208,24 @@ class DerefDataHolder {
   using pointer = TType*;
 
   static constexpr bool stores_value = true;
-  DerefDataHolder() = default;
+  DereferencedDataHolder() = default;
 
   reference operator*() const {
     assert(data);
     return *data;
   }
   pointer operator->() const {
-    assert(data.has_value());
-    return &data.value();
+    assert(data);
+    return &data;
   }
 
-  void reset(T&& item) { data(std::move(item)); }
+  void set_data(T&& item) { data(std::move(item)); }
   explicit operator bool() const { return static_cast<bool>(data); }
 };
 
 // Specialization for when T is an lvalue ref
 template <typename T>
-class DerefDataHolder<T&> {
+class DereferencedDataHolder<T&> {
  public:
   using reference = T&;
   using pointer = T*;
@@ -269,7 +235,7 @@ class DerefDataHolder<T&> {
 
  public:
   static constexpr bool stores_value = false;
-  DerefDataHolder() = default;
+  DereferencedDataHolder() = default;
 
   reference operator*() {
     assert(data);
@@ -280,98 +246,47 @@ class DerefDataHolder<T&> {
     return data;
   }
 
-  void reset(reference _data) { data = &_data; }
+  void set_data(reference _data) { data = &_data; }
   explicit operator bool() const { return data != nullptr; }
 };
 
-// Makes a new function which inverts the result of the passed function (works
-// only if bool
-template <typename Predicate>
-class Not;
-
-template <typename Predicate>
-class Not {
+template <template <typename, typename> class ItImpl, typename DefaultT>
+struct EnumeratorClosureObject {
  private:
-  Predicate predFn;
-
- public:
-  Not(Predicate _predFn) : predFn(std::move(_predFn)) {}
-
-  template <typename T>
-  bool operator()(const T& item) {
-    return !bool(std::invoke(predFn, item));
-  }
-  template <typename T>
-  bool operator()(const T& item) const {
-    return !bool(std::invoke(predFn, item));
-  }
-};
-
-template <template <typename, typename> class ItImpl>
-struct IteratorToolClosureObject {
- public:
   template <typename Container>
-  ItImpl<Container, std::size_t> operator()(Container&& container,
-					    std::size_t func) const {
+  ItImpl<Container, DefaultT> operator()(Container&& container,
+					 DefaultT func) const {
     return {std::forward<Container>(container), std::move(func)};
   }
 
+ public:
   template <typename Container,
 	    typename = std::enable_if_t<is_iterable_v<Container>>>
   auto operator()(Container&& container) const {
-    return (*this)(std::forward<Container>(container), std::size_t{});
-  }
-};
-
-template <typename F>
-struct PipeableAndBindFirst {
- protected:
-  template <typename T>
-  struct FnPartial {
-    mutable T stored_arg;
-    constexpr FnPartial(T in_t) : stored_arg(in_t) {}
-
-    template <typename Container>
-    auto operator()(Container&& container) const {
-      return F{}(stored_arg, std::forward<Container>(container));
-    }
-  };
-
- public:
-  template <typename T, typename = std::enable_if_t<!is_iterable_v<T>>>
-  FnPartial<std::decay_t<T>> operator()(T&& t) const {
-    return {std::forward<T>(t)};
+    return (*this)(std::forward<Container>(container), DefaultT{});
   }
 };
 
 template <template <typename, typename> class ItImpl, typename DefaultT>
-struct IterToolFnOptionalBindFirst
-    : PipeableAndBindFirst<IterToolFnOptionalBindFirst<ItImpl, DefaultT>> {
+struct FilterClosureObject {
  private:
-  using Base =
-      PipeableAndBindFirst<IterToolFnOptionalBindFirst<ItImpl, DefaultT>>;
-
- protected:
   template <typename Container>
-  auto operator()(Container&& container, std::false_type) const {
-    return static_cast<const Base&>(*this)(std::forward<Container>(container));
-  }
-
-  template <typename Container>
-  auto operator()(Container&& container, std::true_type) const {
-    return (*this)(DefaultT{}, std::forward<Container>(container));
+  auto operator()(Container&& container, std::true_type,
+		  const bool use_false = false) const {
+    return (*this)(DefaultT{}, std::forward<Container>(container), use_false);
   }
 
  public:
   template <typename T>
-  auto operator()(T&& t) const {
-    return (*this)(std::forward<T>(t), is_iterable_t<T>{});
+  auto operator()(T&& t, const bool use_false = false) const {
+    return (*this)(std::forward<T>(t), is_iterable_t<T>{}, use_false);
   }
 
   template <typename T, typename Container,
 	    typename = std::enable_if_t<is_iterable_v<Container>>>
-  ItImpl<T, Container> operator()(T func, Container&& container) const {
-    return {std::move(func), std::forward<Container>(container)};
+  ItImpl<T, Container> operator()(T func, Container&& container,
+				  const bool use_false = false) const {
+    return {std::move(func), std::forward<Container>(container), use_false};
   }
 };
 
