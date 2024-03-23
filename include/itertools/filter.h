@@ -61,15 +61,11 @@ class ATATIteratorTools::Filtered {
       }
     }
 
-    bool checkbool(bool input) const {
-      return iterator_use_false ? !input : input;
-    }
-
     // increment until the iterator points to is true on the
     // predicate.  Called by constructor and operator++
     void next() const {
-      while (input_iterator != input_iterator_end &&
-	     checkbool(!std::invoke(*predFn, *reference_item))) {
+      while ((input_iterator != input_iterator_end) &&
+	     (iterator_use_false != !std::invoke(*predFn, *reference_item))) {
 	increment();
       }
     }
