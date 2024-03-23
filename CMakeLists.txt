@@ -6,7 +6,7 @@ PROJECT(ATAT
 	VERSION 1.0
 	LANGUAGES C CXX
 	)
-ADD_COMPILE_OPTIONS(-Wall -Wpedantic)
+ADD_COMPILE_OPTIONS(-Wall -Wpedantic -Wfatal-errors)
 
 SET(CMAKE_CXX_STANDARD 17)
 SET(CMAKE_EXPORT_COMPILE_COMMANDS ON )
@@ -98,6 +98,11 @@ ENDIF()
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/include ${ifopt_SOURCE_DIR}
 	${ifopt_BUILD_DIR})
 
+
+ADD_LIBRARY(itertools INTERFACE)
+TARGET_INCLUDE_DIRECTORIES(itertools INTERFACE
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/itertools>
+	$<INSTALL_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/lib>)
 
 ADD_LIBRARY(cvmclushelp SHARED ${PROJECT_SOURCE_DIR}/src/cvmclushelp.c++)
 ADD_LIBRARY(cvhelp SHARED ${PROJECT_SOURCE_DIR}/src/cvhelp.c++)
@@ -610,5 +615,25 @@ IF(MAKENDVIEWER)
 		)
 ENDIF()
 
-ENABLE_TESTING()
+FETCHCONTENT_DECLARE(
+  Catch2
+  GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+  GIT_TAG        v3.4.0 # or a later release
+)
+FETCHCONTENT_MAKEAVAILABLE(Catch2)
 
+ADD_EXECUTABLE(itertoolstests
+	${PROJECT_SOURCE_DIR}/tests/itertools_test_enumerate.c++
+	${PROJECT_SOURCE_DIR}/tests/testtools_test.c++
+	${PROJECT_SOURCE_DIR}/tests/itertools_test_zip.c++
+	${PROJECT_SOURCE_DIR}/tests/itertools_test_filter.c++
+	${PROJECT_SOURCE_DIR}/tests/itertools_test_filterfalse.c++
+  ${PROJECT_SOURCE_DIR}/tests/itertools_test_range.c++)
+TARGET_LINK_LIBRARIES(itertoolstests PRIVATE itertools Catch2::Catch2WithMain)
+
+ENABLE_TESTING()
+LIST(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
+
+INCLUDE(CTest)
+INCLUDE(Catch)
+CATCH_DISCOVER_TESTS(itertoolstests)
