@@ -33,8 +33,8 @@ class ATATIteratorTools::Filtered {
   // private Value constructor
   Filtered(Predicate Fn, Container&& container, bool use_false)
       : _container(std::forward<Container>(container)),
-	predFn(Fn),
-	_use_false(use_false) {}
+	predFn{Fn},
+	_use_false{use_false} {}
 
  public:
   Filtered(Filtered&&) = default;
