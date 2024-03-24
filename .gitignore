@@ -117,3 +117,6 @@ venv.bak/
 
 # Cython debug symbols
 cython_debug/
+
+# Ignore Catch header
+catch.hpp
