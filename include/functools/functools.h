@@ -13,6 +13,10 @@ constexpr auto compose() {
       [](auto&& x) -> decltype(auto) { return std::forward<decltype(x)>(x); };
 }
 
+// compose takes in multiple functions, passes the input to the last function
+// the output of which is passed to the penultimate function
+// the final output is the output of the (last executed) first input function
+
 // base type when this is the last function to be executed
 template <typename Fn>
 constexpr auto compose(Fn fn) {
@@ -29,6 +33,7 @@ constexpr auto compose(Fn fn, Fargs... args) {
   };
 }
 
+// maps the fn to an input vector to return a new vector
 template <template <typename... /*,typename*/> class OutContainer = std::vector,
 	  typename Fn, class Container>
 constexpr auto map(Fn mapfn, const Container& inputs) {
@@ -39,6 +44,7 @@ constexpr auto map(Fn mapfn, const Container& inputs) {
   return result;
 }
 
+// accumulates each element of a vector by some operation
 template <typename Fn, class Container>
 constexpr auto reduce(
     Fn reducefn, const Container& inputs,
@@ -48,6 +54,23 @@ constexpr auto reduce(
   return result;
 }
 
+// takes two operations which operate on the input container
+// to return a bool. Multiple Predicates are concatenated as as AND
+template <typename Predicate>
+constexpr auto filter(Predicate pred) {
+  return [=](auto&& x) -> decltype(auto) {
+    return pred(std::forward<decltype(x)>(x)) ? x : decltype(x){};
+  };
+}
+
+template <typename Predicate, typename... Predicates>
+constexpr auto filter(Predicate pred, Predicates... preds) {
+  return [=](auto&& x) -> decltype(auto) {
+    return pred(std::forward<decltype(x)>(x))
+	       ? filter(preds...)(std::forward<decltype(x)>(x))
+	       : decltype(x){};
+  };
+}
 }  // namespace ATATFunctionalTools
 
 #endif	// __ATAT_FUNCTIONALTOOLS_HPP__
