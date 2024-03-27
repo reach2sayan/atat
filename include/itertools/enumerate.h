@@ -104,15 +104,17 @@ class ATATIteratorTools::Enumerable {
     }
   };
 
-  Iterator<Container> begin() {
+  constexpr Iterator<Container> begin() {
     return {fancy_getters::begin(container_), start_};
   }
-  Iterator<Container> end() { return {fancy_getters::end(container_), start_}; }
+  constexpr Iterator<Container> end() {
+    return {fancy_getters::end(container_), start_};
+  }
 
-  Iterator<make_const_t<Container>> begin() const {
+  constexpr Iterator<make_const_t<Container>> begin() const {
     return {fancy_getters::begin(std::as_const(container_)), start_};
   }
-  Iterator<make_const_t<Container>> end() const {
+  constexpr Iterator<make_const_t<Container>> end() const {
     return {fancy_getters::end(std::as_const(container_)), start_};
   }
 };

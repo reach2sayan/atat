@@ -15,7 +15,7 @@ template <typename TupleType, std::size_t... Is>
 Zipped<TupleType, Is...> zip_impl(TupleType&&, std::index_sequence<Is...>);
 
 template <typename... Containers>
-auto zip(Containers&&... containers);
+constexpr auto zip(Containers&&... containers);
 }  // namespace ATATIteratorTools
 
 template <typename TupleType, std::size_t... Is>
@@ -83,23 +83,24 @@ class ATATIteratorTools::Zipped {
     auto operator->() -> ArrowProxy<decltype(**this)> { return {**this}; }
   };
 
-  Iterator<TupleType, iterator_tuple_t, iterator_deref_tuple> begin() {
+  constexpr Iterator<TupleType, iterator_tuple_t, iterator_deref_tuple>
+  begin() {
     return {{fancy_getters::begin(std::get<Is>(containers_))...}};
   }
 
-  Iterator<TupleType, iterator_tuple_t, iterator_deref_tuple> end() {
+  constexpr Iterator<TupleType, iterator_tuple_t, iterator_deref_tuple> end() {
     return {{fancy_getters::end(std::get<Is>(containers_))...}};
   }
 
-  Iterator<make_const_t<TupleType>, const_iterator_tuple_t,
-	   const_iterator_deref_tuple>
+  constexpr Iterator<make_const_t<TupleType>, const_iterator_tuple_t,
+		     const_iterator_deref_tuple>
   begin() const {
     return {
 	{fancy_getters::begin(std::as_const(std::get<Is>(containers_)))...}};
   }
 
-  Iterator<make_const_t<TupleType>, const_iterator_tuple_t,
-	   const_iterator_deref_tuple>
+  constexpr Iterator<make_const_t<TupleType>, const_iterator_tuple_t,
+		     const_iterator_deref_tuple>
   end() const {
     return {{fancy_getters::end(std::as_const(std::get<Is>(containers_)))...}};
   }
@@ -112,7 +113,7 @@ ATATIteratorTools::Zipped<TupleType, Is...> ATATIteratorTools::zip_impl(
 }
 
 template <typename... Containers>
-auto ATATIteratorTools::zip(Containers&&... containers) {
+constexpr auto ATATIteratorTools::zip(Containers&&... containers) {
   return zip_impl(
       std::tuple<Containers...>{std::forward<Containers>(containers)...},
       std::make_index_sequence<sizeof...(Containers)>{});

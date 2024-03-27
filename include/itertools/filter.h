@@ -8,6 +8,8 @@ namespace ATATIteratorTools {
 template <typename Predicate, typename Container>
 class Filtered;
 
+// this is default predicate when no predicate is supplied, this essentially
+// runs the bool() operator on the dataype,
 struct Boolean {
   template <typename T>
   constexpr bool operator()(const T& reference_item) const {
@@ -15,8 +17,8 @@ struct Boolean {
   }
 };
 
-using FilterTrueObject = FilterClosureObject<Filtered, Boolean>;
-constexpr FilterTrueObject filter{};
+using FilterObject = FilterClosureObject<Filtered, Boolean>;
+constexpr FilterObject filter{};
 
 }  // namespace ATATIteratorTools
 
@@ -27,7 +29,7 @@ class ATATIteratorTools::Filtered {
   mutable Predicate predFn;
   const bool _use_false;
 
-  friend FilterTrueObject;
+  friend FilterObject;
 
  protected:
   // private Value constructor
@@ -65,6 +67,8 @@ class ATATIteratorTools::Filtered {
     // predicate.  Called by constructor and operator++
     void next() const {
       while ((input_iterator != input_iterator_end) &&
+	     // the code below is essentially a XOR gate, that flips the sign of
+	     // the second bit if the first bit is true
 	     (iterator_use_false != !std::invoke(*predFn, *reference_item))) {
 	increment();
       }
@@ -127,22 +131,22 @@ class ATATIteratorTools::Filtered {
     }
   };
 
-  Iterator<Container> begin() {
+  constexpr Iterator<Container> begin() {
     return {fancy_getters::begin(_container), fancy_getters::end(_container),
 	    predFn, _use_false};
   }
 
-  Iterator<Container> end() {
+  constexpr Iterator<Container> end() {
     return {fancy_getters::end(_container), fancy_getters::end(_container),
 	    predFn, _use_false};
   }
 
-  Iterator<make_const_t<Container>> begin() const {
+  constexpr Iterator<make_const_t<Container>> begin() const {
     return {fancy_getters::begin(std::as_const(_container)),
 	    fancy_getters::end(std::as_const(_container)), predFn, _use_false};
   }
 
-  Iterator<Container> end() const {
+  constexpr Iterator<Container> end() const {
     return {fancy_getters::end(std::as_const(_container)),
 	    fancy_getters::end(std::as_const(_container)), predFn, _use_false};
   }

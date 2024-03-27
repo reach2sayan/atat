@@ -5,6 +5,7 @@
 #include <cassert>
 #include <functional>
 #include <iostream>
+#include <memory>
 #include <optional>
 #include <tuple>
 #include <type_traits>
@@ -201,7 +202,9 @@ class DereferencedDataHolder {
   // it could still be an rvalue reference
   using TType = std::remove_reference_t<T>;
 
-  TType data;  // hold the real-data, could be nullptr so std::optional
+  std::unique_ptr<TType>
+      data;  // carries a reference, extra safety with std::unique_ptr, since
+	     // this can't be copied accidentally which might break it
 
  public:
   using reference = TType&;
@@ -250,43 +253,46 @@ class DereferencedDataHolder<T&> {
   explicit operator bool() const { return data != nullptr; }
 };
 
-template <template <typename, typename> class ItImpl, typename DefaultT>
+// We any need a type for the index since we have to specify it for std::pair
+// so why not allow the enumerate to choose it's index type, instead of
+// defaulting to some unsigned integer type
+template <template <typename, typename> class Iterator, typename IndexType>
 struct EnumeratorClosureObject {
  private:
   template <typename Container>
-  ItImpl<Container, DefaultT> operator()(Container&& container,
-					 DefaultT func) const {
-    return {std::forward<Container>(container), std::move(func)};
+  constexpr Iterator<Container, IndexType> operator()(
+      Container&& container, IndexType start_index) const {
+    return {std::forward<Container>(container), std::move(start_index)};
   }
 
  public:
   template <typename Container,
 	    typename = std::enable_if_t<is_iterable_v<Container>>>
-  auto operator()(Container&& container) const {
-    return (*this)(std::forward<Container>(container), DefaultT{});
+  constexpr auto operator()(Container&& container) const {
+    return (*this)(std::forward<Container>(container), IndexType{});
   }
 };
 
-template <template <typename, typename> class ItImpl, typename DefaultT>
+template <template <typename, typename> class Iterator,
+	  typename DefaultPredicate>
 struct FilterClosureObject {
- private:
-  template <typename Container>
-  auto operator()(Container&& container, std::true_type,
-		  const bool use_false = false) const {
-    return (*this)(DefaultT{}, std::forward<Container>(container), use_false);
-  }
-
  public:
-  template <typename T>
-  auto operator()(T&& t, const bool use_false = false) const {
-    return (*this)(std::forward<T>(t), is_iterable_t<T>{}, use_false);
+  // when only the iterable is passed, we perform (!)bool(object)
+  template <typename Container,
+	    typename = std::enable_if_t<is_iterable_v<Container>>>
+  constexpr auto operator()(Container&& container,
+			    const bool use_false = false) const {
+    return (*this)(DefaultPredicate{}, std::forward<Container>(container),
+		   use_false);
   }
 
-  template <typename T, typename Container,
+  // this is when a explicit predicate is passed
+  template <typename Predicate, typename Container,
 	    typename = std::enable_if_t<is_iterable_v<Container>>>
-  ItImpl<T, Container> operator()(T func, Container&& container,
-				  const bool use_false = false) const {
-    return {std::move(func), std::forward<Container>(container), use_false};
+  constexpr Iterator<Predicate, Container> operator()(
+      Predicate predFn, Container&& container,
+      const bool use_false = false) const {
+    return {std::move(predFn), std::forward<Container>(container), use_false};
   }
 };
 
