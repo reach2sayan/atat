@@ -46,11 +46,11 @@ class ATATIteratorTools::Enumerable {
 
  protected:
   // private Value constructor
-  Enumerable(Container&& container, Index start)
+  constexpr Enumerable(Container&& container, Index start)
       : container_(std::forward<Container>(container)), start_{start} {}
 
  public:
-  Enumerable(Enumerable&&) = default;
+  constexpr Enumerable(Enumerable&&) = default;
 
   template <typename T>
   using Data = EnumeratorDataHolder<Index, iterator_deref<T>>;
@@ -74,12 +74,12 @@ class ATATIteratorTools::Enumerable {
     using pointer = value_type*;
     using reference = value_type&;
 
-    Iterator(iterator_t<ContainerT>&& sub_iter, Index start)
+    constexpr Iterator(iterator_t<ContainerT>&& sub_iter, Index start)
 	: sub_iter_{std::move(sub_iter)}, index_{start} {}
 
     Data<ContainerT> operator*() { return {index_, *sub_iter_}; }
 
-    ArrowProxy<Data<ContainerT>> operator->() { return {**this}; }
+    constexpr ArrowProxy<Data<ContainerT>> operator->() { return {**this}; }
 
     Iterator& operator++() {
       ++sub_iter_;
@@ -94,12 +94,12 @@ class ATATIteratorTools::Enumerable {
     }
 
     template <typename T>
-    bool operator!=(const Iterator<T>& other) const {
+    constexpr bool operator!=(const Iterator<T>& other) const {
       return sub_iter_ != other.sub_iter_;
     }
 
     template <typename T>
-    bool operator==(const Iterator<T>& other) const {
+    constexpr bool operator==(const Iterator<T>& other) const {
       return !(*this != other);
     }
   };

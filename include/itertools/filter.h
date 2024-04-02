@@ -33,7 +33,7 @@ class ATATIteratorTools::Filtered {
 
  protected:
   // private Value constructor
-  Filtered(Predicate Fn, Container&& container, bool use_false)
+  constexpr Filtered(Predicate Fn, Container&& container, bool use_false)
       : _container(std::forward<Container>(container)),
 	predFn{Fn},
 	_use_false{use_false} {}
@@ -88,9 +88,9 @@ class ATATIteratorTools::Filtered {
     using pointer = value_type*;
     using reference = value_type&;
 
-    Iterator(iterator_t<ContainerT>&& _input_iterator,
-	     iterator_t<ContainerT>&& _input_iterator_end, Predicate& Fn,
-	     bool use_false = false)
+    constexpr Iterator(iterator_t<ContainerT>&& _input_iterator,
+		       iterator_t<ContainerT>&& _input_iterator_end,
+		       Predicate& Fn, bool use_false = false)
 	: input_iterator{std::move(_input_iterator)},
 	  input_iterator_end{std::move(_input_iterator_end)},
 	  predFn(&Fn),
@@ -126,7 +126,7 @@ class ATATIteratorTools::Filtered {
     }
 
     template <typename T>
-    bool operator==(const Iterator<T>& other) const {
+    constexpr bool operator==(const Iterator<T>& other) const {
       return !(*this != other);
     }
   };

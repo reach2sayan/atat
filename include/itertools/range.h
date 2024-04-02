@@ -155,10 +155,8 @@ class ATATIteratorTools::Range {
 
     static bool not_equal_to_end(const Iterator& lhs,
 				 const Iterator& rhs) noexcept {
-      if (rhs.is_end)
-	return not_equal_to_impl(lhs, rhs);
-      else
-	return not_equal_to_impl(rhs, lhs);
+      return (rhs.is_end) ? not_equal_to_impl(lhs, rhs)
+			  : not_equal_to_impl(rhs, lhs);
     }
 
    public:

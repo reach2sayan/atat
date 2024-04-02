@@ -48,7 +48,7 @@ class ATATIteratorTools::Zipped {
     using pointer = value_type*;
     using reference = value_type;
 
-    Iterator(TupleIteratorType<TupleTypeT>&& iters)
+    constexpr Iterator(TupleIteratorType<TupleTypeT>&& iters)
 	: iters_(std::move(iters)) {}
 
     Iterator& operator++() {
@@ -64,7 +64,7 @@ class ATATIteratorTools::Zipped {
     // funny - usually it's the other way around
     template <typename T, template <typename> class IT,
 	      template <typename> class TD>
-    bool operator!=(const Iterator<T, IT, TD>& other) const {
+    constexpr bool operator!=(const Iterator<T, IT, TD>& other) const {
       if constexpr (sizeof...(Is) == 0) {
 	return false;  // empty is equal, hence this construction
       } else {
@@ -74,13 +74,15 @@ class ATATIteratorTools::Zipped {
 
     template <typename T, template <typename> class IT,
 	      template <typename> class TD>
-    bool operator==(const Iterator<T, IT, TD>& other) const {
+    constexpr bool operator==(const Iterator<T, IT, TD>& other) const {
       return !(*this != other);
     }
 
     TupleDeref<TupleTypeT> operator*() { return {(*std::get<Is>(iters_))...}; }
 
-    auto operator->() -> ArrowProxy<decltype(**this)> { return {**this}; }
+    constexpr auto operator->() -> ArrowProxy<decltype(**this)> {
+      return {**this};
+    }
   };
 
   constexpr Iterator<TupleType, iterator_tuple_t, iterator_deref_tuple>
