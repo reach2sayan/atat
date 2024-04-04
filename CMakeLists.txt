@@ -1,7 +1,7 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.17)
 
 SET(CMAKE_C_COMPILER "gcc")
-SET(CMAKE_CXX_COMPILER "clang++")
+#SET(CMAKE_CXX_COMPILER "gcc")
 PROJECT(ATAT
 	VERSION 1.0
 	LANGUAGES C CXX
@@ -98,11 +98,6 @@ ENDIF()
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/include ${ifopt_SOURCE_DIR}
 	${ifopt_BUILD_DIR})
 
-ADD_LIBRARY(functools INTERFACE)
-TARGET_INCLUDE_DIRECTORIES(functools INTERFACE
-	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/functools>
-	$<INSTALL_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/lib>)
-
 
 ADD_LIBRARY(cvmclushelp SHARED ${PROJECT_SOURCE_DIR}/src/cvmclushelp.c++)
 ADD_LIBRARY(cvhelp SHARED ${PROJECT_SOURCE_DIR}/src/cvhelp.c++)
@@ -172,6 +167,7 @@ ADD_LIBRARY(parseops SHARED
 	${PROJECT_SOURCE_DIR}/src/integer.c++
 	${PROJECT_SOURCE_DIR}/src/parse.c++
 	${PROJECT_SOURCE_DIR}/src/getvalue.c++
+	${PROJECT_SOURCE_DIR}/src/xtalutil.c++
 	)
 
 ADD_LIBRARY(strinterf SHARED ${PROJECT_SOURCE_DIR}/src/strinterf.c++)
@@ -200,6 +196,7 @@ ADD_LIBRARY(clus_str SHARED ${PROJECT_SOURCE_DIR}/src/clus_str.c++)
 ADD_LIBRARY(lattype SHARED ${PROJECT_SOURCE_DIR}/src/lattype.c++)
 
 ADD_LIBRARY(chull SHARED ${PROJECT_SOURCE_DIR}/src/chull.c++)
+TARGET_LINK_LIBRARIES(chull PUBLIC linearops)
 
 ADD_LIBRARY(mpiinterf SHARED ${PROJECT_SOURCE_DIR}/src/mpiinterf.c++)
 
@@ -207,12 +204,15 @@ ADD_LIBRARY(eci SHARED ${PROJECT_SOURCE_DIR}/src/teci.c++
 	${PROJECT_SOURCE_DIR}/src/keci.c++)
 
 ADD_LIBRARY(drawpd SHARED ${PROJECT_SOURCE_DIR}/src/drawpd.c++)
+TARGET_LINK_LIBRARIES(drawpd PUBLIC calccorr)
 ADD_LIBRARY(normal SHARED ${PROJECT_SOURCE_DIR}/src/normal.c++)
-ADD_LIBRARY(mclib SHARED ${PROJECT_SOURCE_DIR}/src/mclib.c++)
-ADD_LIBRARY(mmclib SHARED ${PROJECT_SOURCE_DIR}/src/mmclib.c++)
 ADD_LIBRARY(calcmf SHARED ${PROJECT_SOURCE_DIR}/src/calcmf.c++)
 ADD_LIBRARY(equil SHARED ${PROJECT_SOURCE_DIR}/src/equil.c++)
 ADD_LIBRARY(fft SHARED ${PROJECT_SOURCE_DIR}/src/anyfft.c++ ${PROJECT_SOURCE_DIR}/src/fftn.c++)
+ADD_LIBRARY(mclib SHARED ${PROJECT_SOURCE_DIR}/src/mclib.c++)
+TARGET_LINK_LIBRARIES(mclib PUBLIC fft)
+ADD_LIBRARY(mmclib SHARED ${PROJECT_SOURCE_DIR}/src/mmclib.c++)
+TARGET_LINK_LIBRARIES(mmclib PUBLIC fft)
 
 ADD_LIBRARY(kspacees SHARED ${PROJECT_SOURCE_DIR}/src/kspacees.c++)
 ADD_LIBRARY(morsepot SHARED ${PROJECT_SOURCE_DIR}/src/morsepot.c++
@@ -227,6 +227,14 @@ ADD_LIBRARY(pred SHARED
 	${PROJECT_SOURCE_DIR}/src/predes.c++
 	${PROJECT_SOURCE_DIR}/src/predrs.c++
 	)
+
+
+ADD_LIBRARY(gceutil SHARED ${PROJECT_SOURCE_DIR}/src/gceutil.c++
+	${PROJECT_SOURCE_DIR}/src/tensorsym.c++
+	${PROJECT_SOURCE_DIR}/src/phonlib.c++
+	${PROJECT_SOURCE_DIR}/src/multipoly.c++
+	)
+TARGET_LINK_LIBRARIES(gceutil PUBLIC linearops)
 
 ADD_EXECUTABLE(fitsvsl ${PROJECT_SOURCE_DIR}/src/fitsvsl.c++)
 TARGET_LINK_LIBRARIES(fitsvsl PUBLIC
@@ -427,11 +435,6 @@ TARGET_LINK_LIBRARIES(kmesh PUBLIC
 	xtalutil
 	)
 
-ADD_LIBRARY(gceutil SHARED ${PROJECT_SOURCE_DIR}/src/gceutil.c++
-	${PROJECT_SOURCE_DIR}/src/tensorsym.c++
-	${PROJECT_SOURCE_DIR}/src/phonlib.c++
-	${PROJECT_SOURCE_DIR}/src/multipoly.c++
-	)
 
 #
 #ADD_EXECUTABLE(skelread ${PROJECT_SOURCE_DIR}/src/skelread.c++)
@@ -615,5 +618,26 @@ IF(MAKENDVIEWER)
 		)
 ENDIF()
 
+ADD_LIBRARY(functools INTERFACE)
+TARGET_INCLUDE_DIRECTORIES(functools INTERFACE
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/functools>
+	$<INSTALL_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/lib>)
+
+FETCHCONTENT_DECLARE(
+  Catch2
+  GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+  GIT_TAG        v3.4.0 # or a later release
+)
+FETCHCONTENT_MAKEAVAILABLE(Catch2)
+
+ADD_EXECUTABLE(functoolstests ${PROJECT_SOURCE_DIR}/tests/functools_test.c++)
+TARGET_LINK_LIBRARIES(functoolstests PRIVATE functools Catch2::Catch2WithMain)
+
+
 ENABLE_TESTING()
+LIST(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
+
+INCLUDE(CTest)
+INCLUDE(Catch)
+CATCH_DISCOVER_TESTS(functoolstests)
 
