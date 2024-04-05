@@ -11,10 +11,9 @@
  * Project home: https://github.com/rollbear/atft
  */
 
-#include "functools/functools.h"
+#include "functools.h"
 
 #include <catch2/catch_test_macros.hpp>
-#include <ostream>
 namespace atft = ATATFunctionalTools;
 
 // constexpr tests
@@ -31,26 +30,25 @@ constexpr auto ne = atft::not_equal(N);
 template <typename T, typename = std::enable_if_t<std::is_same<T, bool>{}>>
 bool func(T);
 
-TEST_CASE("constexpr tests") {
-  static_assert(eq<3>(3), "equal is constexpr");
-  static_assert(ne<3>(1), "not_equal is constexpr");
-  static_assert(atft::less_than(3)(2), "less_than is constexpr");
-  static_assert(atft::less_than_equal(3)(2), "less_equal is constexpr");
-  static_assert(gt<3>(4), "greater_than is constexpr");
-  static_assert(atft::greater_than_equal(3)(4), "greater_equal is constexpr");
-  static_assert(atft::negate(eq<3>)(2), "negate is constexpr");
-  static_assert(atft::when_all(eq<3>, ne<4>)(3), "when_all is constexpr");
-  static_assert(atft::when_any(eq<3>, eq<4>)(4), "when_any is constexpr");
-  static_assert(atft::when_none(eq<3>, eq<4>)(5), "when_none is constexpr");
-  static_assert(atft::if_then_else(gt<3>, eq<4>, eq<5>)(4),
-		"if_then_else is constexpr");
-  static_assert(atft::compose(gt<2>, std::plus<>{})(1, 2),
-		"compose is constexpr");
+// "constexpr tests"
+static_assert(eq<3>(3), "equal is constexpr");
+static_assert(ne<3>(1), "not_equal is constexpr");
+static_assert(atft::less_than(3)(2), "less_than is constexpr");
+static_assert(atft::less_than_equal(3)(2), "less_equal is constexpr");
+static_assert(gt<3>(4), "greater_than is constexpr");
+static_assert(atft::greater_than_equal(3)(4), "greater_equal is constexpr");
+static_assert(atft::negate(eq<3>)(2), "negate is constexpr");
+static_assert(atft::when_all(eq<3>, ne<4>)(3), "when_all is constexpr");
+static_assert(atft::when_any(eq<3>, eq<4>)(4), "when_any is constexpr");
+static_assert(atft::when_none(eq<3>, eq<4>)(5), "when_none is constexpr");
+static_assert(atft::if_then_else(gt<3>, eq<4>, eq<5>)(4),
+	      "if_then_else is constexpr");
+static_assert(atft::compose(gt<2>, std::plus<>{})(1, 2),
+	      "compose is constexpr");
 
-  auto constexpr sumgt2 = atft::compose(gt<2>, std::negate<>{}, std::plus<>{});
-  static_assert(std::is_invocable_r_v<bool, decltype(sumgt2), int, int>);
-  static_assert(std::is_same<bool, decltype(func(sumgt2(1, 2)))>{});
-}
+auto constexpr sumgt2 = atft::compose(gt<2>, std::plus<>{});
+static_assert(std::is_invocable_r_v<bool, decltype(sumgt2), int, int>);
+static_assert(std::is_same<bool, decltype(func(sumgt2(1, 2)))>{});
 
 TEST_CASE("compose") {
   auto to_string = [](auto t) { return std::to_string(t); };
