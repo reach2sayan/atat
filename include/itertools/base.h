@@ -296,14 +296,6 @@ struct FilterClosureObject {
   }
 };
 
-struct IMapClosureObject {
-  template <typename MapFunc, typename Container>
-  auto operator()(MapFunc&& map_func, Container&& container) const {
-    return IMapper<MapFunc, Container>{std::forward<MapFunc&&>(map_func),
-				       std::forward<Container>(container)};
-  }
-};
-
 }  // namespace ATATIteratorTools
 
 #endif	//__ITERATORTOOLSBASE_HPP__

@@ -39,7 +39,7 @@ class ATATIteratorTools::Filtered {
 	_use_false{use_false} {}
 
  public:
-  Filtered(Filtered&&) = default;
+  constexpr Filtered(Filtered&&) = default;
 
   // this template type includes the cv-qualification of type Container
   template <typename ContainerT>
