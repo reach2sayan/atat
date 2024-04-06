@@ -62,7 +62,7 @@ using iterator_deref_t = decltype(*std::declval<iterator_t<Container>&>());
 // ie: the result of Container::iterator::operator*() const
 template <typename Container>
 using const_iterator_deref_t =
-    decltype(*std::declval<const_iterator_t<Container>&>());
+    decltype(*std::declval<const iterator_t<Container>&>());
 
 // the type of dereferencing a const_iterator
 template <typename Container>
