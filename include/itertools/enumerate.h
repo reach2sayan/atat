@@ -6,54 +6,71 @@
 namespace ATATIteratorTools {
 // Held by the Enumerable::Iterator.  Has a .index, and a
 // .element referencing the value yielded by the subiterator
-template <typename Index, typename Elem>
-class EnumeratorDataHolder : public std::pair<Index, Elem> {
-  using std::pair<Index, Elem>::pair;
+template <typename Elem>
+class EnumeratorDataHolder : public std::pair<std::size_t, Elem> {
+  using std::pair<std::size_t, Elem>::pair;
 
  public:
-  typename std::pair<Index, Elem>::first_type index =
-      std::pair<Index, Elem>::first;
-  typename std::pair<Index, Elem>::second_type element =
-      std::pair<Index, Elem>::second;
+  typename std::pair<std::size_t, Elem>::first_type index =
+      std::pair<std::size_t, Elem>::first;
+  typename std::pair<std::size_t, Elem>::second_type element =
+      std::pair<std::size_t, Elem>::second;
 };
 
-template <typename Container, typename Index>
+template <typename Container>
 class Enumerable;
 
-using EnumerateObject = EnumeratorClosureObject<Enumerable, std::size_t>;
-constexpr EnumerateObject enumerate{};
+// We any need a type for the index since we have to specify it for std::pair
+// so why not allow the enumerate to choose it's index type, instead of
+// defaulting to some unsigned integer type
+struct EnumeratorClosureObject {
+ private:
+  template <typename Container>
+  constexpr Enumerable<Container> operator()(Container&& container,
+					     std::size_t start_index) const {
+    return {std::forward<Container>(container), std::move(start_index)};
+  }
+
+ public:
+  template <typename Container,
+	    typename = std::enable_if_t<is_iterable_v<Container>>>
+  constexpr auto operator()(Container&& container) const {
+    return (*this)(std::forward<Container>(container), std::size_t{});
+  }
+};
+constexpr EnumeratorClosureObject enumerate{};
 
 }  // namespace ATATIteratorTools
 
 // Partial specialization of std::tuple related templates for data-holder
 namespace std {
-template <typename Index, typename Elem>
-struct tuple_size<ATATIteratorTools::EnumeratorDataHolder<Index, Elem>>
-    : public tuple_size<std::pair<Index, Elem>> {};
+template <typename Elem>
+struct tuple_size<ATATIteratorTools::EnumeratorDataHolder<Elem>>
+    : public tuple_size<std::pair<std::size_t, Elem>> {};
 
-template <std::size_t N, typename Index, typename Elem>
-struct tuple_element<N, ATATIteratorTools::EnumeratorDataHolder<Index, Elem>>
-    : public tuple_element<N, std::pair<Index, Elem>> {};
+template <std::size_t N, typename Elem>
+struct tuple_element<N, ATATIteratorTools::EnumeratorDataHolder<Elem>>
+    : public tuple_element<N, std::pair<std::size_t, Elem>> {};
 }  // namespace std
 
-template <typename Container, typename Index>
+template <typename Container>
 class ATATIteratorTools::Enumerable {
  private:
   Container container_;
-  const Index start_;
+  const std::size_t start_;
 
-  friend EnumeratorClosureObject<Enumerable, std::decay_t<Index>>;
+  friend EnumeratorClosureObject;
 
  protected:
   // private Value constructor
-  constexpr Enumerable(Container&& container, Index start)
+  constexpr Enumerable(Container&& container, std::size_t start)
       : container_(std::forward<Container>(container)), start_{start} {}
 
  public:
   constexpr Enumerable(Enumerable&&) = default;
 
   template <typename T>
-  using Data = EnumeratorDataHolder<Index, iterator_deref<T>>;
+  using Data = EnumeratorDataHolder<iterator_deref_t<T>>;
 
   //  Holds an iterator of the contained type and an Index for the
   // index_.  Each call to ++ increments both of these data members.
@@ -65,7 +82,7 @@ class ATATIteratorTools::Enumerable {
     friend class Iterator;
 
     iterator_t<ContainerT> sub_iter_;
-    Index index_;
+    std::size_t index_;
 
    public:
     using iterator_category = std::input_iterator_tag;
@@ -74,7 +91,7 @@ class ATATIteratorTools::Enumerable {
     using pointer = value_type*;
     using reference = value_type&;
 
-    constexpr Iterator(iterator_t<ContainerT>&& sub_iter, Index start)
+    constexpr Iterator(iterator_t<ContainerT>&& sub_iter, std::size_t start)
 	: sub_iter_{std::move(sub_iter)}, index_{start} {}
 
     Data<ContainerT> operator*() { return {index_, *sub_iter_}; }

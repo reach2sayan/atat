@@ -5,9 +5,6 @@
 
 namespace ATATIteratorTools {
 
-template <typename Predicate, typename Container>
-class Filtered;
-
 // this is default predicate when no predicate is supplied, this essentially
 // runs the bool() operator on the dataype,
 struct Boolean {
@@ -17,8 +14,30 @@ struct Boolean {
   }
 };
 
-using FilterObject = FilterClosureObject<Filtered, Boolean>;
-constexpr FilterObject filter{};
+template <typename Predicate, typename Container>
+class Filtered;
+
+struct FilterClosureObject {
+ public:
+  // when only the iterable is passed, we perform (!)bool(object)
+  template <typename Container,
+	    typename = std::enable_if_t<is_iterable_v<Container>>>
+  constexpr auto operator()(Container&& container,
+			    const bool use_false = false) const {
+    return (*this)(Boolean{}, std::forward<Container>(container), use_false);
+  }
+
+  // this is when a explicit predicate is passed
+  template <typename Predicate, typename Container,
+	    typename = std::enable_if_t<is_iterable_v<Container>>>
+  constexpr Filtered<Predicate, Container> operator()(
+      Predicate predFn, Container&& container,
+      const bool use_false = false) const {
+    return {std::move(predFn), std::forward<Container>(container), use_false};
+  }
+};
+
+constexpr FilterClosureObject filter{};
 
 }  // namespace ATATIteratorTools
 
@@ -29,7 +48,7 @@ class ATATIteratorTools::Filtered {
   mutable Predicate predFn;
   const bool _use_false;
 
-  friend FilterObject;
+  friend FilterClosureObject;
 
  protected:
   // private Value constructor
@@ -48,7 +67,7 @@ class ATATIteratorTools::Filtered {
     template <typename>
     friend class Iterator;
 
-    using DataHolder = DereferencedDataHolder<iterator_deref<ContainerT>>;
+    using DataHolder = DereferencedDataHolder<iterator_deref_t<ContainerT>>;
     mutable iterator_t<ContainerT> input_iterator;
     iterator_t<ContainerT> input_iterator_end;
 
@@ -83,7 +102,7 @@ class ATATIteratorTools::Filtered {
 
    public:
     using iterator_category = std::input_iterator_tag;
-    using value_type = iterator_traits_deref<ContainerT>;
+    using value_type = iterator_traits_deref_t<ContainerT>;
     using difference_type = std::ptrdiff_t;
     using pointer = value_type*;
     using reference = value_type&;

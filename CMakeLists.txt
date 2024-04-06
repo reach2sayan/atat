@@ -641,6 +641,7 @@ ADD_EXECUTABLE(itertoolstests
 	${PROJECT_SOURCE_DIR}/tests/itertools_test_enumerate.c++
 	${PROJECT_SOURCE_DIR}/tests/testtools_test.c++
 	${PROJECT_SOURCE_DIR}/tests/itertools_test_zip.c++
+	${PROJECT_SOURCE_DIR}/tests/itertools_test_imap.c++
 	${PROJECT_SOURCE_DIR}/tests/itertools_test_filter.c++
 	${PROJECT_SOURCE_DIR}/tests/itertools_test_filterfalse.c++
   ${PROJECT_SOURCE_DIR}/tests/itertools_test_range.c++)

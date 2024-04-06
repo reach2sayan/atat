@@ -85,24 +85,25 @@ class ATATIteratorTools::Zipped {
     }
   };
 
-  constexpr Iterator<TupleType, iterator_tuple_t, iterator_deref_tuple>
+  constexpr Iterator<TupleType, iterator_tuple_t, iterator_deref_tuple_t>
   begin() {
     return {{fancy_getters::begin(std::get<Is>(containers_))...}};
   }
 
-  constexpr Iterator<TupleType, iterator_tuple_t, iterator_deref_tuple> end() {
+  constexpr Iterator<TupleType, iterator_tuple_t, iterator_deref_tuple_t>
+  end() {
     return {{fancy_getters::end(std::get<Is>(containers_))...}};
   }
 
   constexpr Iterator<make_const_t<TupleType>, const_iterator_tuple_t,
-		     const_iterator_deref_tuple>
+		     const_iterator_deref_tuple_t>
   begin() const {
     return {
 	{fancy_getters::begin(std::as_const(std::get<Is>(containers_)))...}};
   }
 
   constexpr Iterator<make_const_t<TupleType>, const_iterator_tuple_t,
-		     const_iterator_deref_tuple>
+		     const_iterator_deref_tuple_t>
   end() const {
     return {{fancy_getters::end(std::as_const(std::get<Is>(containers_)))...}};
   }

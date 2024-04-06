@@ -1,9 +1,6 @@
 #ifndef __ITERATORTOOLS_IMAP_HPP__
 #define __ITERATORTOOLS_IMAP_HPP__
 
-#include <array>
-#include <iterator>
-
 #include "base.h"
 
 namespace ATATIteratorTools {
@@ -11,12 +8,14 @@ template <typename Func, typename Container>
 class IMapper;
 
 struct IMapClosureObject {
-  template <typename MapFunc, typename Container>
-  auto operator()(MapFunc&& map_func, Container&& container) const {
-    return IMapper<MapFunc, Container>{std::forward<MapFunc&&>(map_func),
-				       std::forward<Container>(container)};
+ public:
+  template <typename MapFunc, typename ContainerT>
+  auto operator()(MapFunc map_func, ContainerT&& container) const
+      -> IMapper<MapFunc, ContainerT> {
+    return {std::move(map_func), std::forward<ContainerT>(container)};
   }
 };
+
 constexpr IMapClosureObject imap{};
 
 }  // namespace ATATIteratorTools
@@ -28,17 +27,17 @@ class ATATIteratorTools::IMapper {
   Container container_;
 
   using IterDeref =
-      decltype(std::apply(func_, std::declval<iterator_deref<Container>>()));
+      decltype(std::invoke(func_, std::declval<iterator_deref_t<Container>>()));
   using IterDerefValue = std::remove_cv_t<std::remove_reference_t<IterDeref>>;
 
-  template <typename FFunc, typename CContainer>
-  constexpr IMapper(FFunc&& f, CContainer&& c)
-      : func_(std::forward<FFunc>(f)),
-	container_(std::forward<CContainer>(c)) {}
+  constexpr IMapper(Func&& f, Container&& c)
+      : func_(std::move(f)), container_(std::forward<Container>(c)) {}
 
   friend IMapClosureObject;
 
  public:
+  constexpr IMapper(IMapper&&) = default;
+
   template <typename ContainerT>
   class Iterator {
    private:
@@ -78,16 +77,18 @@ class ATATIteratorTools::IMapper {
       return ret;
     }
 
-    decltype(auto) operator*() { return std::apply(*func_, *sub_iter_); }
+    decltype(auto) operator*() { return std::invoke(*func_, *sub_iter_); }
 
     auto operator->() -> ArrowProxy<decltype(**this)> { return {**this}; }
   };
 
   constexpr Iterator<Container> begin() {
-    return {func_, get_begin(container_)};
+    return {func_, fancy_getters::begin(container_)};
   }
 
-  constexpr Iterator<Container> end() { return {func_, get_end(container_)}; }
+  constexpr Iterator<Container> end() {
+    return {func_, fancy_getters::end(container_)};
+  }
 
   constexpr Iterator<make_const_t<Container>> begin() const {
     return {func_, fancy_getters::begin(std::as_const(container_))};

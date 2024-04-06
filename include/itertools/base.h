@@ -55,13 +55,13 @@ using const_iterator_t = decltype(fancy_getters::begin(
     std::declval<const std::remove_reference_t<Container>&>()));
 
 template <typename Container>
-using iterator_deref = decltype(*std::declval<iterator_t<Container>&>());
+using iterator_deref_t = decltype(*std::declval<iterator_t<Container>&>());
 
-// const_iterator_deref is the type obtained through dereferencing
+// const_iterator_deref_t is the type obtained through dereferencing
 // const iterator&  (not a const_iterator)
 // ie: the result of Container::iterator::operator*() const
 template <typename Container>
-using const_iterator_deref =
+using const_iterator_deref_t =
     decltype(*std::declval<const_iterator_t<Container>&>());
 
 // the type of dereferencing a const_iterator
@@ -70,8 +70,8 @@ using const_iterator_t_deref =
     decltype(*std::declval<const_iterator_t<Container>&>());
 
 template <typename Container>
-using iterator_traits_deref =
-    std::remove_reference_t<iterator_deref<Container>>;
+using iterator_traits_deref_t =
+    std::remove_reference_t<iterator_deref_t<Container>>;
 
 // iterator_end_t
 template <typename Container>
@@ -146,7 +146,7 @@ class ArrowProxy {
 // the 'evaluators' only serve the purpose to give the current Types in
 // declval(expr)
 template <typename... Ts>
-std::tuple<iterator_deref<Ts>...> iterator_tuple_deref_evaluator(
+std::tuple<iterator_deref_t<Ts>...> iterator_tuple_deref_evaluator(
     const std::tuple<Ts...>&);
 
 template <typename... Ts>
@@ -154,7 +154,7 @@ std::tuple<iterator_t<Ts>...> iterator_tuple_type_evaluator(
     const std::tuple<Ts...>&);
 
 template <typename... Ts>
-std::tuple<iterator_deref<const std::remove_reference_t<Ts>>...>
+std::tuple<iterator_deref_t<const std::remove_reference_t<Ts>>...>
 const_iterator_tuple_deref_evaluator(const std::tuple<Ts...>&);
 
 template <typename... Ts>
@@ -174,11 +174,11 @@ using const_iterator_tuple_t =
 // Given a tuple-type template argument, gives the type of the object
 // which the iterators pf the contained type dereferemce to
 template <typename TupleType>
-using iterator_deref_tuple =
+using iterator_deref_tuple_t =
     decltype(iterator_tuple_deref_evaluator(std::declval<TupleType>()));
 
 template <typename TupleType>
-using const_iterator_deref_tuple =
+using const_iterator_deref_tuple_t =
     decltype(const_iterator_tuple_deref_evaluator(std::declval<TupleType>()));
 
 // function absorbing all arguments passed to it. used when
@@ -251,49 +251,6 @@ class DereferencedDataHolder<T&> {
 
   void set_data(reference _data) { data = &_data; }
   explicit operator bool() const { return data != nullptr; }
-};
-
-// We any need a type for the index since we have to specify it for std::pair
-// so why not allow the enumerate to choose it's index type, instead of
-// defaulting to some unsigned integer type
-template <template <typename, typename> class Iterator, typename IndexType>
-struct EnumeratorClosureObject {
- private:
-  template <typename Container>
-  constexpr Iterator<Container, IndexType> operator()(
-      Container&& container, IndexType start_index) const {
-    return {std::forward<Container>(container), std::move(start_index)};
-  }
-
- public:
-  template <typename Container,
-	    typename = std::enable_if_t<is_iterable_v<Container>>>
-  constexpr auto operator()(Container&& container) const {
-    return (*this)(std::forward<Container>(container), IndexType{});
-  }
-};
-
-template <template <typename, typename> class Iterator,
-	  typename DefaultPredicate>
-struct FilterClosureObject {
- public:
-  // when only the iterable is passed, we perform (!)bool(object)
-  template <typename Container,
-	    typename = std::enable_if_t<is_iterable_v<Container>>>
-  constexpr auto operator()(Container&& container,
-			    const bool use_false = false) const {
-    return (*this)(DefaultPredicate{}, std::forward<Container>(container),
-		   use_false);
-  }
-
-  // this is when a explicit predicate is passed
-  template <typename Predicate, typename Container,
-	    typename = std::enable_if_t<is_iterable_v<Container>>>
-  constexpr Iterator<Predicate, Container> operator()(
-      Predicate predFn, Container&& container,
-      const bool use_false = false) const {
-    return {std::move(predFn), std::forward<Container>(container), use_false};
-  }
 };
 
 }  // namespace ATATIteratorTools
