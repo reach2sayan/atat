@@ -26,12 +26,13 @@ class ATATIteratorTools::IMapper {
   mutable Func func_;
   Container container_;
 
-  using IterDeref =
+  using imapper_iterator_deref_t =
       decltype(std::invoke(func_, std::declval<iterator_deref_t<Container>>()));
-  using IterDerefValue = std::remove_cv_t<std::remove_reference_t<IterDeref>>;
 
-  constexpr IMapper(Func&& f, Container&& c)
-      : func_(std::move(f)), container_(std::forward<Container>(c)) {}
+  template <typename FFunc, typename CContainer>
+  constexpr IMapper(FFunc&& f, CContainer&& c)
+      : func_(std::forward<FFunc>(f)),
+	container_(std::forward<CContainer>(c)) {}
 
   friend IMapClosureObject;
 
@@ -48,10 +49,11 @@ class ATATIteratorTools::IMapper {
 
    public:
     using iterator_category = std::input_iterator_tag;
-    using value_type = IterDerefValue;
+    using value_type =
+	std::remove_cv_t<std::remove_reference_t<imapper_iterator_deref_t>>;
     using difference_type = std::ptrdiff_t;
     using pointer = value_type*;
-    using reference = IterDeref;
+    using reference = imapper_iterator_deref_t;
 
     constexpr Iterator(Func& f, iterator_t<ContainerT>&& sub_iter)
 	: func_(&f), sub_iter_(std::move(sub_iter)) {}
