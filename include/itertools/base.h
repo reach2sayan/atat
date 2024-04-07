@@ -69,10 +69,6 @@ template <typename Container>
 using const_iterator_t_deref =
     decltype(*std::declval<const_iterator_t<Container>&>());
 
-template <typename Container>
-using iterator_traits_deref_t =
-    std::remove_reference_t<iterator_deref_t<Container>>;
-
 // iterator_end_t
 template <typename Container>
 using iterator_end_t = decltype(fancy_getters::end(std::declval<Container&>()));

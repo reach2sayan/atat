@@ -1,6 +1,8 @@
 #ifndef __ITERATORTOOLS_FILTER_HPP__
 #define __ITERATORTOOLS_FILTER_HPP__
 
+#include <type_traits>
+
 #include "base.h"
 
 namespace ATATIteratorTools {
@@ -102,7 +104,7 @@ class ATATIteratorTools::Filtered {
 
    public:
     using iterator_category = std::input_iterator_tag;
-    using value_type = iterator_traits_deref_t<ContainerT>;
+    using value_type = std::remove_reference_t<iterator_deref_t<ContainerT>>;
     using difference_type = std::ptrdiff_t;
     using pointer = value_type*;
     using reference = value_type&;

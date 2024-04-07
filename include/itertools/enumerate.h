@@ -69,8 +69,8 @@ class ATATIteratorTools::Enumerable {
  public:
   constexpr Enumerable(Enumerable&&) = default;
 
-  template <typename T>
-  using Data = EnumeratorDataHolder<iterator_deref_t<T>>;
+  template <typename CContainer>
+  using Data = EnumeratorDataHolder<iterator_deref_t<CContainer>>;
 
   //  Holds an iterator of the contained type and an Index for the
   // index_.  Each call to ++ increments both of these data members.
