@@ -73,6 +73,8 @@ class ATATIteratorTools::Filtered {
     mutable iterator_t<ContainerT> input_iterator;
     iterator_t<ContainerT> input_iterator_end;
 
+    // I need to hold a reference to the item internally to invoke the
+    // predicate
     mutable DataHolder reference_item;
     Predicate* predFn;
     bool iterator_use_false;

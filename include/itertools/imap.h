@@ -49,6 +49,7 @@ class ATATIteratorTools::IMapper {
 
    public:
     using iterator_category = std::input_iterator_tag;
+    // it holds the transformed value, which has to be by value
     using value_type =
 	std::remove_cv_t<std::remove_reference_t<imapper_iterator_deref_t>>;
     using difference_type = std::ptrdiff_t;
@@ -81,7 +82,9 @@ class ATATIteratorTools::IMapper {
 
     decltype(auto) operator*() { return std::invoke(*func_, *sub_iter_); }
 
-    auto operator->() -> ArrowProxy<decltype(**this)> { return {**this}; }
+    constexpr auto operator->() -> ArrowProxy<decltype(**this)> {
+      return {**this};
+    }
   };
 
   constexpr Iterator<Container> begin() {

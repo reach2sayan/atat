@@ -11,11 +11,8 @@
 
 namespace ATATFunctionalTools {
 
-template <typename F>
-inline constexpr decltype(auto) compose(F&& f) {
-  return std::forward<F>(f);
-}
-
+#define __FUNCTIONALTOOLS_COMPOSE_DEBUG 0
+#if __FUNCTIONALTOOLS_COMPOSE_DEBUG == 1
 // something went wrong. This gives better error messages
 template <typename P1, typename P2, typename F, typename Tail, typename... T>
 void compose_impl(P1, P2, F&&, Tail&&, T&&...) {
@@ -30,6 +27,12 @@ void compose_impl(P1, P2, F&&, Tail&&, T&&...) {
   static_assert(sizeof...(T) == 1U || !(std::is_invocable_v<Tail, T...> &&
 					(std::is_invocable_v<Tail, T> && ...)),
 		"ambigous composition");
+}
+#endif
+
+template <typename F>
+inline constexpr decltype(auto) compose(F&& f) {
+  return std::forward<F>(f);
 }
 
 // just one more at the tail, do the calculations

@@ -96,7 +96,9 @@ class ATATIteratorTools::Enumerable {
 
     Data<ContainerT> operator*() { return {index_, *sub_iter_}; }
 
-    constexpr ArrowProxy<Data<ContainerT>> operator->() { return {**this}; }
+    constexpr auto operator->() -> ArrowProxy<decltype(**this)> {
+      return {**this};
+    }
 
     Iterator& operator++() {
       ++sub_iter_;
