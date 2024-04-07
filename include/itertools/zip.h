@@ -14,6 +14,18 @@ class Zipped;
 template <typename TupleType, std::size_t... Is>
 Zipped<TupleType, Is...> zip_impl(TupleType&&, std::index_sequence<Is...>);
 
+template <typename TupleType, std::size_t... Is>
+Zipped<TupleType, Is...> zip_impl(TupleType&& containers,
+				  std::index_sequence<Is...>) {
+  return {std::move(containers)};
+}
+
+template <typename... Containers>
+constexpr auto zip(Containers&&... containers) {
+  return zip_impl(
+      std::tuple<Containers...>{std::forward<Containers>(containers)...},
+      std::make_index_sequence<sizeof...(Containers)>{});
+}
 template <typename... Containers>
 constexpr auto zip(Containers&&... containers);
 }  // namespace ATATIteratorTools
@@ -59,7 +71,11 @@ class ATATIteratorTools::Zipped {
       return *this;
     }
 
-    Iterator operator++(int) { return operator++(); }
+    Iterator operator++(int) {
+      auto ret = *this;
+      ++*this;
+      return ret;
+    }
 
     // funny - usually it's the other way around
     template <typename T, template <typename> class IT,
@@ -109,16 +125,4 @@ class ATATIteratorTools::Zipped {
   }
 };
 
-template <typename TupleType, std::size_t... Is>
-ATATIteratorTools::Zipped<TupleType, Is...> ATATIteratorTools::zip_impl(
-    TupleType&& containers, std::index_sequence<Is...>) {
-  return {std::move(containers)};
-}
-
-template <typename... Containers>
-constexpr auto ATATIteratorTools::zip(Containers&&... containers) {
-  return zip_impl(
-      std::tuple<Containers...>{std::forward<Containers>(containers)...},
-      std::make_index_sequence<sizeof...(Containers)>{});
-}
 #endif	//__ITERATORTOOLS_ZIPPER_HPP__
