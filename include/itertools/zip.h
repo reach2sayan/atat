@@ -44,11 +44,12 @@ class ATATIteratorTools::Zipped {
   // passed in the actual types of the tuples of iterators and the type for
   // deref they'd need to be known in the function declarations below.
 
-  template <typename TupleT, template <typename> class TupleIteratorT,
-	    template <typename> class TupleDerefT>
+  template <typename TupleT, template <typename> typename TupleIteratorT,
+	    template <typename> typename TupleDerefT>
   class Iterator {
    private:
-    template <typename, template <typename> class, template <typename> class>
+    template <typename, template <typename> typename,
+	      template <typename> typename>
     friend class Iterator;
     TupleIteratorT<TupleT> iters_;
 
