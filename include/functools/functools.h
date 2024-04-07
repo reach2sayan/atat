@@ -63,6 +63,12 @@ inline constexpr decltype(auto) compose(F&& f, Fs&&... fs) {
   };
 }
 
+// TODO Add Not Null func
+template <typename T>
+inline constexpr auto not_null() {
+  return [](const auto& obj) -> bool { return obj != nullptr; };
+}
+
 template <typename Predicate>
 inline constexpr auto negate(Predicate&& pred) {
   return [f = std::forward<Predicate>(pred)](auto&&... obj) {

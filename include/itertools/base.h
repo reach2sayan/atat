@@ -45,33 +45,13 @@ auto end(T& t) -> decltype(end_impl(std::declval<T&>(), 42)) {
 template <typename T>
 using make_const_t = decltype(std::as_const(std::declval<T&>()));
 
-// iterator_t<C> and const_iterator_t<C> is the type of C and const C' iterators
-// respectively
+// iterator_t<C> and iterator_deref_t<C> is the type of C and the type of
+// de-reference (underlying type) respectively
 template <typename T>
 using iterator_t = decltype(fancy_getters::begin(std::declval<T&>()));
 
 template <typename Container>
-using const_iterator_t = decltype(fancy_getters::begin(
-    std::declval<const std::remove_reference_t<Container>&>()));
-
-template <typename Container>
 using iterator_deref_t = decltype(*std::declval<iterator_t<Container>&>());
-
-// const_iterator_deref_t is the type obtained through dereferencing
-// const iterator&  (not a const_iterator)
-// ie: the result of Container::iterator::operator*() const
-template <typename Container>
-using const_iterator_deref_t =
-    decltype(*std::declval<const iterator_t<Container>&>());
-
-// the type of dereferencing a const_iterator
-template <typename Container>
-using const_iterator_t_deref =
-    decltype(*std::declval<const_iterator_t<Container>&>());
-
-// iterator_end_t
-template <typename Container>
-using iterator_end_t = decltype(fancy_getters::end(std::declval<Container&>()));
 
 template <typename T, typename = void>
 struct is_iterable_t : std::false_type {};
