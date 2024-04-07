@@ -35,20 +35,20 @@ class ATATIteratorTools::Zipped {
   // passed in the actual types of the tuples of iterators and the type for
   // deref they'd need to be known in the function declarations below.
 
-  template <typename TupleTypeT, template <typename> class TupleIteratorType,
-	    template <typename> class TupleDeref>
+  template <typename TupleT, template <typename> class TupleIteratorT,
+	    template <typename> class TupleDerefT>
   class Iterator {
    public:
-    TupleIteratorType<TupleTypeT> iters_;
+    TupleIteratorT<TupleT> iters_;
 
    public:
     using iterator_category = std::input_iterator_tag;
-    using value_type = TupleDeref<TupleTypeT>;
+    using value_type = TupleDerefT<TupleT>;
     using difference_type = std::ptrdiff_t;
     using pointer = value_type*;
     using reference = value_type;
 
-    constexpr Iterator(TupleIteratorType<TupleTypeT>&& iters)
+    constexpr Iterator(TupleIteratorT<TupleT>&& iters)
 	: iters_(std::move(iters)) {}
 
     Iterator& operator++() {
@@ -78,7 +78,7 @@ class ATATIteratorTools::Zipped {
       return !(*this != other);
     }
 
-    TupleDeref<TupleTypeT> operator*() { return {(*std::get<Is>(iters_))...}; }
+    TupleDerefT<TupleT> operator*() { return {(*std::get<Is>(iters_))...}; }
 
     constexpr auto operator->() -> ArrowProxy<decltype(**this)> {
       return {**this};

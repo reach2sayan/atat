@@ -19,19 +19,16 @@ inline constexpr decltype(auto) compose(F&& f) {
 // something went wrong. This gives better error messages
 template <typename P1, typename P2, typename F, typename Tail, typename... T>
 void compose_impl(P1, P2, F&&, Tail&&, T&&...) {
-  constexpr auto unitail = std::is_invocable_v<Tail, T...>;
-  constexpr auto multitail = (std::is_invocable_v<Tail, T> && ...);
-  if constexpr (unitail) {
-    using tail_type = std::invoke_result_t<Tail, T...>;
-    static_assert(std::is_invocable_v<F, tail_type>,
-		  "Function not callable with result of next function");
-  } else if constexpr (multitail) {
-    static_assert(std::is_invocable_v<F, std::invoke_result<Tail, T>...>,
-		  "Function not callable with results from multiple calls of "
-		  "unary function");
-  }
-  static_assert(unitail || multitail, "function not callable");
-  static_assert(sizeof...(T) == 1U || !(unitail && multitail),
+  static_assert(
+      std::is_invocable_v<Tail, T...> || (std::is_invocable_v<Tail, T> && ...),
+      "function not callable");
+  static_assert(std::is_invocable_v<F, std::invoke_result_t<Tail, T...>>,
+		"Function not callable with result of next function");
+  static_assert(std::is_invocable_v<F, std::invoke_result<Tail, T>...>,
+		"Function not callable with results from multiple calls of "
+		"unary function");
+  static_assert(sizeof...(T) == 1U || !(std::is_invocable_v<Tail, T...> &&
+					(std::is_invocable_v<Tail, T> && ...)),
 		"ambigous composition");
 }
 
@@ -55,12 +52,13 @@ inline constexpr decltype(auto) compose(F&& f, Fs&&... fs) {
 	     auto&&... objs) -> decltype(auto) {
     using tail_type = decltype(tail);
 
-    constexpr auto unitail =
+    constexpr auto is_tail_single_func =
 	typename std::is_invocable<tail_type, decltype(objs)...>::type{};
-    constexpr auto multitail =
+    constexpr bool is_tail_multi_func =
 	(std::is_invocable_v<tail_type, decltype(objs)> && ...);
 
-    return compose_impl(unitail, std::bool_constant<multitail>{}, f, tail,
+    return compose_impl(is_tail_single_func,
+			std::bool_constant<is_tail_multi_func>{}, f, tail,
 			std::forward<decltype(objs)>(objs)...);
   };
 }
