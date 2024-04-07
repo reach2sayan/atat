@@ -12,9 +12,6 @@ template <typename TupleType, std::size_t... Is>
 class Zipped;
 
 template <typename TupleType, std::size_t... Is>
-Zipped<TupleType, Is...> zip_impl(TupleType&&, std::index_sequence<Is...>);
-
-template <typename TupleType, std::size_t... Is>
 Zipped<TupleType, Is...> zip_impl(TupleType&& containers,
 				  std::index_sequence<Is...>) {
   return {std::move(containers)};
@@ -50,7 +47,9 @@ class ATATIteratorTools::Zipped {
   template <typename TupleT, template <typename> class TupleIteratorT,
 	    template <typename> class TupleDerefT>
   class Iterator {
-   public:
+   private:
+    template <typename, template <typename> class, template <typename> class>
+    friend class Iterator;
     TupleIteratorT<TupleT> iters_;
 
    public:
@@ -84,7 +83,7 @@ class ATATIteratorTools::Zipped {
       if constexpr (sizeof...(Is) == 0) {
 	return false;  // empty is equal, hence this construction
       } else {
-	return (... && (std::get<Is>(iters_) != std::get<Is>(other.iters_)));
+	return ((std::get<Is>(iters_) != std::get<Is>(other.iters_)) && ...);
       }
     }
 
