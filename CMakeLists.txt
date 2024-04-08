@@ -644,6 +644,7 @@ ADD_EXECUTABLE(itertoolstests
 	${PROJECT_SOURCE_DIR}/tests/itertools_test_imap.c++
 	${PROJECT_SOURCE_DIR}/tests/itertools_test_filter.c++
 	${PROJECT_SOURCE_DIR}/tests/itertools_test_filterfalse.c++
+	${PROJECT_SOURCE_DIR}/tests/itertools_test_chain.c++
   ${PROJECT_SOURCE_DIR}/tests/itertools_test_range.c++)
 TARGET_LINK_LIBRARIES(itertoolstests PRIVATE itertools Catch2::Catch2WithMain)
 

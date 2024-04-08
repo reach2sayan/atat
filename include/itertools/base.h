@@ -2,6 +2,7 @@
 #define __ITERATORTOOLSBASE_HPP__
 
 #include <algorithm>
+#include <array>
 #include <cassert>
 #include <functional>
 #include <iostream>
@@ -44,6 +45,11 @@ auto end(T& t) -> decltype(end_impl(std::declval<T&>(), 42)) {
 
 template <typename T>
 using make_const_t = decltype(std::as_const(std::declval<T&>()));
+
+template <typename T>
+struct type_is {
+  using type = T;
+};
 
 // iterator_t<C> and iterator_deref_t<C> is the type of C and the type of
 // de-reference (underlying type) respectively
@@ -118,6 +124,35 @@ class ArrowProxy {
  private:
   T obj;
 };
+
+template <typename T, typename = void>
+struct ArrowHelper {
+  using type = void;
+  void operator()(T&) const noexcept {}
+};
+
+template <typename T>
+struct ArrowHelper<T*, void> {
+  using type = T*;
+  constexpr type operator()(T* t) const noexcept { return t; }
+};
+
+template <typename T>
+struct ArrowHelper<T, std::void_t<decltype(std::declval<T&>().operator->())>> {
+  using type = decltype(std::declval<T&>().operator->());
+  type operator()(T& t) const { return t.operator->(); }
+};
+
+template <typename T>
+using arrow_t = typename ArrowHelper<T>::type;
+
+template <typename C>
+using iterator_arrow_t = arrow_t<iterator_t<C>>;
+
+template <typename T>
+arrow_t<T> apply_arrow(T& t) {
+  return ArrowHelper<T>{}(t);
+}
 
 // the 'evaluators' only serve the purpose to give the current Types in
 // declval(expr)

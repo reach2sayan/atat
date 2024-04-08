@@ -44,13 +44,13 @@ constexpr EnumeratorClosureObject enumerate{};
 
 // Partial specialization of std::tuple related templates for data-holder
 namespace std {
-template <typename Elem>
-struct tuple_size<ATATIteratorTools::EnumeratorDataHolder<Elem>>
-    : public tuple_size<std::pair<std::size_t, Elem>> {};
+template <typename T>
+struct tuple_size<ATATIteratorTools::EnumeratorDataHolder<T>>
+    : public tuple_size<std::pair<std::size_t, T>> {};
 
-template <std::size_t N, typename Elem>
-struct tuple_element<N, ATATIteratorTools::EnumeratorDataHolder<Elem>>
-    : public tuple_element<N, std::pair<std::size_t, Elem>> {};
+template <std::size_t N, typename T>
+struct tuple_element<N, ATATIteratorTools::EnumeratorDataHolder<T>>
+    : public tuple_element<N, std::pair<std::size_t, T>> {};
 }  // namespace std
 
 template <typename Container>
