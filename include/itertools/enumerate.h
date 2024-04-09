@@ -89,7 +89,7 @@ class ATATIteratorTools::Enumerable {
     using value_type = Data<ContainerT>;
     using difference_type = std::ptrdiff_t;
     using pointer = value_type*;
-    using reference = value_type&;
+    using reference = value_type;
 
     constexpr Iterator(iterator_t<ContainerT>&& sub_iter, std::size_t start)
 	: sub_iter_{std::move(sub_iter)}, index_{start} {}

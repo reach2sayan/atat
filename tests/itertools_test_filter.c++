@@ -160,6 +160,7 @@ TEST_CASE("filter: iterator meets requirements", "[filter]") {
   std::string s{};
   auto c = it::filter([] { return true; }, s);
   REQUIRE(it::is_iterator_v<decltype(std::begin(c))>);
+  REQUIRE(tt::reference_t_matches_deref_t<decltype(std::begin(c))>::value);
 }
 
 template <typename T, typename U>

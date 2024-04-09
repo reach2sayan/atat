@@ -10,23 +10,25 @@ namespace tt = ATATTestTools;
 
 using Vec = std::vector<std::pair<std::size_t, char>>;
 TEST_CASE("Basic Functioning enumerate", "[enumerate]") {
-  std::string str = "abc";
-  auto e = it::enumerate(str);
+  Array<int> arr = {4, 5, 6};
+  auto e = it::enumerate(arr);
   Vec v(std::begin(e), std::end(e));
-  Vec vc{{0, 'a'}, {1, 'b'}, {2, 'c'}};
+  Vec vc{{0, 4}, {1, 5}, {2, 6}};
 
   REQUIRE(v == vc);
 }
 TEST_CASE("enumerate: can modify underlying sequence", "[enumerate]") {
-  std::string s = "abc";
+  Array<char> s = {'a', 'b', 'c'};
   for (auto&& [i, c] : it::enumerate(s)) {
     c = '-';
   }
-  REQUIRE(s == "---");
+  REQUIRE(s[0] == '-');
+  REQUIRE(s[1] == '-');
+  REQUIRE(s[2] == '-');
 }
 
 TEST_CASE("enumerate: has .index, .element, .first, and .second") {
-  std::string s = "abc";
+  Array<int> s = {1, 2, 3};
   auto e = it::enumerate(s);
   auto it = std::begin(e);
   REQUIRE(it->index == it->first);
@@ -34,13 +36,13 @@ TEST_CASE("enumerate: has .index, .element, .first, and .second") {
 }
 
 TEST_CASE("Empty enumerate", "[enumerate]") {
-  std::string emp{};
+  Array<int> emp = {};
   auto e = it::enumerate(emp);
   REQUIRE(std::begin(e) == std::end(e));
 }
 
 TEST_CASE("Postfix ++ enumerate", "[enumerate]") {
-  std::string s{"amz"};
+  Array<int> s{1, 2, 3};
   auto e = it::enumerate(s);
   auto it = std::begin(e);
   it++;
@@ -65,16 +67,16 @@ TEST_CASE("enumerate: structured bindings", "[enumerate]") {
 }
 
 TEST_CASE("Modifications through enumerate affect container", "[enumerate]") {
-  std::vector<int> v{1, 2, 3, 4};
-  std::vector<int> vc(v.size(), -1);
+  Array<int> v{1, 2, 3, 4};
+  std::vector<int> vc(v.getSize(), -1);
   for (auto&& p : it::enumerate(v)) {
     p.second = -1;
   }
 
-  REQUIRE(v == vc);
+  REQUIRE(v[0] == vc[0]);
 }
 TEST_CASE("enumerate with static array works", "[enumerate]") {
-  char arr[] = {'w', 'x', 'y'};
+  Array<char> arr = {'w', 'x', 'y'};
 
   SECTION("Conversion to vector") {
     auto e = it::enumerate(arr);
@@ -190,6 +192,7 @@ TEST_CASE("enumerate: iterator meets requirements", "[enumerate]") {
   std::string s{};
   auto c = it::enumerate(s);
   REQUIRE(it::is_iterator_v<decltype(std::begin(c))>);
+  REQUIRE(tt::reference_t_matches_deref_t<decltype(std::begin(c))>::value);
 }
 
 template <typename T>

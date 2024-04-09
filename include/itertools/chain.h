@@ -9,14 +9,14 @@ template <typename TupType, std::size_t... Is>
 class Chained;
 
 template <typename>
-struct TupleOfConstImpl;
+struct tuple_const_impl;
 
 template <typename... Ts>
-struct TupleOfConstImpl<std::tuple<Ts...>>
+struct tuple_const_impl<std::tuple<Ts...>>
     : type_is<std::tuple<make_const_t<Ts>...>> {};
 
 template <typename T>
-using make_tuple_const_t = typename TupleOfConstImpl<T>::type;
+using make_tuple_const_t = typename tuple_const_impl<T>::type;
 
 class ChainerClosureObject {
  private:
