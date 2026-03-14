@@ -137,7 +137,7 @@ int main(int argc, char *argv[]) {
 
   Structure lattice;
   Array<Arrayint> labellookup;
-  Array<AutoString> label;
+  Array<std::string> label;
   rMatrix3d axes;
   {
     ifstream latticefile("lat.in");
@@ -333,20 +333,21 @@ int main(int argc, char *argv[]) {
       run_mc(&mcdata,pmc,2,n_step,x_prec,which_col);
 
       if (strlen(snapshotnumfile)>0) {
-	AutoString snapshotnumfilec(snapshotnumfile);
-	char *pdot=strchr(snapshotnumfilec,'.');
-	if (pdot) {
-	  ostringstream num;
-	  num << snapshotnum << '\0';
-	  const char *pnum=num.str().c_str();
-	  strcpy(pdot-strlen(pnum),pnum);
-	  *pdot='.';
-	  ofstream file(snapshotnumfilec);
-	  file.setf(ios::fixed);
-	  file.precision(sigdig);
-	  pmc->view(labellookup,label,file,axes);
-	  snapshotnum++;
-	}
+          std::string filename = snapshotnumfile;   // assuming snapshotnumfilec is const char*
+          auto dot = filename.rfind('.');
+
+          if (dot != std::string::npos) {
+              std::string number = std::to_string(snapshotnum);
+
+              // replace the part before the dot with the number
+              filename.replace(0, dot, number);
+
+              std::ofstream file(filename);
+              file << std::fixed << std::setprecision(sigdig);
+
+              pmc->view(labellookup, label, file, axes);
+              ++snapshotnum;
+          }
       }
 
       if (init_gs==-1) mcdata.lro=0.;
@@ -445,20 +446,22 @@ int main(int argc, char *argv[]) {
       run_mc(&mcdata,pmc,1,n_step,x_prec,which_col);
 
       if (strlen(snapshotnumfile)>0) {
-	AutoString snapshotnumfilec(snapshotnumfile);
-	char *pdot=strchr(snapshotnumfilec,'.');
-	if (pdot) {
-	  ostringstream num;
-	  num << snapshotnum << '\0';
-	  const char *pnum=num.str().c_str();
-	  strcpy(pdot-strlen(pnum),pnum);
-	  *pdot='.';
-	  ofstream file(snapshotnumfilec);
-	  file.setf(ios::fixed);
-	  file.precision(sigdig);
-	  pmc->view(labellookup,label,file,axes);
-	  snapshotnum++;
-	}
+
+    std::string filename = snapshotnumfile;   // assuming snapshotnumfilec is const char*
+    auto dot = filename.rfind('.');
+
+    if (dot != std::string::npos) {
+        std::string number = std::to_string(snapshotnum);
+
+        // replace the part before the dot with the number
+        filename.replace(0, dot, number);
+
+        std::ofstream file(filename);
+        file << std::fixed << std::setprecision(sigdig);
+
+        pmc->view(labellookup, label, file, axes);
+        ++snapshotnum;
+    }
       }
 
       if (init_gs==-1) mcdata.lro=0.;

@@ -36,11 +36,12 @@ void display_help(int nb, AskStruct *label);
   { "-" #VAR, #VAR, TYP, &VAR }
 
 void chdir_robust(const char *dir);
+inline void chdir_robust(const std::string &dir) { chdir_robust(dir.c_str()); }
 
-int get_string(AutoString *ps, istream &file, const char *delim = " \t\n");
+int get_string(std::string *ps, istream &file, const char *delim = " \t\n");
 int skip_delim(istream &file, const char *delim = " \t\n");
 int get_row_numbers(Array<Real> *pa, istream &file);
 void read_table(Array<Array<Real>> *pa, istream &file, int keepempty);
-void get_atat_root(AutoString *patatroot);
+void get_atat_root(std::string *patatroot);
 
 #endif

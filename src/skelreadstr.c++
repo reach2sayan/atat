@@ -4,11 +4,11 @@
 #include "version.h"
 
 // write extra help as plain text
-char *helpstring="More help!\n";
+const char *helpstring="More help!\n";
 
 int main(int argc, char *argv[]) {
   // parsing command line. See getvalue.hh for details;
-  char *strfilename="str.in";
+  const char *strfilename="str.in";
   Real r=0;
   int n=0;
   int b=0;
@@ -46,7 +46,7 @@ int main(int argc, char *argv[]) {
 
   // parsing structure file. See parse.hh for detail;
   Structure str; // contains cell and atom positions in cartesian and atom types as integers;
-  Array<AutoString> label; //these integers will point to strings in this array;
+  Array<std::string> label; //these integers will point to strings in this array;
   rMatrix3d axes; // coordinate system the user wants to use (multiply coord by (!axes) to get them into user coordinates);
   {
     Array<Arrayint> labellookup;

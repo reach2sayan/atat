@@ -88,8 +88,8 @@ public:
   void init(ifstream &file);
   void write(LinkedList<rVector3d> *plistpts, LinkedList<Array<int>> *plistpoly,
              const rVector3d &where, const rVector3d &right,
-             const rVector3d &up, char *string);
-  Real get_length(char *string, int includelast = 0);
+             const rVector3d &up, const char *string);
+  Real get_length(const char *string, int includelast = 0);
 };
 
 #endif

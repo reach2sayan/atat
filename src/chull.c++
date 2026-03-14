@@ -446,7 +446,7 @@ int is_point_in_hull(const Array<Real> &x, const LinkedList<LinearInequality> &i
   return (!i);
 }
 
-void read_inequalities(LinkedList<LinearInequality> *ineq_list, const Array<AutoString> &label, istream &s) {
+void read_inequalities(LinkedList<LinearInequality> *ineq_list, const Array<std::string> &label, istream &s) {
   skip_delim(s," \t\n");
   while (!s.eof()) {
     LinearInequality ineq(label.get_size());
@@ -460,7 +460,7 @@ void read_inequalities(LinkedList<LinearInequality> *ineq_list, const Array<Auto
 	ERRORQUIT("Error parsing inequality");
       }
       skip_delim(s,"* \t\n");
-      AutoString w;
+      std::string w;
       get_string(&w,s,"\t\n +-<>");
       if (!is_in_array(label,w)) {
         cerr << "unknown atom label " << w << endl;
@@ -484,7 +484,7 @@ void read_inequalities(LinkedList<LinearInequality> *ineq_list, const Array<Auto
   }
 }
 
-void read_equalities(LinkedList<LinearInequality> *ineq_list, const Array<AutoString> &label, istream &s) {
+void read_equalities(LinkedList<LinearInequality> *ineq_list, const Array<std::string> &label, istream &s) {
   skip_delim(s," \t\n");
   while (!s.eof()) {
     LinearInequality ineq(label.get_size());
@@ -498,7 +498,7 @@ void read_equalities(LinkedList<LinearInequality> *ineq_list, const Array<AutoSt
 	ERRORQUIT("Error parsing equality");
       }
       skip_delim(s,"* \t\n");
-      AutoString w;
+      std::string w;
       get_string(&w,s,"\t\n +-=");
       if (!is_in_array(label,w)) {
         cerr << "unknown atom label " << w << endl;

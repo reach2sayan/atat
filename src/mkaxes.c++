@@ -183,27 +183,27 @@ int main(int argc, char *argv[]) {
   cout.precision(sigdig);
 
   PolyFont3D font;
-  Array<AutoString> labels(4);
+  Array<std::string> labels(4);
   Real fontsize=0.05;
   if (strlen(allvertexlabels)>0) {
-    AutoString aallvertexlabels(allvertexlabels);
-    char *begstr=aallvertexlabels;
+    std::string aallvertexlabels(allvertexlabels);
+    char *begstr = aallvertexlabels.data();
     char *endstr=begstr+strlen(begstr);
     for (int l=0; l<labels.get_size(); l++) {
       char *seek=begstr;
       while (seek<endstr && *seek!=',') {seek++;}
       *seek=0;
-      labels(l).set(begstr);
+      labels(l) = begstr;
       begstr=seek;
       if (begstr<endstr) {begstr++;}
     }
 
-    AutoString fontfilename(font_file);
+    std::string fontfilename(font_file);
     if (strlen(font_file)==0) {
       get_atat_root(&fontfilename);
       fontfilename+="/data/font.dat";
     }
-    ifstream fontfile(fontfilename);
+    ifstream fontfile(fontfilename.c_str());
     if (!fontfile) ERRORQUIT("Unable to open font file.");
     font.init(fontfile);
   }
@@ -230,8 +230,8 @@ int main(int argc, char *argv[]) {
 	rVector3d right=rVector3d(1.,0.,0.)*fontsize;
 	rVector3d up=rVector3d(0.,0.,1.)*fontsize;
 	for (int i=0; i<3; i++) {
-	  rVector3d where=vertex(i)+rVector3d(0.,0.,(zmax-zmin)/zscale/2.0)+outshift(i)*fontsize*2.-right*font.get_length(labels(i))/2.;
-	  font.write(&listpts,&listpoly,where,right,up,labels(i));
+	  rVector3d where=vertex(i)+rVector3d(0.,0.,(zmax-zmin)/zscale/2.0)+outshift(i)*fontsize*2.-right*font.get_length(labels(i).c_str())/2.;
+	  font.write(&listpts,&listpoly,where,right,up,labels(i).c_str());
 	}
 	Array<rVector3d> apts;
 	LinkedList_to_Array(&apts,listpts);
@@ -275,8 +275,8 @@ int main(int argc, char *argv[]) {
 	rVector3d right=rVector3d(1.,0.,0.)*fontsize;
 	rVector3d up=rVector3d(0.,0.,1.)*fontsize;
 	for (int i=0; i<4; i++) {
-	  rVector3d where=vertex(i)+outshift(i)*fontsize*2.-right*font.get_length(labels(i))/2.;
-	  font.write(&listpts,&listpoly,where,right,up,labels(i));
+	  rVector3d where=vertex(i)+outshift(i)*fontsize*2.-right*font.get_length(labels(i).c_str())/2.;
+	  font.write(&listpts,&listpoly,where,right,up,labels(i).c_str());
 	}
 	Array<rVector3d> apts;
 	LinkedList_to_Array(&apts,listpts);

@@ -1,12 +1,12 @@
 #include <fstream>
-
+#include <numbers>
 #include "getvalue.h"
 #include "parse.h"
 #include "version.h"
 #include "xtalutil.h"
 
 void list_atom(ostream &file, const Array<Arrayint> &labellookup,
-	       const Array<AutoString> &label, int thetype) {
+	       const Array<std::string> &label, int thetype) {
   for (int i = 0; i < labellookup(thetype).get_size(); i++) {
     if (i > 0) {
       cout << ",";
@@ -16,7 +16,7 @@ void list_atom(ostream &file, const Array<Arrayint> &labellookup,
 }
 
 int main(int argc, char *argv[]) {
-  char *latfilename = "lat.in";
+  const char *latfilename = "lat.in";
   int listbond = 0;
   Real user_rad = 0.0;
   int sigdig = 5;
@@ -39,7 +39,7 @@ int main(int argc, char *argv[]) {
   }
   Structure lat;
   Array<Arrayint> labellookup;
-  Array<AutoString> label;
+  Array<std::string> label;
   rMatrix3d axes;
   {
     ifstream latfile(latfilename);
@@ -67,7 +67,7 @@ int main(int argc, char *argv[]) {
 	  rVector3d r2 = clus((i + 2) % body) - clus(i % body);
 	  ang(i) = acos(r1 * r2 / sqrt((r1 * r1) * (r2 * r2)));
 	}
-	cout << max(ang) * 180 / M_PI << " ";
+	cout << max(ang) * 180 / std::numbers::pi << " ";
 	/*
 	for (int i=0; i<body; i++) {
 	  rVector3d r1=clus((i+1)%body)-clus(i%body);

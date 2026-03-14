@@ -103,7 +103,7 @@ OptimizedStructure::OptimizedStructure(void): FunctionWithGrad(), grad(), val(0)
 
 OptimizedStructure::~OptimizedStructure(void) {ofstream file("stop");}
 
-void OptimizedStructure::init(Array<Real> *px, const rMatrix3d &_axes, const Structure &_str, const Array<AutoString> &_atom_label, Real forcefact, int _dimstrain) {
+void OptimizedStructure::init(Array<Real> *px, const rMatrix3d &_axes, const Structure &_str, const Array<std::string> &_atom_label, Real forcefact, int _dimstrain) {
   axes=_axes;
   str=_str;
   dimstrain=_dimstrain;

@@ -1,4 +1,5 @@
 #include <fstream>
+#include <numbers>
 
 #include "getvalue.h"
 #include "linalg.h"
@@ -32,17 +33,17 @@ int main(int argc, char *argv[]) {
   Real lfact = 50.;
   Real dlfact = 4e-1;
   Real dfact = 1e-2;
-  Real totall = M_PI * 0.5;
+  Real totall = std::numbers::pi * 0.5;
   Real told = 1e-4;
 
-  //  for (totall=M_PI/8.; totall<M_PI*2.0; totall+=M_PI/32.) {
+  //  for (totall=std::numbers::pi/8.; totall<std::numbers::pi*2.0; totall+=std::numbers::pi/32.) {
   Array<Array<Real> > band(n + 1);
   for (int i = 0; i <= n; i++) {
     band(i).resize(dim);
   }
-  band(0)(0) = M_PI / 4;
-  band(0)(1) = M_PI / 10.;
-  band(n)(0) = M_PI;
+  band(0)(0) = std::numbers::pi / 4;
+  band(0)(1) = std::numbers::pi / 10.;
+  band(n)(0) = std::numbers::pi;
   band(n)(1) = 0.0;
   for (int i = 1; i < n; i++) {
     Real r = (Real)i / (Real)(n);

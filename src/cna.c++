@@ -1,5 +1,5 @@
 #include <fstream>
-
+#include <numbers>
 #include "getvalue.h"
 #include "parse.h"
 #include "xtalutil.h"
@@ -67,7 +67,7 @@ void calc_pair_corr(Array<Real> *pcorr, const Structure &str, Real rmax) {
 void smooth_pair_corr(Array<Real> *psmocorr, const Array<Real> &corr,
 		      Real width) {
   Real h = 2. * width;
-  Real k = 1. / sqrt(2. * M_PI) / width;
+  Real k = 1. / sqrt(2. * std::numbers::pi) / width;
   psmocorr->resize(corr.get_size());
   zero_array(psmocorr);
   for (int i = 0; i < corr.get_size(); i++) {
@@ -203,7 +203,7 @@ int main(int argc, char *argv[]) {
   if (shell < cshell) ERRORQUIT("Error: must have s>=cs");
   if (rmax > 0.) {
     Array<Array<int> > site_type_list;
-    Array<AutoString> atom_label;
+    Array<std::string> atom_label;
     istream &infile = cin;
     Array<Real> corr(n_bin);
     zero_array(&corr);
@@ -251,7 +251,7 @@ int main(int argc, char *argv[]) {
       LinkedList_to_Array(&cutoff, cutofflist);
     }
     Array<Array<int> > site_type_list;
-    Array<AutoString> atom_label;
+    Array<std::string> atom_label;
     LinkedList<Array<int> > all_common_neighbor;
     istream &infile = cin;
     while (!infile.eof()) {

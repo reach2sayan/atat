@@ -1,5 +1,5 @@
 #include <fstream>
-
+#include <numbers>
 #include "array.h"
 #include "getvalue.h"
 #include "parse.h"
@@ -49,9 +49,9 @@ Real get_2d_strain(const rMatrix2d s) {
 }
 
 int main(int argc, char *argv[]) {
-  char *cellfilename1 = "";
-  char *cellfilename2 = "";
-  char *planefilename = "";
+  const char *cellfilename1 = "";
+  const char *cellfilename2 = "";
+  const char *planefilename = "";
   Real rmax = 0;
   Real eps = zero_tolerance;
   AskStruct options[] = {
@@ -131,7 +131,7 @@ int main(int argc, char *argv[]) {
       Real p = ((*j)(0) * (*i)(0)) / ((*i)(0) * (*i)(0));
       if (fabs(p) <= 0.5) {
 	Real ang1 = angle((*j)(0), (*i)(0));
-	if (!near_zero(ang1) && !near_zero(ang1 - M_PI)) {
+	if (!near_zero(ang1) && !near_zero(ang1 - std::numbers::pi)) {
 	  rMatrix2d supcell1, supcell2;
 	  supcell1.set_column(
 	      0, norm((*i)(0)) * rVector2d(cos(ang1 / 2), sin(ang1 / 2)));

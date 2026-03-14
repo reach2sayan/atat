@@ -4,7 +4,6 @@
 #include "machdep.h"
 #include <iostream>
 #include <memory.h>
-#include <sys/time.h>
 
 // -------------------------- divers
 
@@ -100,14 +99,7 @@ typedef unsigned char uchar;
 #define TRACEIT(var) cerr << #var << endl << var << endl;
 
 inline void rndseed(int seed = 0) {
-  if (seed == 0) {
-    struct timeval tv;
-    struct timezone tz;
-    gettimeofday(&tv, &tz);
-    srand(tv.tv_usec);
-  } else {
     srand(seed);
-  }
 }
 
 inline int random(int max) { return rand() % max; }

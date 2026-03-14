@@ -81,7 +81,7 @@ int main(int argc, char *argv[]) {
 	}
 	Structure lattice;
 	Array<Arrayint> labellookup;
-	Array<AutoString> label;
+	Array<std::string> label;
 	rMatrix3d axes;
 	{
 		ifstream latticefile(latticefilename);
@@ -138,7 +138,7 @@ int main(int argc, char *argv[]) {
 		ifstream dilfile(dilutefilename);
 		if (!dilfile) ERRORQUIT("Unable to open dilute sites file.");
 		while (!dilfile.eof()) {
-			AutoString tmp;
+			std::string tmp;
 			get_string(&tmp,dilfile,"\n");
 			if (dilfile.eof()) break;
 			ifstream line(tmp);

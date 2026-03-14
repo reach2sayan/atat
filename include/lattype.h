@@ -36,7 +36,7 @@ enum BravaisType {
 rMatrix3d find_reduced_cell(const rMatrix3d &cell);
 int is_reduced_cell(const rMatrix3d &cell);
 BravaisType find_bravais_type(rMatrix3d *p_conventional, const rMatrix3d &cell);
-void print_bravais_type(AutoString *s, BravaisType bt);
+void print_bravais_type(std::string *s, BravaisType bt);
 rMatrix3d find_symmetric_cell(const rMatrix3d &cell);
 void find_smallest_supercell_enclosing_sphere(rMatrix3d *psupercell,
                                               const rMatrix3d cell, Real r);

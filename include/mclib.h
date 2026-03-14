@@ -53,7 +53,7 @@ public:
   void init_run(Real _T, Real _mu);
   void run(int mc_passes, int mode = 1); // 1: grand-canonical, 2: canonical;
   void view(const Array<Arrayint> &labellookup,
-            const Array<AutoString> &atom_label, ofstream &file,
+            const Array<std::string> &atom_label, ofstream &file,
             const rMatrix3d &axes);
 
   const Array<Real> &get_cur_corr(void) const { return cur_rho; }

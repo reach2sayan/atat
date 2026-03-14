@@ -18,7 +18,7 @@ void fix_energy(Real *pE, const Array<Real> &mult, const Array<Real> &corr,
                 const PolyInterpolatorBig<Array<Real>> &teci, Real T);
 
 class TDependentECIPhase : public PhaseThermoData {
-  AutoString labeltocreate;
+  std::string labeltocreate;
   Structure lattice;
   SpaceGroup space_group;
   Structure str;

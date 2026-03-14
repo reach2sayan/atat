@@ -1,5 +1,5 @@
 #include <fstream>
-
+#include <numbers>
 #include "getvalue.h"
 #include "linalg.h"
 #include "meshutil.h"
@@ -43,7 +43,7 @@ void make_2dview(Array<Array<rVector2d> > *ptri, Array<Array<Real> > *prgb,
   view.set_row(0, side);
   view.set_row(1, myup);
   view.set_row(2, front);
-  Real dtoplane = 1. / tan((M_PI / 180.) * fov / 2.);
+  Real dtoplane = 1. / tan((std::numbers::pi / 180.) * fov / 2.);
   Array<rVector2d> trans_pts(pts.get_size());
   Array<Real> dpts(pts.get_size());
   for (int i = 0; i < pts.get_size(); i++) {
@@ -125,18 +125,18 @@ void write_gnuplot(ostream &file, const char *cmd,
   file << "unset out " << endl;
 }
 
-char *helpstring = "";
+const char *helpstring = "";
 
 int main(int argc, char *argv[]) {
   // parsing command line. See getvalue.hh for details;
-  char *infilename = "tri.bi";
+  const char *infilename = "tri.bi";
   rVector3d eye(0., -5, 0.);
   rVector3d lookat(0., 0., 0.);
   rVector3d up(0., 0., 1.);
   rVector3d light(0., sqrt(2.) / 2., -sqrt(2.) / 2.);
   Real ambiant = 0.5;
   Real fov = 30.;
-  char *termcmd = "set term postscript eps color ; set out 'test.eps'";
+  const char *termcmd = "set term postscript eps color ; set out 'test.eps'";
   int dohelp = 0;
   int dummy = 0;
   Array<Real> eyev, lookatv, upv, lightv;

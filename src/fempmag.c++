@@ -25,9 +25,9 @@ Real calc_empirical_mag_free_energy(Real spin, Real T, Real Tc, Real kB,
 extern char *helpstring;
 
 int main(int argc, char *argv[]) {
-  char *strfilename = "str.out";
-  char *Tcurriefilename = "tcurrie";
-  char *magmomfilename = "magmom";
+  const char *strfilename = "str.out";
+  const char *Tcurriefilename = "tcurrie";
+  const char *magmomfilename = "magmom";
   int sigdig = 5;
   int dohelp = 0;
   Real kboltzman = 1.380658e-23 / 1.60217733e-19;  // k_B in eV/K;
@@ -86,7 +86,7 @@ int main(int argc, char *argv[]) {
   }
   Structure str;
   Array<Arrayint> labellookup;
-  Array<AutoString> label;
+  Array<std::string> label;
   {
     ifstream strfile(strfilename);
     if (!strfile) ERRORQUIT("Unable to open structure file");

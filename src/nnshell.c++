@@ -5,7 +5,7 @@
 #include "version.h"
 
 
-void list_atom(ostream &file, const Array<Arrayint> &labellookup, const Array<AutoString> &label, int thetype) {
+void list_atom(ostream &file, const Array<Arrayint> &labellookup, const Array<std::string> &label, int thetype) {
   for (int i=0; i<labellookup(thetype).get_size(); i++) {
     if (i>0) {cout << ",";}
     cout << label(labellookup(thetype)(i));
@@ -33,7 +33,7 @@ int main(int argc, char *argv[]) {
   }
   Structure lat;
   Array<Arrayint> labellookup;
-  Array<AutoString> label;
+  Array<std::string> label;
   rMatrix3d axes;
   if (strcmp(latfilename,"-")==0) {
     parse_lattice_file(&lat.cell, &lat.atom_pos, &lat.atom_type, &labellookup, &label, cin, &axes);

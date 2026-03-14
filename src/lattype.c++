@@ -414,7 +414,7 @@ rMatrix3d find_symmetric_cell(const rMatrix3d &cell) {
   return conv_cell * (~T);
 }
 
-void print_bravais_type(AutoString *s, BravaisType bt) {
+void print_bravais_type(std::string *s, BravaisType bt) {
   char codes[] = "PFICRctomah";
   for (int i = strlen(codes) - 1; i >= 0; i--) {
     if (bt & (1 << i))

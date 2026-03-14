@@ -14,8 +14,8 @@ void to_lower(char *buf) {
 
 int main(int argc, char *argv[]) {
   int maxvol = 0;
-  char *latticefilename = "lat.in";
-  char *radiifilename = "rad.in";
+  const char *latticefilename = "lat.in";
+  const char *radiifilename = "rad.in";
   int sigdig = 6;
   int dummy = 0;
   Real scale = 1.;
@@ -40,7 +40,7 @@ int main(int argc, char *argv[]) {
   // read in lattice (see parse.h);
   Structure lat;
   Array<Arrayint> site_type_list;
-  Array<AutoString> atom_label;
+  Array<std::string> atom_label;
   rMatrix3d axes;
   if (strcmp(latticefilename, "-") == 0) {
     parse_lattice_file(&lat.cell, &lat.atom_pos, &lat.atom_type,
@@ -53,10 +53,10 @@ int main(int argc, char *argv[]) {
                        &site_type_list, &atom_label, file, &axes);
   }
 
-  Array<AutoString> radii_label;
+  Array<std::string> radii_label;
   Array<Real> radii;
   {
-    LinkedList<AutoString> radii_label_list;
+    LinkedList<std::string> radii_label_list;
     LinkedList<Real> radii_list;
     ifstream file(radiifilename);
     if (!file)
@@ -68,7 +68,7 @@ int main(int argc, char *argv[]) {
       if (strlen(buf) == 0)
         break;
       to_lower(buf);
-      radii_label_list << new AutoString(buf);
+      radii_label_list << new std::string(buf);
       Real r;
       file >> r;
       radii_list << new Real(r);

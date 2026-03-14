@@ -18,8 +18,6 @@ typedef double Real;
 #endif
 #define PATHSEP '/'
 #include <stdlib.h>
-#include <unistd.h>
-
 #include "fixagg.h"
 
 using namespace std;

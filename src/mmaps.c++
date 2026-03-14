@@ -1,7 +1,10 @@
 #include <fstream>
 #include <sstream>
+#include <filesystem>
+#include <thread>
+#include <chrono>
+
 #include <iomanip>
-#include <unistd.h>
 #include <sys/stat.h>
 #include "parse.h"
 #include "mrefine.h"
@@ -21,22 +24,29 @@ int sigdig=6;
 //  atom_label: (IN)        / ;
 //  axes: (IN) coordinate system in which to express coordinates;
 void write_structure_file(const StructureInfo &str, const Structure &lat,
-			  const Array<Arrayint> &site_type_list, const Array<AutoString> &atom_label, const rMatrix3d &axes) {
-  mkdir(str.label,S_IRWXU | S_IRWXG | S_IRWXO);
-  if (chdir(str.label)==0) {
+			  const Array<Arrayint> &site_type_list, const Array<std::string> &atom_label, const rMatrix3d &axes) {
+    std::filesystem::create_directory(str.label);
+    std::filesystem::permissions(
+        str.label,
+        std::filesystem::perms::owner_all |
+        std::filesystem::perms::group_all |
+        std::filesystem::perms::others_all,
+        std::filesystem::perm_options::replace
+    );
+  if (std::filesystem::exists(str.label.c_str())) {
     ofstream file("str.out");
     file.setf(ios::fixed);
     file.precision(sigdig);
     write_structure(str,lat,site_type_list,atom_label, axes, file);
     ofstream waitfile("wait");
-    chdir("..");
+    std::filesystem::current_path("..");
   }
 }
 
 // Writes all the output files describing the current state;
 // of the cluster expansion (see class CEFitInfo in raffine.h).
 void write_fit_info(const CEFitInfo &fitinfo, const Structure &lattice,
-		    const Array<Arrayint> &site_type_list, const Array<AutoString> &atom_label, const rMatrix3d &axes, const char *propnameext="eci.out") {
+		    const Array<Arrayint> &site_type_list, const Array<std::string> &atom_label, const rMatrix3d &axes, const char *propnameext="eci.out") {
   ofstream log("maps.log");
   log << "Maps version " MAPS_VERSION << endl;
   if (fitinfo.status & CEFitInfo::fit_impossible) {
@@ -246,11 +256,11 @@ int update_structure(StructureInfo *pstr, Real atom_factor, const char *propname
   return changed;
 }
 
-int update_all_structures(StructureBank<StructureInfo> *pstr_bank, const Structure &lattice, const Array<Arrayint> &site_type_list, const Array<AutoString> &atom_label, const char *propname="energy", int intensive=0) {
+int update_all_structures(StructureBank<StructureInfo> *pstr_bank, const Structure &lattice, const Array<Arrayint> &site_type_list, const Array<std::string> &atom_label, const char *propname="energy", int intensive=0) {
   Real atom_factor=(intensive ? -lattice.atom_pos.get_size() : lattice.atom_pos.get_size());
   int changed=0;
   // list structures on disk;
-  LinkedList<AutoString> label_on_disk;
+  LinkedList<std::string> label_on_disk;
   if (MyMPIobj.is_root()) {
     system("ls */str.out 2> /dev/null | sed 's+/str.out++g' > strlist.out");
     ifstream strfile("strlist.out");
@@ -261,7 +271,7 @@ int update_all_structures(StructureBank<StructureInfo> *pstr_bank, const Structu
       char tmp;
       strfile.get(tmp);
       if (strlen(buf)==0) break;
-      label_on_disk << new AutoString(buf);
+      label_on_disk << new std::string(buf);
     }
     unlink("strlist.out"); // cleanup structure list file;
   }
@@ -270,7 +280,7 @@ int update_all_structures(StructureBank<StructureInfo> *pstr_bank, const Structu
   LinkedListIterator<StructureInfo> i(pstr_bank->get_structure_list());
   for (; i; i++) {
     if (!(i->status & StructureInfo::unknown)) {
-      LinkedListIterator<AutoString> i_disk(label_on_disk);
+      LinkedListIterator<std::string> i_disk(label_on_disk);
       for ( ; i_disk; i_disk++) {
 	if (i->label==*i_disk) break;
       }
@@ -279,26 +289,26 @@ int update_all_structures(StructureBank<StructureInfo> *pstr_bank, const Structu
 	changed=1;
       }
       else {
-	if (chdir(i->label)==0) {
+	if (std::filesystem::exists(i->label.c_str())) {
 	  if (update_structure(&(*i),atom_factor,propname)) changed=1;
 	  delete label_on_disk.detach(i_disk);
-	  chdir("..");
+      std::filesystem::current_path("..");
 	}
       }
     }
   }
 
-  LinkedListIterator<AutoString> i_disk(label_on_disk);
+  LinkedListIterator<std::string> i_disk(label_on_disk);
   for (; i_disk; i_disk++) {
     int str_is_ok=0;
     StructureInfo str;
     if (MyMPIobj.is_root()) {
-      if (chdir(*i_disk)==0) {
+      if (std::filesystem::exists(*i_disk)==0) {
 	ifstream strfile("str.out");
 	if (strfile) {
 	  str_is_ok=parse_structure_file(&str.cell,&str.atom_pos,&str.atom_type,atom_label,strfile);
 	}
-	chdir("..");
+    std::filesystem::current_path("..");
       }
       else {
 	cerr << "Unable to cd to " << *i_disk << endl;
@@ -316,12 +326,12 @@ int update_all_structures(StructureBank<StructureInfo> *pstr_bank, const Structu
       if (fix_atom_type(&str,lattice,site_type_list,0)) {
 	StructureInfo *pstr;
 	if (pstr_bank->add_structure(str,&pstr)) {
-	  pstr->label.set(*i_disk);
+	  pstr->label = *i_disk;
 	  if (update_structure(pstr,atom_factor,propname)) changed=1;
 	}
 	else {
 	  if (pstr->status & StructureInfo::unknown) {
-	    pstr->label.set(*i_disk);
+	    pstr->label = *i_disk;
 	    if (update_structure(pstr,atom_factor,propname)) changed=1;
 	  }
 	  else {
@@ -405,7 +415,7 @@ int main(int argc, char *argv[]) {
   // read in lattice (see parse.h);
   Structure lat;
   Array<Arrayint> site_type_list;
-  Array<AutoString> atom_label;
+  Array<std::string> atom_label;
   rMatrix3d axes;
   if (MyMPIobj.is_root()) {
     ifstream file(latticefilename);
@@ -534,7 +544,7 @@ int main(int argc, char *argv[]) {
     }
     for (int t=0; t<polltime; t++) {
       if (MyMPIobj.file_exists("refresh")) break;
-      sleep(1); // wait a little;
+      std::this_thread::sleep_for(std::chrono::seconds(1));
     }
   }
   if (MyMPIobj.is_root()) {

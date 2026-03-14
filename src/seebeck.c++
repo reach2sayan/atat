@@ -1,4 +1,5 @@
 #include <fstream>
+#include <numbers>
 
 #include "getvalue.h"
 #include "lstsqr.h"
@@ -17,10 +18,10 @@ class KBand {
 };
 
 int main(int argc, char *argv[]) {
-  char *delim = "\t";
+  const char *delim = "\t";
   int dohelp = 0;
-  char *strfilename = "str.out";
-  char *bandfilename = "bands.out";
+  const char *strfilename = "str.out";
+  const char *bandfilename = "bands.out";
   int sigdig = 5;
   Real kr = 0.5;
   int nosym = 0;
@@ -61,7 +62,7 @@ int main(int argc, char *argv[]) {
 
   Structure str;
   Array<Arrayint> labellookup;
-  Array<AutoString> label;
+  Array<std::string> label;
   rMatrix3d axes;
   {
     ifstream strfile(strfilename);
@@ -73,7 +74,7 @@ int main(int argc, char *argv[]) {
   spacegroup.cell = str.cell;
   find_spacegroup(&spacegroup.point_op, &spacegroup.trans, str.cell,
 		  str.atom_pos, str.atom_type);
-  rMatrix3d rec_lat = 2. * M_PI * !(~str.cell);
+  rMatrix3d rec_lat = 2. * std::numbers::pi * !(~str.cell);
   rMatrix3d inv_rec_lat = !rec_lat;
 
   int nb_bands = 0;

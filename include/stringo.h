@@ -2,131 +2,49 @@
 #define __STRINGO_H__
 
 #include "misc.h"
+
+#include <cstring>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
-#include <string.h>
+#include <string>
 
-class AutoString {
-protected:
-  char *buf;
-#ifdef DEBUG
-  int truelen;
-#endif
-public:
-  AutoString(const char *str) {
-    buf = NULL;
-    set(str);
-  }
-  AutoString(const AutoString &a) {
-    buf = NULL;
-    set(a);
-  }
-  AutoString(int len) {
-    buf = NULL;
-    set(len);
-  }
-  void set(const char *str) {
-    if (buf)
-      delete[] buf;
-    if (str) {
-      buf = new char[strlen(str) + 1];
-      strcpy(buf, str);
-#ifdef DEBUG
-      truelen = strlen(str);
-#endif
-    } else
-      buf = NULL;
-  }
-  void set(int len) {
-    if (buf)
-      delete[] buf;
-    buf = new char[len + 1];
-    MEMCLR(buf, len + 1);
-#ifdef DEBUG
-    truelen = len;
-#endif
-  }
-  AutoString(void) {
-    buf = NULL;
-    set("");
-  }
-  int len(void) const {
-    if (buf) {
-      return strlen(buf);
-    } else {
-      return 0;
-    }
-  }
-  void operator=(const AutoString &a) { set(a); }
-#ifndef STRING_FIX
-  operator char *() { return buf; }
-#endif
-  operator const char *() const { return buf; }
-  char &operator[](int i) {
-#ifdef DEBUG
-    if (i < 0 || i >= truelen) {
-      cerr << "AutoString out of range: " << i << "/" << truelen << endl;
-      ERRORQUIT("Abort");
-    } else
-#endif
-      return buf[i];
-  }
-  const char &operator[](int i) const {
-#ifdef DEBUG
-    if (i < 0 || i >= truelen) {
-      cerr << "AutoString out of range: " << i << "/" << truelen << endl;
-      ERRORQUIT("Abort");
-    } else
-#endif
-      return buf[i];
-  }
-  void operator+=(const AutoString &s) {
-    char *newbuf = new char[len() + s.len() + 1];
-    strcpy(newbuf, *this);
-    strcpy(newbuf + len(), s);
-    delete[] buf;
-    buf = newbuf;
-#ifdef DEBUG
-    truelen = strlen(newbuf);
-#endif
-  }
-  void operator+=(char c) {
-    char *newbuf = new char[len() + 2];
-    strcpy(newbuf, *this);
-    newbuf[len()] = c;
-    newbuf[len() + 1] = 0;
-    delete[] buf;
-    buf = newbuf;
-#ifdef DEBUG
-    truelen = strlen(newbuf);
-#endif
-  }
-  int operator==(const AutoString &s) const { return (strcmp(*this, s) == 0); }
-  ~AutoString() {
-    if (buf)
-      delete[] buf;
-  }
-};
+inline int strcmp(const std::string &lhs, const char *rhs) {
+  return lhs.compare(rhs == nullptr ? "" : rhs);
+}
 
-Real to_real(const AutoString &s);
+inline int strcmp(const char *lhs, const std::string &rhs) {
+  return std::strcmp(lhs == nullptr ? "" : lhs, rhs.c_str());
+}
+
+inline int strcmp(const std::string &lhs, const std::string &rhs) {
+  return lhs.compare(rhs);
+}
+
+inline size_t strlen(const std::string &value) { return value.size(); }
+
+inline char *strcpy(char *dest, const std::string &src) {
+  return std::strcpy(dest, src.c_str());
+}
+
+Real to_real(const std::string &s);
 
 #include "binstream.h"
 
-inline ostream &bin_ostream(ostream &file, AutoString &str) {
-  bin_ostream(file, str.len());
-  for (int i = 0; i < str.len(); i++) {
-    bin_ostream(file, str[i]);
+inline ostream &bin_ostream(ostream &file, const std::string &str) {
+  bin_ostream(file, static_cast<int>(str.size()));
+  for (char c : str) {
+    bin_ostream(file, c);
   }
   return file;
 }
 
-inline istream &bin_istream(istream &file, AutoString &str) {
+inline istream &bin_istream(istream &file, std::string &str) {
   int len;
   bin_istream(file, len);
-  str.set(len);
+  str.assign(static_cast<std::string::size_type>(len), '\0');
   for (int i = 0; i < len; i++) {
-    bin_istream(file, str[i]);
+    bin_istream(file, str[static_cast<std::string::size_type>(i)]);
   }
   return file;
 }

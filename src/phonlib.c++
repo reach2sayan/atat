@@ -1,7 +1,7 @@
 #include "phonlib.h"
 #include <fstream>
-
-void remove_vacancies(Structure *p_str, const Array<AutoString> &label, const char *specie) {
+#include <numbers>
+void remove_vacancies(Structure *p_str, const Array<std::string> &label, const char *specie) {
   Structure str=*p_str;
   int newsize=str.atom_type.get_size();
   for (int at=0; at<str.atom_type.get_size(); at++) {
@@ -326,7 +326,7 @@ void calc_dynmat(Array2d<Complex> *p_dynmat, const rVector3d &k, const LinkedLis
 	zero_array(p_dynmat);
 	LinkedListIterator<PairSpring> p(pair);
 	for (; p; p++) {
-		Real phase=2.*M_PI*k*(p->dr);
+		Real phase=2.*std::numbers::pi*k*(p->dr);
 		rMatrix3d rblock=(p->forcek)*cos(phase);
 		rMatrix3d iblock=(p->forcek)*sin(phase);
 		int at0=p->whichatom[0];
@@ -361,7 +361,7 @@ int list_phonon_freq(LinkedList<Real> *p_freq, LinkedList<Real> *p_weight, const
 		diagonalize_symmetric_matrix(&lambda,NULL,dynmat);
 //cerr << lambda  << endl;
 		for (int i=0; i<lambda.get_size(); i++) {
-			Real v=sqrt(convfact*fabs(lambda(i)))/(2.*M_PI);
+			Real v=sqrt(convfact*fabs(lambda(i)))/(2.*std::numbers::pi);
 			if (lambda(i)<0) {v=-v;}
 			(*p_freq) << new Real(v);
 			if (p_weight) (*p_weight) << new Real(w);
@@ -395,7 +395,7 @@ void calc_normal_modes(Array<Real> *p_freq, Array2d<Complex> *p_eigvect, const r
   }
   p_freq->resize(lambda.get_size());
   for (int i=0; i<lambda.get_size(); i++) {
-    (*p_freq)(i)=sqrt(convfact*fabs(lambda(lookup(i))))/(2.*M_PI);
+    (*p_freq)(i)=sqrt(convfact*fabs(lambda(lookup(i))))/(2.*std::numbers::pi);
     if (lambda(lookup(i))<0) {(*p_freq)(i)=-(*p_freq)(i);}
   }
   if (p_eigvect) {
@@ -440,7 +440,7 @@ void calc_dispersion_curve(LinkedList<Array<Real> > *p_freq, LinkedList<Array2d<
     }
     nu.resize(lambda.get_size());
     for (int i=0; i<lambda.get_size(); i++) {
-      nu(i)=sqrt(convfact*fabs(lambda(lookup(i))))/(2.*M_PI);
+      nu(i)=sqrt(convfact*fabs(lambda(lookup(i))))/(2.*std::numbers::pi);
       if (lambda(lookup(i))<0) {nu(i)=-nu(i);}
     }
     (*p_freq) << new Array<Real>(nu);
@@ -465,7 +465,7 @@ Real real_erf(Real x) {
   Real du=0.01;
   Real maxx=3.5;
   if (x>maxx) return 1.;
-  Real a=2*fabs(x)/sqrt(M_PI);
+  Real a=2*fabs(x)/sqrt(std::numbers::pi);
   Real adu=a*du;
   Real b=-sgn(x)*sqr(x);
   Real y=0.;
@@ -479,7 +479,7 @@ Real ln_real_erf(Real x) {
   Real du=0.01;
   Real maxx=3.5;
   if (x>maxx) return 0.;
-  Real a=2*fabs(x)/sqrt(M_PI);
+  Real a=2*fabs(x)/sqrt(std::numbers::pi);
   Real adu=a*du;
   Real b=-sgn(x)*sqr(x);
   Real y=0.;
@@ -492,7 +492,7 @@ Real ln_real_erf(Real x) {
 Real calc_vib_free_energy_robust(LinkedList<Real> freq, LinkedList<Real> weight, Real kBT, Real hplanck, Real length) {
 	LinkedListIterator<Real> v(freq);
 	LinkedListIterator<Real> w(weight);
-	Real c=(2.*M_PI*length)/sqrt(2.*kBT);
+	Real c=(2.*std::numbers::pi*length)/sqrt(2.*kBT);
 	Real f=0.;
 	for (; v; v++, w++) {
 	  Real a=(2.*kBT)/(hplanck*fabs(*v));
@@ -510,7 +510,7 @@ Real calc_vib_free_energy_robust(LinkedList<Real> freq, LinkedList<Real> weight,
 	    f+=-(*w)*kBT*ln_real_erf(c*(*v));
 	  }
 	  else {
-	    if (*v<0) {f+=-(*w)*2.*sqr(M_PI*length*(*v));}
+	    if (*v<0) {f+=-(*w)*2.*sqr(std::numbers::pi*length*(*v));}
 	  }
 	}
 	return f;
@@ -840,7 +840,7 @@ void read_force_vector(Array<Real> *pforce, istream &file, const Array<int> &cop
 }
 
 Real smooth_kernel(Real x) {
-  return exp(-x*x/2)/sqrt(2.*M_PI);
+  return exp(-x*x/2)/sqrt(2.*std::numbers::pi);
 }
 
 void smooth_density(Real *xmin, Real *xmax, Array<Real> *pf, const Array<Real> &x) {

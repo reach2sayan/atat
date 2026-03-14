@@ -50,8 +50,8 @@ Real calc_mag_free_energy(Real maxspin, Real coupling, Real T) {
 }
 
 int main(int argc, char *argv[]) {
-  char *strfilename = "str.out";
-  char *magatom = "";
+  const char *strfilename = "str.out";
+  const char *magatom = "";
   Real coupling = 0.;
   Real maxspin = 0.5;
   int sigdig = 5;
@@ -92,7 +92,7 @@ int main(int argc, char *argv[]) {
   }
   Structure str;
   Array<Arrayint> labellookup;
-  Array<AutoString> label;
+  Array<std::string> label;
   {
     ifstream strfile(strfilename);
     if (!strfile) ERRORQUIT("Unable to open structure file");

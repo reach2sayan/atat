@@ -439,7 +439,7 @@ int main(int argc, char *argv[]) {
 
   rMatrix3d axes;
   Structure str;
-  Array<AutoString> atom_label;
+  Array<std::string> atom_label;
   {
     Array<Array<int> > site_type_list;
     ifstream file("str.in");

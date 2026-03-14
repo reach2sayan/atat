@@ -43,7 +43,7 @@ void read_cell(rMatrix3d *pcell, istream &file) {
 void parse_lattice_file(rMatrix3d *pcell, Array<rVector3d> *patom_pos,
                         Array<int> *psite_type,
                         Array<Arrayint> *psite_type_list,
-                        Array<AutoString> *patom_label, istream &file,
+                        Array<std::string> *patom_label, istream &file,
                         rMatrix3d *paxes) {
   const char *delim = " \t,;/";
   // read cell;
@@ -60,7 +60,7 @@ void parse_lattice_file(rMatrix3d *pcell, Array<rVector3d> *patom_pos,
 
   // read in atoms;
   LinkedList<rVector3d> atom_pos_list;
-  LinkedList<ArrayAutoString> long_site_type_list;
+  LinkedList<ArrayString> long_site_type_list;
   while (1) {
     rVector3d pos(MAXFLOAT, MAXFLOAT, MAXFLOAT);
     file >> pos;
@@ -69,7 +69,7 @@ void parse_lattice_file(rMatrix3d *pcell, Array<rVector3d> *patom_pos,
     pos = axes * pos;
     char buf[MAX_LINE_LEN];
     file.get(buf, MAX_LINE_LEN - 1);
-    LinkedList<AutoString> site_types;
+    LinkedList<std::string> site_types;
     char *atom_begin = buf;
     char *string_end = buf + strlen(buf);
     while (atom_begin < string_end) {
@@ -84,17 +84,17 @@ void parse_lattice_file(rMatrix3d *pcell, Array<rVector3d> *patom_pos,
       }
       *atom_end = 0;
       /*
-            LinkedListIterator<AutoString> i(site_types);
+            LinkedListIterator<std::string> i(site_types);
             while (i && strcmp(*i,atom_begin)<0) {i++;}
-            site_types.add(new AutoString(atom_begin),i);
+            site_types.add(new std::string(atom_begin),i);
       */
-      site_types << new AutoString(atom_begin);
+      site_types << new std::string(atom_begin);
       atom_begin = atom_end + 1;
     }
-    Array<AutoString> *parraystring = new Array<AutoString>();
+    Array<std::string> *parraystring = new Array<std::string>();
     LinkedList_to_Array(parraystring, site_types);
 
-    LinkedListIterator<ArrayAutoString> i_atom(long_site_type_list);
+    LinkedListIterator<ArrayString> i_atom(long_site_type_list);
     LinkedListIterator<rVector3d> i_pos(atom_pos_list);
     while (i_atom && i_atom->get_size() >= parraystring->get_size()) {
       i_atom++;
@@ -105,27 +105,27 @@ void parse_lattice_file(rMatrix3d *pcell, Array<rVector3d> *patom_pos,
   }
 
   // make atom label list;
-  LinkedList<AutoString> atom_label_list;
-  LinkedListIterator<ArrayAutoString> i_atom(long_site_type_list);
+  LinkedList<std::string> atom_label_list;
+  LinkedListIterator<ArrayString> i_atom(long_site_type_list);
   for (; i_atom; i_atom++) {
     for (int at = 0; at < i_atom->get_size(); at++) {
-      LinkedListIterator<AutoString> i_label(atom_label_list);
+      LinkedListIterator<std::string> i_label(atom_label_list);
       while (i_label && strcmp(*i_label, (*i_atom)(at)) < 0) {
         i_label++;
       }
       if (!i_label || strcmp(*i_label, (*i_atom)(at)) != 0) {
-        atom_label_list.add(new AutoString((*i_atom)(at)), i_label);
+        atom_label_list.add(new std::string((*i_atom)(at)), i_label);
       }
     }
   }
 
   // convert string to int in the long site type list;
-  LinkedListIterator<ArrayAutoString> il(long_site_type_list);
+  LinkedListIterator<ArrayString> il(long_site_type_list);
   LinkedList<Arrayint> long_int_site_type_list;
   for (; il; il++) {
     Array<int> *ptype_list = new Array<int>(il->get_size());
     for (int at = 0; at < ptype_list->get_size(); at++) {
-      LinkedListIterator<AutoString> i_label(atom_label_list);
+      LinkedListIterator<std::string> i_label(atom_label_list);
       int which_type = 0;
       while (i_label && strcmp(*i_label, (*il)(at)) != 0) {
         i_label++;
@@ -172,7 +172,7 @@ void parse_lattice_file(rMatrix3d *pcell, Array<rVector3d> *patom_pos,
 void parse_rndstr_file(rMatrix3d *pcell, Array<rVector3d> *patom_pos,
                        Array<int> *psite_type, Array<Array<Real>> *pprob,
                        Array<Arrayint> *psite_type_list,
-                       Array<AutoString> *patom_label, istream &file,
+                       Array<std::string> *patom_label, istream &file,
                        rMatrix3d *paxes) {
   const char *delim = " \t,;/";
   const char *numbersdot = "0123456789.";
@@ -192,7 +192,7 @@ void parse_rndstr_file(rMatrix3d *pcell, Array<rVector3d> *patom_pos,
   // read in atoms;
   LinkedList<rVector3d> atom_pos_list;
   LinkedList<Array<Real>> prob_list;
-  LinkedList<ArrayAutoString> long_site_type_list;
+  LinkedList<ArrayString> long_site_type_list;
   while (1) {
     rVector3d pos(MAXFLOAT, MAXFLOAT, MAXFLOAT);
     file >> pos;
@@ -201,7 +201,7 @@ void parse_rndstr_file(rMatrix3d *pcell, Array<rVector3d> *patom_pos,
     pos = axes * pos;
     char buf[MAX_LINE_LEN];
     file.get(buf, MAX_LINE_LEN - 1);
-    LinkedList<AutoString> site_types;
+    LinkedList<std::string> site_types;
     LinkedList<Real> atomprob;
     char *atom_begin = buf;
     char *string_end = buf + strlen(buf);
@@ -216,7 +216,7 @@ void parse_rndstr_file(rMatrix3d *pcell, Array<rVector3d> *patom_pos,
         atom_end++;
       }
       *atom_end = 0;
-      site_types << new AutoString(atom_begin);
+      site_types << new std::string(atom_begin);
       atom_begin = atom_end + 1;
       if (atom_begin > string_end) {
         atom_begin = string_end;
@@ -234,12 +234,12 @@ void parse_rndstr_file(rMatrix3d *pcell, Array<rVector3d> *patom_pos,
       atomprob << new Real(prob);
       atom_begin = atom_end + 1;
     }
-    Array<AutoString> *parraystring = new Array<AutoString>();
+    Array<std::string> *parraystring = new Array<std::string>();
     LinkedList_to_Array(parraystring, site_types);
     Array<Real> *parrayatomprob = new Array<Real>();
     LinkedList_to_Array(parrayatomprob, atomprob);
 
-    LinkedListIterator<ArrayAutoString> i_atom(long_site_type_list);
+    LinkedListIterator<ArrayString> i_atom(long_site_type_list);
     LinkedListIterator<rVector3d> i_pos(atom_pos_list);
     LinkedListIterator<Array<Real>> i_prob(prob_list);
     while (i_atom && i_atom->get_size() >= parraystring->get_size()) {
@@ -253,27 +253,27 @@ void parse_rndstr_file(rMatrix3d *pcell, Array<rVector3d> *patom_pos,
   }
 
   // make atom label list;
-  LinkedList<AutoString> atom_label_list;
-  LinkedListIterator<ArrayAutoString> i_atom(long_site_type_list);
+  LinkedList<std::string> atom_label_list;
+  LinkedListIterator<ArrayString> i_atom(long_site_type_list);
   for (; i_atom; i_atom++) {
     for (int at = 0; at < i_atom->get_size(); at++) {
-      LinkedListIterator<AutoString> i_label(atom_label_list);
+      LinkedListIterator<std::string> i_label(atom_label_list);
       while (i_label && strcmp(*i_label, (*i_atom)(at)) < 0) {
         i_label++;
       }
       if (!i_label || strcmp(*i_label, (*i_atom)(at)) != 0) {
-        atom_label_list.add(new AutoString((*i_atom)(at)), i_label);
+        atom_label_list.add(new std::string((*i_atom)(at)), i_label);
       }
     }
   }
 
   // convert string to int in the long site type list;
-  LinkedListIterator<ArrayAutoString> il(long_site_type_list);
+  LinkedListIterator<ArrayString> il(long_site_type_list);
   LinkedList<Arrayint> long_int_site_type_list;
   for (; il; il++) {
     Array<int> *ptype_list = new Array<int>(il->get_size());
     for (int at = 0; at < ptype_list->get_size(); at++) {
-      LinkedListIterator<AutoString> i_label(atom_label_list);
+      LinkedListIterator<std::string> i_label(atom_label_list);
       int which_type = 0;
       while (i_label && strcmp(*i_label, (*il)(at)) != 0) {
         i_label++;
@@ -320,7 +320,7 @@ void parse_rndstr_file(rMatrix3d *pcell, Array<rVector3d> *patom_pos,
 
 int parse_structure_file(rMatrix3d *pcell, Array<rVector3d> *patom_pos,
                          Array<int> *patom_type,
-                         const Array<AutoString> &atom_label, istream &file,
+                         const Array<std::string> &atom_label, istream &file,
                          rMatrix3d *paxes) {
   // read cell;
   rMatrix3d axes;
@@ -436,7 +436,7 @@ void write_axes(const rMatrix3d &axes, ostream &file, int doabc) {
 
 void write_structure(const Structure &str, const Structure &lat,
                      const Array<Arrayint> &site_type_list,
-                     const Array<AutoString> &atom_label, const rMatrix3d &axes,
+                     const Array<std::string> &atom_label, const rMatrix3d &axes,
                      ostream &file, int doabc) {
   rMatrix3d iaxes = !axes;
   write_axes(axes, file, doabc);
@@ -453,7 +453,7 @@ void write_structure(const Structure &str, const Structure &lat,
   }
 }
 
-void write_structure(const Structure &str, const Array<AutoString> &atom_label,
+void write_structure(const Structure &str, const Array<std::string> &atom_label,
                      const rMatrix3d &axes, ostream &file, int doabc) {
   rMatrix3d iaxes = !axes;
   write_axes(axes, file, doabc);
@@ -481,7 +481,7 @@ void skip_to_next_structure(istream &strfile) {
 }
 
 void write_lattice(const Structure &lat, const Array<Arrayint> &site_type_list,
-                   const Array<AutoString> &atom_label, const rMatrix3d &axes,
+                   const Array<std::string> &atom_label, const rMatrix3d &axes,
                    ostream &file, int doabc) {
   rMatrix3d iaxes = !axes;
   write_axes(axes, file, doabc);

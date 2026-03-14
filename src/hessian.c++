@@ -179,6 +179,7 @@ int read_vector(Array<Real> *pa, istream &file) {
     l << new Real(r);
   }
   LinkedList_to_Array(pa, l);
+  return 0;
 }
 
 int read_vector(Array<Real> *pa, const char *filename) {
@@ -202,6 +203,7 @@ int read_square_matrix(Array2d<Real> *pa, istream &file) {
   for (; i; i++, j++) {
     (*pa)(j) = *i;
   }
+  return 0;
 }
 
 int read_square_matrix(Array2d<Real> *pa, const char *filename) {
@@ -228,6 +230,7 @@ int read_equi_tensor(Tensor<Real> *pa, int dim, istream &file) {
   for (; i; i++, j++) {
     (*pa)(j) = *i;
   }
+  return 0;
 }
 
 int read_equi_tensor(Tensor<Real> *pa, int dim, const char *filename) {
@@ -235,10 +238,10 @@ int read_equi_tensor(Tensor<Real> *pa, int dim, const char *filename) {
   return read_equi_tensor(pa, dim, file);
 }
 
-char *helpstring = "Insert more help here";
+const char *helpstring = "Insert more help here";
 
 int main(int argc, char *argv[]) {
-  char *hesfilename = "hessian.out";
+  const char *hesfilename = "hessian.out";
   int n = 0;
   int sigdig = 5;
   int dohelp = 0;

@@ -1,4 +1,5 @@
 #include <fstream>
+#include <numbers>
 #include "getvalue.h"
 #include "integer.h"
 #include "version.h"
@@ -102,7 +103,7 @@ int main(int argc, char *argv[]) {
     if (!file) ERRORQUIT("Unable to open str.out, needed for -pa option");
     Structure str;
     Array<Arrayint> labellookup;
-    Array<AutoString> label;
+    Array<std::string> label;
     parse_lattice_file(&str.cell, &str.atom_pos, &str.atom_type, &labellookup, &label, file);
     denom_atom=(Real)(str.atom_pos.get_size());
   }
@@ -139,7 +140,7 @@ int main(int argc, char *argv[]) {
     if (smooth>0.) {
       zero_array(&sdos);
       Real se=smooth/dE;
-      Real c=1./sqrt(2*M_PI)/se;
+      Real c=1./sqrt(2*std::numbers::pi)/se;
       for (int i=0; i<dos.get_size(); i++) {
 	for (int j=0; j<dos.get_size(); j++) {
 	  sdos(i)+=dos(j)*c*exp(-sqr((Real)(i-j)/se));
@@ -154,7 +155,7 @@ int main(int argc, char *argv[]) {
     }
     {
       Real dens=(1-fEf)*sdos(iEf)+fEf*sdos(iEf+1);
-      Real ksommer=-(1./6.)*sqr(M_PI*kboltzman)*dens/dE*scale*perfewer/denom_atom;
+      Real ksommer=-(1./6.)*sqr(std::numbers::pi*kboltzman)*dens/dE*scale*perfewer/denom_atom;
       ofstream ksommerout("ksommer");
       ksommerout << ksommer << endl;
     }

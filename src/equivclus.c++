@@ -4,11 +4,11 @@
 #include "xtalutil.h"
 #include <fstream>
 
-void read_atom_clus(Array<rVector3d> *patom_pos, Array<AutoString> *plabel,
+void read_atom_clus(Array<rVector3d> *patom_pos, Array<std::string> *plabel,
                     istream &file) {
-  char *delim = " \t";
+  const char *delim = " \t";
   LinkedList<rVector3d> latom_pos;
-  LinkedList<AutoString> llabel;
+  LinkedList<std::string> llabel;
   while (1) {
     rVector3d pos(MAXFLOAT, MAXFLOAT, MAXFLOAT);
     file >> pos;
@@ -27,19 +27,19 @@ void read_atom_clus(Array<rVector3d> *patom_pos, Array<AutoString> *plabel,
       atom_end++;
     }
     *atom_end = 0;
-    llabel << new AutoString(atom_begin);
+    llabel << new std::string(atom_begin);
   }
   LinkedList_to_Array(patom_pos, latom_pos);
   LinkedList_to_Array(plabel, llabel);
 }
 
 // write extra help as plain text in *.hlp
-char *helpstring = "";
+const char *helpstring = "";
 
 int main(int argc, char *argv[]) {
   // parsing command line. See getvalue.hh for details;
-  char *latfilename = "lat.in";
-  char *clusaxesfilename = "";
+  const char *latfilename = "lat.in";
+  const char *clusaxesfilename = "";
   const char *clusfilename[2] = {"", ""};
   int dohelp = 0;
   int dummy = 0;
@@ -65,7 +65,7 @@ int main(int argc, char *argv[]) {
 
   Structure lat;
   Array<Arrayint> labellookup;
-  Array<AutoString> label;
+  Array<std::string> label;
   rMatrix3d axes;
   {
     ifstream latfile(latfilename);
@@ -89,7 +89,7 @@ int main(int argc, char *argv[]) {
   }
 
   Array<Array<rVector3d>> cluspos(2);
-  Array<Array<AutoString>> cluslabel(2);
+  Array<Array<std::string>> cluslabel(2);
   for (int i = 0; i < 2; i++) {
     ifstream clusfile(clusfilename[i]);
     if (!clusfile)

@@ -99,12 +99,12 @@ void ElectroStaticPredictor::static_init(const ClusterExpansion &ce) {
     ifstream file("es.in");
     if (!file) ERRORQUIT("Unable to open es.in file.");
     while (!file.eof()) {
-      AutoString specie;
+      std::string specie;
       skip_delim(file, " \t=\n");
       get_string(&specie, file, " \t=");
       skip_delim(file, " \t=");
       if (file.eof()) break;
-      if (specie == AutoString("scrn")) {
+      if (specie == std::string("scrn")) {
 	file >> ElectroStaticPredictor::scrn;
       } else {
 	int wspecie = index_in_array(ce.get_atom_label(), specie);

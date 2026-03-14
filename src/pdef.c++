@@ -1,5 +1,7 @@
 #include <fstream>
 #include <sys/stat.h>
+#include <filesystem>
+
 #include "phonlib.h"
 #include "getvalue.h"
 #include "parse.h"
@@ -59,7 +61,7 @@ int main(int argc, char *argv[]) {
 
   Structure lat;
   Array<Arrayint> site_type_list;
-  Array<AutoString> atom_label;
+  Array<std::string> atom_label;
   rMatrix3d axes;
   {
     ifstream file(latfilename);
@@ -98,7 +100,14 @@ int main(int argc, char *argv[]) {
 	supstr.atom_type(i_in_supstr)=s;
 	ostringstream line;
 	line << strprefix << "_" << pert << '\0';
-	mkdir(line.str().c_str(),S_IRWXU | S_IRWXG | S_IRWXO);
+    std::filesystem::create_directory(line.str());
+    std::filesystem::permissions(
+        line.str(),
+        std::filesystem::perms::owner_all |
+        std::filesystem::perms::group_all |
+        std::filesystem::perms::others_all,
+        std::filesystem::perm_options::replace
+    );
 	chdir_robust(line.str().c_str());
 	{
 	  ofstream file("str.out");

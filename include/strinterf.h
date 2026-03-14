@@ -23,14 +23,14 @@ class OptimizedStructure : public FunctionWithGrad {
 public:
   rMatrix3d axes;
   Structure str;
-  Array<AutoString> atom_label;
+  Array<std::string> atom_label;
   int sleeptime;
 
 public:
   OptimizedStructure(void);
   ~OptimizedStructure(void);
   void init(Array<Real> *px, const rMatrix3d &_axes, const Structure &_str,
-            const Array<AutoString> &_atom_label, Real forcefact = 1.,
+            const Array<std::string> &_atom_label, Real forcefact = 1.,
             int _dimstrain = 3);
   void vect_to_str(Structure *pstr, const Array<Real> &x);
   void set_arg(const Array<Real> &x);

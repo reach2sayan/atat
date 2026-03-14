@@ -47,9 +47,9 @@ void calc_formation(Array<Real> *pfe, Array<Real> *ppure,
                     const Array<Array<Real>> &x, const Array<Real> &e);
 
 void read_inequalities(LinkedList<LinearInequality> *ineq_list,
-                       const Array<AutoString> &label, istream &s);
+                       const Array<std::string> &label, istream &s);
 void read_equalities(LinkedList<LinearInequality> *ineq_list,
-                     const Array<AutoString> &label, istream &s);
+                     const Array<std::string> &label, istream &s);
 void ineq_list_to_Array(Array2d<Real> *a, Array<Real> *c,
                         const LinkedList<LinearInequality> &l);
 

@@ -109,7 +109,7 @@ public:
   //  void set_concentration(Real concentration);
   void set_T_mu(Real _T, const Array<Real> &_mu);
   void view(const Array<Arrayint> &labellookup,
-            const Array<AutoString> &atom_label, ofstream &file,
+            const Array<std::string> &atom_label, ofstream &file,
             const rMatrix3d &axes);
 
   const Array<Real> &get_cur_corr(void) const { return cur_rho; }

@@ -25,8 +25,8 @@ void mat_sqrt(rMatrix3d *pS, const rMatrix3d &S2) {
 */
 
 int main(int argc, char *argv[]) {
-  char *strfilename = "str.out";
-  char *strfilename_rel = "str_relax.out";
+  const char *strfilename = "str.out";
+  const char *strfilename_rel = "str_relax.out";
   int dummy = 0;
   AskStruct options[] = {
       {"", "check cell distortion " MAPS_VERSION ", by Axel van de Walle",
@@ -39,7 +39,7 @@ int main(int argc, char *argv[]) {
     return 1;
   }
   Array<Arrayint> site_type_list;
-  Array<AutoString> label;
+  Array<std::string> label;
   rMatrix3d axes;
 
   Structure str;

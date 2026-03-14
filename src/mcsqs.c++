@@ -288,7 +288,7 @@ int main(int argc, char *argv[]) {
   Structure ulat;
   Array<Array<Real>> uatomprob;
   Array<Arrayint> site_type_list;
-  Array<AutoString> atom_label;
+  Array<std::string> atom_label;
   rMatrix3d axes;
   {
     ifstream file(rndstrfilename);

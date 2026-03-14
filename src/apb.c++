@@ -27,13 +27,13 @@ extern const char *helpstring;
 const double eV_mJ = 16021.77;
 
 int main(int argc, char *argv[]) {
-  char *latfilename = "lat.in";
-  char *strfilename = "str.out";
-  char *ecifilename = "eci.out";
-  char *apbfilename = "str_apb.out";
-  char *gammafilename = "gamma_apb.out";
-  char *clusterfilename = "clusters.out";
-  char *gsfilename = "gs_str.out";
+  const char *latfilename = "lat.in";
+  const char *strfilename = "str.out";
+  const char *ecifilename = "eci.out";
+  const char *apbfilename = "str_apb.out";
+  const char *gammafilename = "gamma_apb.out";
+  const char *clusterfilename = "clusters.out";
+  const char *gsfilename = "gs_str.out";
   rVector3d slipvec(0, 0, 0); // APB slip vector
   int dohelp = 0;
   int dofileonly = 0;
@@ -87,7 +87,7 @@ int main(int argc, char *argv[]) {
   /* ----------  begin parsing ---------- */
   Structure lat;
   Array<Arrayint> labellookup;
-  Array<AutoString> label;
+  Array<std::string> label;
   rMatrix3d axes;
   ifstream latfile(latfilename);
   if (!latfile)
@@ -140,7 +140,7 @@ int main(int argc, char *argv[]) {
 
   if (domc) {
     // fix concentration in conccons.in
-    char *concfilename = "conccons.in";
+    const char *concfilename = "conccons.in";
     ofstream concfile(concfilename);
     int type;
     Array<Real> n_atom_type(n_type);
@@ -156,7 +156,7 @@ int main(int argc, char *argv[]) {
                << endl;
     }
 
-    char *controlfilename = "control.in";
+    const char *controlfilename = "control.in";
 
     // write control.in
     write_control(T, nav, n_type, controlfilename);
@@ -195,7 +195,7 @@ int main(int argc, char *argv[]) {
  * =====================================================================================
  */
 void write_apb_structure(const Structure &str,
-                         const Array<AutoString> &atom_label,
+                         const Array<std::string> &atom_label,
                          const rMatrix3d &axes, ostream &file,
                          const rVector3d &slipvec) {
   file.setf(ios::fixed);
@@ -270,7 +270,7 @@ void write_control(const Real &T, const int &n, const int &n_type,
 Real get_energy(const char *strfilename, int &nf, const int &n_type,
                 const char *mcfilename) {
 
-  char *controlfilename = "energy_control.in";
+  const char *controlfilename = "energy_control.in";
   // write control.in
   write_control(0, 1, n_type, controlfilename);
 
@@ -285,7 +285,7 @@ Real get_energy(const char *strfilename, int &nf, const int &n_type,
 
   // find field number of "E_mc"
   if (nf == 0) {
-    char *mcheaderfilename = "mcheader.out";
+    const char *mcheaderfilename = "mcheader.out";
     ifstream mcheaderfile(mcheaderfilename);
     if (!mcheaderfile)
       ERRORQUIT("Unable to open mcheader.out");

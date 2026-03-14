@@ -1,7 +1,8 @@
 #include <sys/stat.h>
-
+#include <filesystem>
 #include <sstream>
-
+#include <thread>
+#include <chrono>
 #include "arraylist.h"
 #include "getvalue.h"
 #include "lstsqr.h"
@@ -90,7 +91,7 @@ int main(int argc, char *argv[]) {
   // associated reciprocal cell);
   Structure lat;
   Array<Arrayint> site_type_list;
-  Array<AutoString> atom_label;
+  Array<std::string> atom_label;
   rMatrix3d axes;
   ifstream file(latticefilename);
   if (!file) ERRORQUIT("Unable to open lattice file.");
@@ -115,10 +116,14 @@ int main(int argc, char *argv[]) {
   Real scale[2];
   Structure str[2];
   for (int elem = 0; elem < 2; elem++) {
-    if (chdir(puredir[elem]) != 0) {
+    if (!std::filesystem::exists(puredir[elem])) {
       cerr << "Directory " << puredir[elem];
       ERRORQUIT(" does not exist.");
     }
+	else
+	{
+		std::filesystem::current_path(puredir[elem]);
+	}
     {
       ifstream file("str_relax.out");
       if (!file) {
@@ -130,7 +135,7 @@ int main(int argc, char *argv[]) {
     }
     scale[elem] =
 	pow(det(str[elem].cell) / det(lat.cell), 1. / 3.);  // for cubic only!;
-    chdir("..");
+	std::filesystem::current_path("..");
   }
 
   // generate distorted structures;
@@ -138,7 +143,7 @@ int main(int argc, char *argv[]) {
     LinkedListIterator<rVector3d> i_dir(dirlist);
     for (; i_dir; i_dir++) {
       for (int elem = 0; elem < 2; elem++) {
-	chdir(puredir[elem]);
+	std::filesystem::current_path(puredir[elem]);
 	for (int perp = 0; perp < perp_stretch_mesh; perp++) {
 	  Real t = (Real)perp / (Real)(perp_stretch_mesh - 1);
 	  Real stretch_perp =
@@ -164,12 +169,23 @@ int main(int argc, char *argv[]) {
 	    ostringstream cur_dir;
 	    cur_dir << "stretch_" << (*i_dir)(0) << "_" << (*i_dir)(1) << "_"
 		    << (*i_dir)(2) << "_" << perp << "_" << paral << '\0';
-	    mkdir(cur_dir.str().c_str(), S_IRWXU | S_IRWXG | S_IRWXO);
-	    if (chdir(cur_dir.str().c_str()) != 0) {
+		std::filesystem::create_directory(cur_dir.str());
+		std::filesystem::permissions(
+			cur_dir.str(),
+			std::filesystem::perms::owner_all |
+			std::filesystem::perms::group_all |
+			std::filesystem::perms::others_all,
+			std::filesystem::perm_options::replace
+		);
+	    if (!std::filesystem::exists(cur_dir.str().c_str())) {
 	      cerr << "Unable to create or cd into " << puredir[elem] << "/"
 		   << cur_dir.str().c_str();
 	      ERRORQUIT("");
 	    }
+		else
+		{
+			std::filesystem::current_path(cur_dir.str().c_str());
+		}
 	    {
 	      ofstream file("str.out");
 	      file.setf(ios::fixed);
@@ -180,10 +196,10 @@ int main(int argc, char *argv[]) {
 	    if (!file_exists("energy")) {
 	      ofstream file("wait");  /// flag for pollmach;
 	    }
-	    chdir("..");
+	    std::filesystem::current_path("..");
 	  }
 	}
-	chdir("..");
+	std::filesystem::current_path("..");
       }
     }
   }
@@ -199,14 +215,14 @@ int main(int argc, char *argv[]) {
     LinkedListIterator<rVector3d> i_dir(dirlist);
     for (; nomissing && i_dir; i_dir++) {
       for (int elem = 0; nomissing && elem < 2; elem++) {
-	chdir(puredir[elem]);
+	std::filesystem::current_path(puredir[elem]);
 	for (int perp = 0; nomissing && perp < perp_stretch_mesh; perp++) {
 	  for (int paral = 0; nomissing && paral < paral_stretch_mesh;
 	       paral++) {
 	    ostringstream cur_dir;
 	    cur_dir << "stretch_" << (*i_dir)(0) << "_" << (*i_dir)(1) << "_"
 		    << (*i_dir)(2) << "_" << perp << "_" << paral << '\0';
-	    if (chdir(cur_dir.str().c_str()) != 0) {
+	    if (!std::filesystem::exists(cur_dir.str().c_str())) {
 	      cerr << "Unable to create or cd into " << puredir[elem] << "/"
 		   << cur_dir.str().c_str();
 	      ERRORQUIT("");
@@ -223,14 +239,14 @@ int main(int argc, char *argv[]) {
 		nomissing = 0;
 	      }
 	    }
-	    chdir("..");
+	    std::filesystem::current_path("..");
 	  }
 	}
-	chdir("..");
+	std::filesystem::current_path("..");
       }
     }
     if (nomissing) break;
-    sleep(polltime);
+	std::this_thread::sleep_for(std::chrono::seconds(polltime));
   }
 
   cerr << "Calculations done, fitting the data" << endl;
@@ -242,25 +258,25 @@ int main(int argc, char *argv[]) {
       Array<Array<Real> > perp_e(2);
       for (int elem = 0; elem < 2; elem++) {
 	perp_e(elem).resize(perp_stretch_mesh);
-	chdir(puredir[elem]);
+	std::filesystem::current_path(puredir[elem]);
 	for (int perp = 0; perp < perp_stretch_mesh; perp++) {
 	  Array<Real> paral_e(paral_stretch_mesh);
 	  for (int paral = 0; paral < paral_stretch_mesh; paral++) {
 	    ostringstream cur_dir;
 	    cur_dir << "stretch_" << (*i_dir)(0) << "_" << (*i_dir)(1) << "_"
 		    << (*i_dir)(2) << "_" << perp << "_" << paral << '\0';
-	    chdir(cur_dir.str().c_str());
+	    std::filesystem::current_path(cur_dir.str().c_str());
 	    {
 	      ifstream file("energy");
 	      file >> paral_e(paral);
 	      debugfile << paral_e(paral) << " ";
 	    }
-	    chdir("..");
+	    std::filesystem::current_path("..");
 	  }
 	  perp_e(elem)(perp) = find_minimum(paral_e, search_mesh);
 	  debugfile << perp_e(elem)(perp) << endl;
 	}
-	chdir("..");
+	std::filesystem::current_path("..");
       }
       perp_e_list << new Array<Array<Real> >(perp_e);
     }

@@ -45,7 +45,7 @@ int main(int argc, char *argv[]) {
     }
   }
   istream &infile = cin;
-  AutoString line;
+  std::string line;
   do {
     get_string(&line, infile, "\n");
     skip_delim(infile, "\n");

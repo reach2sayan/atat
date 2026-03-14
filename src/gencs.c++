@@ -61,7 +61,7 @@ int main(int argc, char *argv[]) {
     else {
       Structure lattice;
       Array<Arrayint> labellookup;
-      Array<AutoString> label;
+      Array<std::string> label;
       {
 	ifstream latticefile(latticefilename);
 	if (!latticefile) ERRORQUIT("Unable to open lattice file");

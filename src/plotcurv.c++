@@ -1,10 +1,11 @@
 #include "linalg.h"
+#include <numbers>
 #include <fstream>
 
 Real func_pol(Real r, Real theta) {
   Real A = 0.5;
   Real sigma = 0.5;
-  return (cos(r) - A * exp(-(sqr(r - M_PI) + sqr(theta)) / (2. * sqr(sigma))));
+  return (cos(r) - A * exp(-(sqr(r - std::numbers::pi) + sqr(theta)) / (2. * sqr(sigma))));
 }
 
 Array2d<Real> z;
@@ -106,7 +107,7 @@ Real curvp(const Array<Real> &x) {
 }
 */
 
-Real smoothstep(Real x) { return atan(x) / (M_PI / 2.); }
+Real smoothstep(Real x) { return atan(x) / (std::numbers::pi / 2.); }
 
 int main(int argc, char *argv[]) {
   iVector2d sz;

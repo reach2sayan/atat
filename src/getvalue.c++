@@ -1,12 +1,13 @@
 #include "getvalue.h"
 #include "linklist.h"
 #include <fstream>
-#include <strstream>
+#include <filesystem>
+#include <sstream>
 
 const char *equal_delim = ":= \t\n";
 const char *blanks_delim = " \t\n";
 
-LinkedList<AutoString> getvalue_string_buffer;
+LinkedList<std::string> getvalue_string_buffer;
 
 int get_values(istream &s, int nb, AskStruct *label) {
   char c;
@@ -19,14 +20,13 @@ int get_values(istream &s, int nb, AskStruct *label) {
     if (s.eof())
       return 1;
     s.putback(c);
-    ostrstream cur_label;
+    std::ostringstream cur_label;
     while (1) {
       c = s.get();
       if (strchr(equal_delim, c) || s.eof())
         break;
       cur_label << c;
     }
-    cur_label << '\0';
     while (1) {
       c = s.get();
       if (!strchr(equal_delim, c) || s.eof())
@@ -37,8 +37,8 @@ int get_values(istream &s, int nb, AskStruct *label) {
     }
     int i;
     for (i = 0; i < nb; i++) {
-      if (strcmp(label[i].shortname, cur_label.str()) == 0) {
-        ostrstream value_str;
+      if (cur_label.str() == label[i].shortname) {
+        std::ostringstream value_str;
         if (label[i].vartype != BOOLVAL) {
           while (1) {
             c = s.get();
@@ -47,8 +47,7 @@ int get_values(istream &s, int nb, AskStruct *label) {
             value_str << c;
           }
         }
-        value_str << '\0';
-        istrstream value(value_str.str());
+        std::istringstream value(value_str.str());
         switch (label[i].vartype) {
         case INTVAL:
           value >> (*(int *)(label[i].outvar));
@@ -60,9 +59,10 @@ int get_values(istream &s, int nb, AskStruct *label) {
           (*(int *)(label[i].outvar)) = 1;
           break;
         case STRINGVAL: {
-          AutoString *pstr = new AutoString(value_str.str());
+          const std::string value_buffer = value_str.str();
+          std::string *pstr = new std::string(value_buffer);
           getvalue_string_buffer << pstr;
-          *((const char **)(label[i].outvar)) = (const char *)(*pstr);
+          *((const char **)(label[i].outvar)) = pstr->c_str();
         } break;
         case CHOICEVAL:
           value >> (*(char *)(label[i].outvar));
@@ -91,12 +91,11 @@ int get_values(istream &s, int nb, AskStruct *label) {
 int get_values(int argc, char *argv[], int nb, AskStruct *label) {
   if (argc == 1)
     return 0;
-  ostrstream os;
+  std::ostringstream os;
   for (int i = 1; i < argc; i++) {
     os << argv[i] << ' ';
   }
-  os << '\0';
-  istrstream is(os.str());
+  std::istringstream is(os.str());
   return get_values(is, nb, label);
 }
 
@@ -159,7 +158,7 @@ void display_help(int nb, AskStruct *label) {
       case STRINGVAL:
         cerr << "=[string]   " << label[i].longname;
         if (dodef) {
-          cerr << " (Default: " << *(char **)label[i].outvar << ")";
+          cerr << " (Default: " << *(const char **)label[i].outvar << ")";
         }
         cerr << endl;
         break;
@@ -190,14 +189,17 @@ void display_help(int nb, AskStruct *label) {
 }
 
 void chdir_robust(const char *dir) {
-  if (chdir(dir) != 0) {
-    cerr << "Cannot cd into " << dir << endl;
-    ERRORQUIT("Aborting");
-  }
+    try {
+        std::filesystem::current_path(dir);
+    }
+    catch (const std::filesystem::filesystem_error& e) {
+        std::cerr << "Cannot cd into " << e.what() << '\n';
+        ERRORQUIT("Aborting");
+    }
 }
 
-int get_string(AutoString *ps, istream &file, const char *delim) {
-  AutoString accum;
+int get_string(std::string *ps, istream &file, const char *delim) {
+  std::string accum;
   char c;
   while (1) {
     file.get(c);
@@ -231,7 +233,7 @@ int get_row_numbers(Array<Real> *pa, istream &file) {
   buf[0] = 0;
   file.get(buf, MAX_LINE_LEN - 1);
   file.get();
-  istrstream line(buf);
+  std::istringstream line(buf);
   LinkedList<Real> list;
   while (!line.eof()) {
     Real r = MAXFLOAT;
@@ -253,7 +255,7 @@ void read_table(Array<Array<Real>> *pa, istream &file, int keepempty) {
     file.get(buf, MAX_LINE_LEN - 1);
     if (file.eof())
       break;
-    istrstream line(buf);
+    std::istringstream line(buf);
     {
       LinkedList<Real> rlist;
       while (1) {
@@ -277,10 +279,10 @@ void read_table(Array<Array<Real>> *pa, istream &file, int keepempty) {
   LinkedList_to_Array(pa, alist);
 }
 
-void get_atat_root(AutoString *patatroot) {
-  AutoString configfilename(getenv("HOME"));
+void get_atat_root(std::string *patatroot) {
+  std::string configfilename(getenv("HOME"));
   configfilename += "/.atat.rc";
-  ifstream configfile(configfilename);
+  ifstream configfile(configfilename.c_str());
   if (!configfile) {
     ERRORQUIT("$HOME/.atat.rc was not found.");
   }

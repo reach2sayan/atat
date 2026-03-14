@@ -22,7 +22,7 @@ Real calc_structure_cost(const Structure &str, const rMatrix3d &cell, const Arra
 
 ClusterExpansion::ClusterExpansion(const Structure &_parent_lattice,
                                    const Array<Arrayint> &_site_type_list,
-                                   const Array<AutoString> &_atom_label,
+                                   const Array<std::string> &_atom_label,
                                    const SpaceGroup &_spacegroup, CorrFuncTable *_pcorrfunc):
    pclusters(), equiv_cluster(), spacegroup(_spacegroup), structures(_parent_lattice,_site_type_list,spacegroup), weight(), 
    parent_lattice(_parent_lattice), site_type_list(_site_type_list), atom_label(_atom_label), label_list(), i_label_list(), corr_to_fullconc(), corr_to_conc(), conc_to_fullconc(), conc_to_fullconc_c(), down_e(), conc_range() {
@@ -111,8 +111,8 @@ void ClusterExpansion::update_correlations(StructureInfo *str) {
     }
     label_list.add(new int(cur_label),i_label_list);
     ostringstream tmp;
-    tmp << cur_label << '\0';
-    str->label.set(tmp.str().c_str());
+    tmp << cur_label;
+    str->label = tmp.str();
   }
   // set structure cost, if needed;
   if (str->cost==0) str->cost=calc_structure_cost(*str,spacegroup.cell,spacegroup.point_op,spacegroup.trans,complexity_exp);
@@ -764,7 +764,7 @@ void ClusterExpansion::find_best_cluster_choice(CEFitInfo *pfitinfo) {
 	  allstr.precision(6);
         for (int i=0; i<all_fitted_energy.get_size(); i++) {
 	    while (!(s->status & (StructureInfo::Status) (StructureInfo::unknown | StructureInfo::busy | StructureInfo::error))) {s++;}
-	    const char *slabel=s->label;
+	    const char *slabel = s->label.c_str();
           Array<Real> cur_conc;
           product(&cur_conc,conc_to_fullconc,all_concentration(i));
           sum(&cur_conc,cur_conc,conc_to_fullconc_c);
@@ -820,7 +820,7 @@ void ClusterExpansion::reset_structure(void) {
   LinkedListIterator<StructureInfo> j(structures.get_structure_list());
   for ( ; j; j++) {
     int index=-1;
-    istringstream tmp((const char *)(j->label));
+    istringstream tmp(j->label);
     tmp >> index;
     if (index!=-1) {
       LinkedListIterator<int> i(label_list);

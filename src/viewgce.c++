@@ -1,6 +1,6 @@
 #include <fstream>
-#include <strstream>
-
+#include <sstream>
+#include <numbers>
 #include "getvalue.h"
 #include "parse.h"
 #include "tensor.h"
@@ -17,7 +17,7 @@ int equal_multiclus(const MultiCluster &a, const MultiCluster &b) {
 }
 
 void view_tensor_cluster(const rTensor &sumtensor, const MultiCluster &oldclus,
-			 int c, char *plotcommand, int normalize = 0) {
+			 int c, const char *plotcommand, int normalize = 0) {
   {
     ofstream pfile("clusp.tmp");
     ofstream lfile("clusl.tmp");
@@ -47,10 +47,10 @@ void view_tensor_cluster(const rTensor &sumtensor, const MultiCluster &oldclus,
     ofstream shfile("sh.tmp");
     Real maxr = 0.;
     for (int pass = 0; pass < 2; pass++) {
-      Real dt = M_PI / 48;
-      Real dp = M_PI / 48;
-      for (Real t = 0; t < M_PI + dt / 2.0; t += dt) {
-	for (Real p = 0; p < 2 * M_PI + dp / 2.0; p += dp) {
+      Real dt = std::numbers::pi / 48;
+      Real dp = std::numbers::pi / 48;
+      for (Real t = 0; t < std::numbers::pi + dt / 2.0; t += dt) {
+	for (Real p = 0; p < 2 * std::numbers::pi + dp / 2.0; p += dp) {
 	  Array<Real> x(3);
 	  x(0) = sin(t) * cos(p);
 	  x(1) = sin(t) * sin(p);
@@ -83,20 +83,21 @@ void view_tensor_cluster(const rTensor &sumtensor, const MultiCluster &oldclus,
       }
     }
   }
-  ostrstream line;
+  std::ostringstream line;
   line << plotcommand << " ";
   line.width(3);
   line.fill('0');
-  line << c << '\0';
-  system(line.str());
+  line << c;
+  const std::string command = line.str();
+  system(command.c_str());
 }
 
 int main(int argc, char *argv[]) {
-  char *latticefilename = "lat.in";
-  char *ecifilename = "";
-  char *rmcommand = "rm -f shclus???.pnm";
-  char *plotcommand = "viewtensorclus";
-  char *catcommand = "pnmcat -topbottom shclus???.pnm | pnmtopng > all.png";
+  const char *latticefilename = "lat.in";
+  const char *ecifilename = "";
+  const char *rmcommand = "rm -f shclus???.pnm";
+  const char *plotcommand = "viewtensorclus";
+  const char *catcommand = "pnmcat -topbottom shclus???.pnm | pnmtopng > all.png";
   int normalize = 0;
   int dummy = 0;
   AskStruct options[] = {
@@ -123,7 +124,7 @@ int main(int argc, char *argv[]) {
   {
     Structure lattice;
     Array<Arrayint> labellookup;
-    Array<AutoString> label;
+    Array<std::string> label;
     ifstream latticefile(latticefilename);
     if (latticefile) {
       parse_lattice_file(&lattice.cell, &lattice.atom_pos, &lattice.atom_type,

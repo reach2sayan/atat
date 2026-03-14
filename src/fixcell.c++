@@ -54,7 +54,7 @@ int main(int argc, char *argv[]) {
   cout.precision(sigdig);
 
   if (bravaistype) {
-    AutoString bts;
+    std::string bts;
     rMatrix3d conv;
     print_bravais_type(&bts, find_bravais_type(&conv, find_reduced_cell(cell)));
     cout << bts << endl;

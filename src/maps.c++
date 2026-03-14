@@ -1,7 +1,9 @@
 #include <sys/stat.h>
-#include <unistd.h>
-
+#include <filesystem>
 #include <fstream>
+#include <thread>
+#include <chrono>
+
 #include <iomanip>
 #include <sstream>
 
@@ -23,16 +25,23 @@ int sigdig = 6;
 //  axes: (IN) coordinate system in which to express coordinates;
 void write_structure_file(const StructureInfo &str, const Structure &lat,
 			  const Array<Arrayint> &site_type_list,
-			  const Array<AutoString> &atom_label,
+			  const Array<std::string> &atom_label,
 			  const rMatrix3d &axes) {
-  mkdir(str.label, S_IRWXU | S_IRWXG | S_IRWXO);
-  if (chdir(str.label) == 0) {
+    std::filesystem::create_directory(str.label);
+    std::filesystem::permissions(
+        str.label,
+        std::filesystem::perms::owner_all |
+        std::filesystem::perms::group_all |
+        std::filesystem::perms::others_all,
+        std::filesystem::perm_options::replace
+    );
+  if (std::filesystem::exists(str.label.c_str())) {
     ofstream file("str.out");
     file.setf(ios::fixed);
     file.precision(sigdig);
     write_structure(str, lat, site_type_list, atom_label, axes, file);
     ofstream waitfile("wait");
-    chdir("..");
+    std::filesystem::current_path("..");
   }
 }
 
@@ -40,7 +49,7 @@ void write_structure_file(const StructureInfo &str, const Structure &lat,
 // of the cluster expansion (see class CEFitInfo in raffine.h).
 void write_fit_info(const CEFitInfo &fitinfo, const Structure &lattice,
 		    const Array<Arrayint> &site_type_list,
-		    const Array<AutoString> &atom_label,
+		    const Array<std::string> &atom_label,
 		    const rMatrix3d &axes) {
   ofstream log("maps.log");
   log << "Maps version " MAPS_VERSION << endl;
@@ -169,12 +178,12 @@ int update_structure(StructureInfo *pstr, Real atom_factor) {
 int update_all_structures(StructureBank<StructureInfo> *pstr_bank,
 			  const Structure &lattice,
 			  const Array<Arrayint> &site_type_list,
-			  const Array<AutoString> &atom_label) {
+			  const Array<std::string> &atom_label) {
   int changed = 0;
   // list structures on disk;
   system("ls */str.out 2> /dev/null | sed 's+/str.out++g' > strlist.out");
   ifstream strfile("strlist.out");
-  LinkedList<AutoString> label_on_disk;
+  LinkedList<std::string> label_on_disk;
   while (strfile && !strfile.eof()) {
     char buf[MAX_LINE_LEN];
     buf[0] = 0;
@@ -182,13 +191,13 @@ int update_all_structures(StructureBank<StructureInfo> *pstr_bank,
     char tmp;
     strfile.get(tmp);
     if (strlen(buf) == 0) break;
-    label_on_disk << new AutoString(buf);
+    label_on_disk << new std::string(buf);
   }
 
   LinkedListIterator<StructureInfo> i(pstr_bank->get_structure_list());
   for (; i; i++) {
     if (!(i->status & StructureInfo::unknown)) {
-      LinkedListIterator<AutoString> i_disk(label_on_disk);
+      LinkedListIterator<std::string> i_disk(label_on_disk);
       for (; i_disk; i_disk++) {
 	if (i->label == *i_disk) break;
       }
@@ -196,18 +205,18 @@ int update_all_structures(StructureBank<StructureInfo> *pstr_bank,
 	i->status = StructureInfo::unknown;
 	changed = 1;
       } else {
-	if (chdir(i->label) == 0) {
+	if (std::filesystem::exists(i->label.c_str())) {
 	  if (update_structure(&(*i), lattice.atom_pos.get_size())) changed = 1;
 	  delete label_on_disk.detach(i_disk);
-	  chdir("..");
+      std::filesystem::current_path("..");
 	}
       }
     }
   }
 
-  LinkedListIterator<AutoString> i_disk(label_on_disk);
+  LinkedListIterator<std::string> i_disk(label_on_disk);
   for (; i_disk; i_disk++) {
-    if (chdir(*i_disk) == 0) {
+    if (std::filesystem::exists(*i_disk)) {
       StructureInfo str;
       ifstream strfile("str.out");
       if (strfile) {
@@ -220,12 +229,12 @@ int update_all_structures(StructureBank<StructureInfo> *pstr_bank,
 	  if (fix_atom_type(&str, lattice, site_type_list, 0)) {
 	    StructureInfo *pstr;
 	    if (pstr_bank->add_structure(str, &pstr)) {
-	      pstr->label.set(*i_disk);
+	      pstr->label = *i_disk;
 	      if (update_structure(pstr, lattice.atom_pos.get_size()))
 		changed = 1;
 	    } else {
 	      if (pstr->status & StructureInfo::unknown) {
-		pstr->label.set(*i_disk);
+		pstr->label = *i_disk;
 		if (update_structure(pstr, lattice.atom_pos.get_size()))
 		  changed = 1;
 	      } else {
@@ -241,7 +250,7 @@ int update_all_structures(StructureBank<StructureInfo> *pstr_bank,
 	  cerr << "Error while reading structure " << *i_disk << endl;
 	}
       }
-      chdir("..");
+      std::filesystem::current_path("..");
     } else {
       cerr << "Unable to cd to " << *i_disk << endl;
     }
@@ -329,7 +338,7 @@ int main(int argc, char *argv[]) {
   // read in lattice (see parse.h);
   Structure lat;
   Array<Arrayint> site_type_list;
-  Array<AutoString> atom_label;
+  Array<std::string> atom_label;
   rMatrix3d axes;
   ifstream file(latticefilename);
   if (!file) ERRORQUIT("Unable to open lattice file.");
@@ -440,7 +449,7 @@ int main(int argc, char *argv[]) {
     }
     for (int t = 0; t < polltime; t++) {
       if (file_exists("refresh")) break;
-      sleep(1);	 // wait a little;
+      std::this_thread::sleep_for(std::chrono::seconds(1));
     }
   }
   unlink("stop");

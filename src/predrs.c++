@@ -1,4 +1,5 @@
 #include "predrs.h"
+#include <numbers>
 
 RSPredictorBase::RSPredictorBase(void) : EnergyPredictor() { done = 0; }
 
@@ -68,7 +69,7 @@ Real RSPredictorBase::get_energy(const StructureInfo &str) {
 	    i_lat);	     // find index of atom within unit cell of lattice;
 	if (w_atom != -1) {  // skip spectator atoms;
 	  Real sigma = (str.atom_type(j) == 1 ? 1. : -1.);
-	  Real phase = 2. * M_PI * kpts(i) *
+	  Real phase = 2. * std::numbers::pi * kpts(i) *
 		       str.atom_pos(j);	 // convention: atom position (and not
 					 // cell corner) determines phase shift;
 	  str_fact(i)(w_atom) += sigma * Complex(cos(phase), sin(phase));

@@ -39,7 +39,7 @@ int main(int argc, char **argv) {
   }
   rMatrix3d axes;
   axes.identity();
-  Array<AutoString> labels(n);
+  Array<std::string> labels(n);
   for (int i=0; i<n; i++) {
       labels(i).set(1);
       labels(i)[0]='a'+i;

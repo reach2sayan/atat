@@ -1,5 +1,7 @@
 #include <fstream>
 #include <sys/stat.h>
+#include <filesystem>
+
 #include "phonlib.h"
 #include "getvalue.h"
 #include "parse.h"
@@ -105,7 +107,7 @@ void calc_equation_matrix(Array<Array<Real> > *peqn_mat, const Structure &ideal_
   }
 }
 
-void write_spring_file(ostream &file, const LinkedList<SpringSvsL> &springlist, const Array<AutoString> &label, int maxlpow, int dirdep, int concpow) {
+void write_spring_file(ostream &file, const LinkedList<SpringSvsL> &springlist, const Array<std::string> &label, int maxlpow, int dirdep, int concpow) {
   if (dirdep!=0 || concpow!=0) {
     file << "maxlpow " << maxlpow << endl;
     file << "dirdep " << dirdep << endl;
@@ -473,7 +475,7 @@ int main(int argc, char *argv[]) {
   }
   Structure lat;
   Array<Arrayint> site_type_list;
-  Array<AutoString> atom_label;
+  Array<std::string> atom_label;
   rMatrix3d axes;
   {
     ifstream file(latfilename);
@@ -558,14 +560,14 @@ int main(int argc, char *argv[]) {
   if (!fitfc) {
     LinkedList<Structure> str_list;
     LinkedList<Structure> rel_str_list;
-    LinkedList<AutoString> dir_list;
+    LinkedList<std::string> dir_list;
     {
       ifstream strnamefile(strnamefilename);
       if (!strnamefile) {ERRORQUIT("Unable to open structure name file");}
       while (skip_delim(strnamefile)) {
-        AutoString dirname;
+        std::string dirname;
         get_string(&dirname,strnamefile);
-        dir_list << new AutoString(dirname);
+        dir_list << new std::string(dirname);
         Structure str;
         {
           ostringstream ostrfilename;
@@ -604,13 +606,12 @@ int main(int argc, char *argv[]) {
       }
     }
   
-    LinkedListIterator<AutoString> i_dir(dir_list);
+    LinkedListIterator<std::string> i_dir(dir_list);
     LinkedListIterator<Structure> i_str(str_list);
     LinkedListIterator<Structure> i_rel_str(rel_str_list);
     cerr << "Generating perturbations..." << endl;
     for ( ; i_str; i_dir++, i_str++, i_rel_str++) {
-      char thecwd[MAX_LINE_LEN];
-      if (!getcwd(thecwd,MAX_LINE_LEN)) {ERRORQUIT("Pathname too long, Increase MAX_LINE_LEN.");}
+        auto thecwd = std::filesystem::current_path();
       chdir_robust(*i_dir);
       cerr << *i_dir << endl;
       SpaceGroup str_spacegroup;
@@ -625,7 +626,15 @@ int main(int argc, char *argv[]) {
 	  ostringstream volname;
 	  volname << "vol_" << strain*100 << '\0';
 	  cerr << "  " << volname.str().c_str() << endl;
-	  mkdir(volname.str().c_str(),S_IRWXU | S_IRWXG | S_IRWXO);
+      std::filesystem::create_directory(volname.str());
+      std::filesystem::permissions(
+          volname.str(),
+          std::filesystem::perms::owner_all |
+          std::filesystem::perms::group_all |
+          std::filesystem::perms::others_all,
+          std::filesystem::perm_options::replace
+      );
+
 	  chdir_robust(volname.str().c_str());
 	  Structure s_str_relax;
 	  stretch_str(&s_str_relax,*i_rel_str,strain);
@@ -644,7 +653,15 @@ int main(int argc, char *argv[]) {
             pertname << "p+" << displ_mag << "_" << enclosed_radius << "_" << p << '\0';
 	    cerr << "    " << pertname.str().c_str() << endl;
 	  }
-	  mkdir(pertname.str().c_str(),S_IRWXU | S_IRWXG | S_IRWXO);
+      std::filesystem::create_directory(pertname.str());
+      std::filesystem::permissions(
+          pertname.str(),
+          std::filesystem::perms::owner_all |
+          std::filesystem::perms::group_all |
+          std::filesystem::perms::others_all,
+          std::filesystem::perm_options::replace
+      );
+
 	  chdir_robust(pertname.str().c_str());
           rMatrix3d ideal_supercell;
           find_smallest_supercell_enclosing_sphere(&ideal_supercell,i_str->cell,enclosed_radius);
@@ -678,13 +695,13 @@ int main(int argc, char *argv[]) {
           if (!file_exists("force.out")) {
             ofstream waitfile("wait");
           }
-          chdir("..");
+          std::filesystem::current_path("..");
         }
 	if (!olddirstruct) {
-	  chdir("..");
+	  std::filesystem::current_path("..");
 	}
       }
-      chdir(thecwd);
+      std::filesystem::current_path(thecwd);
     }
   }
   else { // fit forcek instead of generate pert;
@@ -697,11 +714,10 @@ int main(int argc, char *argv[]) {
     ifstream pertfile("pertlist.out");
     if (!pertfile) {ERRORQUIT("Unable to open pertlist.out.");}
     int strcnt=0;
+    auto thecwd = std::filesystem::current_path();
     while (skip_delim(pertfile)) {
-      AutoString dirname;
+      std::string dirname;
       get_string(&dirname,pertfile);
-      char thecwd[MAX_LINE_LEN];
-      if (!getcwd(thecwd,MAX_LINE_LEN)) {ERRORQUIT("Pathname too long, Increase MAX_LINE_LEN.");}
       chdir_robust(dirname);
       if (file_exists("str_unpert.out")) {
 	cerr << strcnt << ") Reading " << dirname << endl;
@@ -768,7 +784,7 @@ int main(int argc, char *argv[]) {
 	  nb_row+=pforce->get_size();
 	}
       }
-      chdir(thecwd);
+      std::filesystem::current_path(thecwd);
     }
 
     int nb_col=0;

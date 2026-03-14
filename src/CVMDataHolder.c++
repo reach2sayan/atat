@@ -424,7 +424,7 @@ CVMOptimizerDataHolder::CVMOptimizerDataHolder(const string &maxclusfilename,
 					       const string &ecifilename,
 					       const string &strfilename) {
   Array<Arrayint> labellookup;
-  Array<AutoString> label;
+  Array<std::string> label;
   constexpr const char *corrfunc_label = "trigo";
 
   ifstream latfile(latfilename);
@@ -521,7 +521,7 @@ CVMOptimizerDataHolder::CVMOptimizerDataHolder(const string &maxclusfilename,
 
 void CVMOptimizerDataHolder::get_structure_from_file(
     Structure &str, const string &strfilename, const Structure &lat,
-    const Array<AutoString> &label, const Array<Arrayint> &labellookup) {
+    const Array<std::string> &label, const Array<Arrayint> &labellookup) {
   ifstream strfile(strfilename);
   if (!strfile) ERRORQUIT("Unable to open structure file");
   int strnum = 1;

@@ -36,7 +36,7 @@ public:
   ArrayFunctionArray<Real> *pfunc;
 };
 
-void remove_vacancies(Structure *p_str, const Array<AutoString> &label,
+void remove_vacancies(Structure *p_str, const Array<std::string> &label,
                       const char *specie = "Vac");
 
 void add_rVector3d_to_ArrayReal(Array<Real> *pa, int at, const rVector3d &v);

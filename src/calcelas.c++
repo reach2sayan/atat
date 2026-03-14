@@ -1,7 +1,7 @@
 #include <sys/stat.h>
-
+#include <filesystem>
 #include <fstream>
-#include <strstream>
+#include <sstream>
 
 #include "arraylist.h"
 #include "findsym.h"
@@ -12,7 +12,7 @@
 #include "version.h"
 
 // extern char *helpstring;
-char *helpstring = "";
+const char *helpstring = "";
 
 void convert(rMatrix3d *mat, const rTensor &ten) {
   Array<int> i(2);
@@ -26,7 +26,7 @@ void convert(rMatrix3d *mat, const rTensor &ten) {
 int main(int argc, char *argv[]) {
   rMatrix3d Id;
   Id.identity();
-  char *strfilename = "str_relax.out";
+  const char *strfilename = "str_relax.out";
   Real max_strain = 0.01;
   int nb_strain = 1;
   int dohelp = 0;
@@ -61,7 +61,7 @@ int main(int argc, char *argv[]) {
   }
 
   Structure str;
-  Array<AutoString> atom_label;
+  Array<std::string> atom_label;
   rMatrix3d axes;
   {
     Array<Arrayint> site_type_list;
@@ -108,12 +108,20 @@ int main(int argc, char *argv[]) {
 	  if (op < pointgroup.point_op.get_size()) break;
 	}
 
-	ostrstream pertname;
-	pertname << "p" << (m == -1 ? '-' : '+') << max_strain << "_" << pert
-		 << '\0';
-	cerr << " " << pertname.str() << endl;
-	mkdir(pertname.str(), S_IRWXU | S_IRWXG | S_IRWXO);
-	chdir_robust(pertname.str());
+	std::ostringstream pertname;
+	pertname << "p" << (m == -1 ? '-' : '+') << max_strain << "_" << pert;
+	const std::string pertname_str = pertname.str();
+	cerr << " " << pertname_str << endl;
+    std::filesystem::create_directory(pertname_str);
+    std::filesystem::permissions(
+        pertname_str,
+        std::filesystem::perms::owner_all |
+        std::filesystem::perms::group_all |
+        std::filesystem::perms::others_all,
+        std::filesystem::perm_options::replace
+    );
+
+	chdir_robust(pertname_str.c_str());
 	{
 	  ofstream unpertstrfile("str.out");
 	  unpertstrfile.setf(ios::fixed);
@@ -144,7 +152,7 @@ int main(int argc, char *argv[]) {
     {
       ifstream volfile("pertlist.out");
       while (skip_delim(volfile)) {
-	AutoString volname;
+	std::string volname;
 	get_string(&volname, volfile);
 	cerr << volname;
 	chdir_robust(volname);

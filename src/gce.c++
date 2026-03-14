@@ -66,7 +66,7 @@ int main(int argc, char *argv[]) {
   }
   Structure lattice;
   Array<Arrayint> labellookup;
-  Array<AutoString> label;
+  Array<std::string> label;
   rMatrix3d axes;
   {
     ifstream latticefile(latticefilename);

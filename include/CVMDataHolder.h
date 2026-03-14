@@ -82,7 +82,7 @@ class CVMOptimizerDataHolder {
 				  const SpaceGroup &spacegroup);
   static void get_structure_from_file(Structure &str, const string &strfilename,
 				      const Structure &lattice,
-				      const Array<AutoString> &label,
+				      const Array<std::string> &label,
 				      const Array<Arrayint> &labellookup);
 
   VectorXd GetDisorderedCorrelation() const;

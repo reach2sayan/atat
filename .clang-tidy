@@ -1,0 +1,25 @@
+Checks: >
+  -*,
+  bugprone-*,
+  cppcoreguidelines-*,
+  modernize-*,
+  performance-*,
+  readability-*,
+  -cppcoreguidelines-avoid-magic-numbers,
+  -cppcoreguidelines-pro-bounds-array-to-pointer-decay,
+  -cppcoreguidelines-pro-type-vararg,
+  -cppcoreguidelines-owning-memory,
+  -modernize-use-trailing-return-type,
+  -readability-identifier-length
+WarningsAsErrors: ''
+HeaderFilterRegex: '^(C:/atat/(include|src)/).*'
+FormatStyle: none
+CheckOptions:
+  - key: modernize-loop-convert.MinConfidence
+    value: reasonable
+  - key: modernize-pass-by-value.IncludeStyle
+    value: llvm
+  - key: modernize-replace-auto-ptr.IncludeStyle
+    value: llvm
+  - key: readability-qualified-auto.IgnoreAliasing
+    value: 'true'

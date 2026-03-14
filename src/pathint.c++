@@ -1,5 +1,5 @@
 #include <complex.h>
-
+#include <numbers>
 #include <fstream>
 
 #include "getvalue.h"
@@ -13,14 +13,14 @@ Real dPhi(Real p, Real k, Real kT) {
   if (dk0val / k0val < 0.1) {
     acc = k0val - dk0val;
   } else {
-    kT *= M_PI;
+    kT *= std::numbers::pi;
     for (Real s = -1; s < 1.5; s += 2.) {
       Complex r = sqrt(k) / sqrt(Complex(p, -s * kT));
       Complex ftfermi(1., 0.);
       if (abs(kT * r) > 0) {
 	ftfermi = kT * r / sinh(kT * r);
       }
-      acc += real(Complex(0, s) * sqrt(Complex(0, -s)) / (2. * sqrt(M_PI)) *
+      acc += real(Complex(0, s) * sqrt(Complex(0, -s)) / (2. * sqrt(std::numbers::pi)) *
 		  pow(k * Complex(p, -s * kT), -0.25) *
 		  exp(-Complex(kT, 2 * s * p) * r) * ftfermi);
     }
@@ -35,13 +35,13 @@ Complex dPhi_complex(Real p, Real k, Real kT) {
   if (dk0val / k0val < 0.1) {
     acc = k0val - dk0val;
   } else {
-    kT *= M_PI;
+    kT *= std::numbers::pi;
     Complex r = sqrt(k) / sqrt(Complex(p, -kT));
     Complex ftfermi(1., 0.);
     if (abs(kT * r) > 0) {
       ftfermi = kT * r / sinh(kT * r);
     }
-    acc += Complex(0, 1.) * sqrt(Complex(0, -1.)) / (2. * sqrt(M_PI)) *
+    acc += Complex(0, 1.) * sqrt(Complex(0, -1.)) / (2. * sqrt(std::numbers::pi)) *
 	   pow(k * Complex(p, -kT), -0.25) * exp(-Complex(kT, 2 * p) * r) *
 	   ftfermi;
   }
@@ -55,7 +55,7 @@ Real dPhi_pos(Real p, Real k, Real kT) {
   if (dk0val / k0val < 0.1) {
     acc = k0val - dk0val;
   } else {
-    kT *= M_PI;
+    kT *= std::numbers::pi;
     for (Real s = -1; s < 1.5; s += 2.) {
       Complex r = sqrt(k) / sqrt(Complex(p, -s * kT));
       Real ftfermi = 1.;
@@ -63,7 +63,7 @@ Real dPhi_pos(Real p, Real k, Real kT) {
       if (real(kT * r) > 0.) {
 	ftfermi = abs(kT * r / sinh(kT * r));
       }
-      acc += (1. / (2. * sqrt(M_PI))) *
+      acc += (1. / (2. * sqrt(std::numbers::pi))) *
 	     pow(abs(k * Complex(p, -s * kT)), -0.25) *
 	     exp(real(-Complex(kT, 2 * s * p) * r)) * ftfermi;
     }
@@ -138,7 +138,9 @@ Real dPhi(Real p, Real k, int dpmdk, Real a, int nn) {
 template <class R, class T>
 class Function {
  public:
-  virtual R operator()(const T &x) const {}
+  virtual R operator()(const T &x) const {
+      return R{};
+  }
 };
 
 class ActualPot : public Function<Real, rVector3d> {
@@ -482,10 +484,10 @@ int main(int argc, char *argv[]) {
 
     cout << cfreq << endl;
     //    cout << "ne= " << mu << " " <<
-    //    real(2.*M_PI*exp(Complex(0.,ph))*exp(-0.5*c_quadratic_form(W,cfreq))*sqrt(determinant_2x2(W)))
+    //    real(2.*std::numbers::pi*exp(Complex(0.,ph))*exp(-0.5*c_quadratic_form(W,cfreq))*sqrt(determinant_2x2(W)))
     //    << endl;
     cout << "ne= " << mu << " "
-	 << real(2. * M_PI * exp(-0.5 * c_quadratic_form(W, cfreq)) *
+	 << real(2. * std::numbers::pi * exp(-0.5 * c_quadratic_form(W, cfreq)) *
 		 sqrt(determinant_2x2(W)))
 	 << endl;
   }

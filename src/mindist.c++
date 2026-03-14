@@ -30,7 +30,7 @@ int main(int argc, char *argv[]) {
   // parsing lattice and structure files. See parse.hh for detail;
   Structure lat;
   Array<Arrayint> labellookup;
-  Array<AutoString> label;
+  Array<std::string> label;
   rMatrix3d axes;
   {
     if (strcmp(latfilename,"-")==0) {

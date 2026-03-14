@@ -5,12 +5,12 @@
 
 // write extra help as plain text in *.hlp
 //extern char *helpstring;
-char *helpstring="";
+const char *helpstring="";
 
 int main(int argc, char *argv[]) {
   // parsing command line. See getvalue.hh for details;
-  char *wellstrfilename="wel_str.out";
-  char *saddlestrfilename="sad_str.out";
+  const char *wellstrfilename="wel_str.out";
+  const char *saddlestrfilename="sad_str.out";
   Real r=0;
   rVector3d center(0.,0.,0.);
   Array<Real> centera;
@@ -42,7 +42,7 @@ int main(int argc, char *argv[]) {
 
   // parsing structure files. See parse.hh for detail;
   Structure str[2];
-  Array<AutoString> label;
+  Array<std::string> label;
   rMatrix3d axes;
   {
     ifstream wellfile(wellstrfilename);
@@ -67,12 +67,12 @@ int main(int argc, char *argv[]) {
 
 
   int fixsh=label.get_size();
-  Array<AutoString> label_f(fixsh*2);
+  Array<std::string> label_f(fixsh*2);
   for (int i=0; i<fixsh; i++) {
     label_f(i)=label(i);
-    label_f(i)+=AutoString("_T");
+    label_f(i)+=std::string("_T");
     label_f(i+fixsh)=label(i);
-    label_f(i+fixsh)+=AutoString("_F");
+    label_f(i+fixsh)+=std::string("_F");
   }
 
   for (int ws=0; ws<2; ws++) {

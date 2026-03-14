@@ -119,7 +119,7 @@ void transform(Array<rVector3d> *ptpts, const Array<rVector3d> pts, const rMatri
 }
 
 void PolyFont3D::init(ifstream &file) {
-  AutoString dummy;
+  std::string dummy;
   get_string(&dummy,file,"\n");
   while (!file.eof()) {
     get_string(&dummy,file," ");
@@ -149,7 +149,7 @@ void PolyFont3D::init(ifstream &file) {
   charwidth(' ')=0.5;
 }
 
-void PolyFont3D::write(LinkedList<rVector3d> *plistpts, LinkedList<Array<int> > *plistpoly, const rVector3d &where, const rVector3d &right, const rVector3d &up, char *string) {
+void PolyFont3D::write(LinkedList<rVector3d> *plistpts, LinkedList<Array<int> > *plistpoly, const rVector3d &where, const rVector3d &right, const rVector3d &up, const char *string) {
   rMatrix3d rot;
   rot.set_column(0,right);
   rot.set_column(1,up);
@@ -164,7 +164,7 @@ void PolyFont3D::write(LinkedList<rVector3d> *plistpts, LinkedList<Array<int> > 
   }
 }
 
-Real PolyFont3D::get_length(char *string, int includelast) {
+Real PolyFont3D::get_length(const char *string, int includelast) {
   Real len=0;
   for (int i=0; i<strlen(string); i++) {
     len+=charwidth(string[i]);

@@ -31,7 +31,7 @@ public:
   Real energy;
   Status status;
   Real cost;
-  AutoString label;
+  std::string label;
   LinkedList<EnergyPredictor> predictor;
   LinkedList<LinkedListReal> correlations;
   StructureInfo(void) : Structure(), label(), correlations(), predictor() {
@@ -101,7 +101,7 @@ protected:
   Structure parent_lattice;       // the lattice;
   Structure lattice_only;         // the lattice, with fixed atoms removed;
   Array<Arrayint> site_type_list; // as read by parse_lattice_file;
-  Array<AutoString> atom_label;   //  as read by parse_lattice_file;
+  Array<std::string> atom_label;   //  as read by parse_lattice_file;
   int nb_calculated_str;          // number of calculated structures;
   int nb_clusters;                // number of clusters used in the fit;
   Real radius_1nn;                // radius of the nearest neighbor shell;
@@ -120,7 +120,7 @@ public:
   Real complexity_exp;
   ClusterExpansion(const Structure &_parent_lattice,
                    const Array<Arrayint> &_site_type_list,
-                   const Array<AutoString> &_atom_label,
+                   const Array<std::string> &_atom_label,
                    const SpaceGroup &_spacegroup);
   ~ClusterExpansion(void);
 
@@ -204,7 +204,7 @@ public:
   const Array<Arrayint> &get_site_type_list(void) const {
     return site_type_list;
   }
-  const Array<AutoString> &get_atom_label(void) const { return atom_label; }
+  const Array<std::string> &get_atom_label(void) const { return atom_label; }
   const LinkedList<StructureInfo> &get_structure_list(void) {
     return structures.get_structure_list();
   }
@@ -225,7 +225,7 @@ class ClusterExpansionCreator { // for the default algorithm;
 public:
   virtual ClusterExpansion *create(const Structure &_parent_lattice,
                                    const Array<Arrayint> &_site_type_list,
-                                   const Array<AutoString> &_atom_label,
+                                   const Array<std::string> &_atom_label,
                                    const SpaceGroup &_spacegroup) {
     return new ClusterExpansion(_parent_lattice, _site_type_list, _atom_label,
                                 _spacegroup);
@@ -237,7 +237,7 @@ class CustomClusterExpansionCreator
     : public ClusterExpansionCreator { // for alternate algorithm;
   virtual ClusterExpansion *create(const Structure &_parent_lattice,
                                    const Array<Arrayint> &_site_type_list,
-                                   const Array<AutoString> &_atom_label,
+                                   const Array<std::string> &_atom_label,
                                    const SpaceGroup &_spacegroup) {
     return new T(_parent_lattice, _site_type_list, _atom_label, _spacegroup);
   }

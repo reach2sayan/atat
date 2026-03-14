@@ -176,9 +176,9 @@ Real read_clusters_and_eci(LinkedList<GeneralizedCluster> *clusterlist, LinkedLi
           cluster.func(j)=0;
 	  }
       }
-      AutoString gce_label;
+      std::string gce_label;
       get_string(&gce_label,clusterfile,"\n");
-      SymmetryObeyingObject *psymobj=GenericPlugIn<SymmetryObeyingObject>::create(gce_label);
+      SymmetryObeyingObject *psymobj=GenericPlugIn<SymmetryObeyingObject>::create(gce_label.c_str());
       psymobj->read(clusterfile);
       GeneralizedCluster *pcluster=new GeneralizedCluster(cluster,psymobj);
       (*clusterlist) << pcluster;

@@ -11,7 +11,7 @@ public:
   Array<Real> cur_regul_param;
   CE_TLambda (const Structure &_parent_lattice,
                    const Array<Arrayint> &_site_type_list,
-                   const Array<AutoString> &_atom_label,
+                   const Array<std::string> &_atom_label,
                    const SpaceGroup &_spacegroup): ClusterExpansion(_parent_lattice,_site_type_list,_atom_label,_spacegroup), cur_regul_param() {};
 
   // Main routine calling the cluster enumeration and crossvalidation routines;
@@ -269,7 +269,7 @@ void CE_TLambda::find_best_cluster_choice(CEFitInfo *pfitinfo) {
 	allstr.precision(6);
         for (int i=0; i<all_fitted_energy.get_size(); i++) {
 	  while (!(s->status & (StructureInfo::Status) (StructureInfo::unknown | StructureInfo::busy | StructureInfo::error))) {s++;}
-	  const char *slabel=s->label;
+	  const char *slabel = s->label.c_str();
           allstr << (1.+all_concentration(i))/2. << " " << all_fitted_energy(i) << " " 
 		 << (s->status & StructureInfo::unknown ? "?" : slabel) << " " 
 		 << (s->status & StructureInfo::busy    ? "b" : "") 

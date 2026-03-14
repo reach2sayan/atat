@@ -79,7 +79,7 @@ int check_plug_in(const B &dummy, const char *labels, char delim) {
     if (p) {
       delete p;
     } else {
-      cerr << "Unable to find plug-in '" << ((const char *)lab) + j << "'."
+      cerr << "Unable to find plug-in '" << (lab + j) << "'."
            << endl;
       isok = 0;
     }

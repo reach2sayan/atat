@@ -6,7 +6,7 @@
 #include "xtalutil.h"
 
 void write_apb_structure(const Structure &str,
-                         const Array<AutoString> &atom_label,
+                         const Array<std::string> &atom_label,
                          const rMatrix3d &axes, ostream &file,
                          const rVector3d &slipvec);
 

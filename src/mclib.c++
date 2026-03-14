@@ -447,7 +447,7 @@ void MonteCarlo::run(int mc_passes, int mode) {
   }
 }
 
-void MonteCarlo::view(const Array<Arrayint> &labellookup, const Array<AutoString> &atom_label, ofstream &file, const rMatrix3d &axes) {
+void MonteCarlo::view(const Array<Arrayint> &labellookup, const Array<std::string> &atom_label, ofstream &file, const rMatrix3d &axes) {
   for (int i=0; i<3; i++) {
     file << axes.get_column(i) << endl;
   }

@@ -5,12 +5,12 @@
 #include "version.h"
 #include "plugin.h"
 
-void read_spring_file(LinkedList<SpringSvsL> *springlist, int *pmaxlpow, int *pdirdep, int *pconcpow, istream &file, const Array<AutoString> &label) {
+void read_spring_file(LinkedList<SpringSvsL> *springlist, int *pmaxlpow, int *pdirdep, int *pconcpow, istream &file, const Array<std::string> &label) {
   *pmaxlpow=-1;
   *pdirdep=0;
   *pconcpow=0;
   while (skip_delim(file)) {
-    AutoString atom;
+    std::string atom;
     SpringSvsL s;
     get_string(&atom,file);
     if (strcmp(atom,"maxlpow")==0) {
@@ -39,9 +39,9 @@ void read_spring_file(LinkedList<SpringSvsL> *springlist, int *pmaxlpow, int *pd
   }
 }
 
-void read_spring_file(LinkedList<ExtendableSpringSvsL> *springlist, istream &file, const Array<AutoString> &label, const char *potplugin) {
+void read_spring_file(LinkedList<ExtendableSpringSvsL> *springlist, istream &file, const Array<std::string> &label, const char *potplugin) {
   while (skip_delim(file)) {
-    AutoString atom;
+    std::string atom;
     ExtendableSpringSvsL *pspring=new ExtendableSpringSvsL;
     get_string(&atom,file);
     pspring->atom_type[0]=index_in_array(label,atom);
@@ -56,11 +56,11 @@ void read_spring_file(LinkedList<ExtendableSpringSvsL> *springlist, istream &fil
   }
 }
 
-void read_mass_file(Array<Real> *masses, istream &file, const Array<AutoString> &label) {
+void read_mass_file(Array<Real> *masses, istream &file, const Array<std::string> &label) {
   masses->resize(label.get_size());
   for (int i=0; i<masses->get_size(); i++) {(*masses)(i)=-1.;}
   while (skip_delim(file)) {
-    AutoString curlab;
+    std::string curlab;
     get_string(&curlab,file);
     Real m;
     file >> m;
@@ -213,7 +213,7 @@ int main(int argc, char *argv[]) {
 
   Structure lat;
   Array<Arrayint> labellookup;
-  Array<AutoString> label;
+  Array<std::string> label;
   rMatrix3d axes;
   {
     if (strlen(latfilename)==0) {
@@ -255,7 +255,7 @@ int main(int argc, char *argv[]) {
   {
     ifstream sprfile(sprfilename);
     if (!sprfile) {
-      AutoString filename("../");
+      std::string filename("../");
       filename+=sprfilename;
       sprfile.clear();
       sprfile.open(filename);
@@ -338,7 +338,7 @@ int main(int argc, char *argv[]) {
       }
     }
     else {
-      AutoString configfilename(getenv("HOME"));
+      std::string configfilename(getenv("HOME"));
       configfilename+="/.atat.rc";
       ifstream configfile(configfilename);
       if (!configfile) {
@@ -346,7 +346,7 @@ int main(int argc, char *argv[]) {
       }
       while (configfile.get()!='=') {};
       skip_delim(configfile," \t");
-      AutoString massfilename2;
+      std::string massfilename2;
       get_string(&massfilename2,configfile);
       massfilename2+="/data/masses.in";
       massfile.open(massfilename2);

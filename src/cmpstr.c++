@@ -5,7 +5,7 @@
 #include "version.h"
 #include "xtalutil.h"
 
-char *helpstring = "Insert more help here";
+const char *helpstring = "Insert more help here";
 
 int equivalent_mod_cell(const rVector3d &a, const rVector3d &b,
 			const rMatrix3d &inv_cell, Real tol) {
@@ -126,8 +126,8 @@ int struct_compare(Array<int> *pmatches, const Structure &str1,
 
 int main(int argc, char *argv[]) {
   // parsing command line. See getvalue.hh for details;
-  char *str1filename = "str1.out";
-  char *str2filename = "str2.out";
+  const char *str1filename = "str1.out";
+  const char *str2filename = "str2.out";
   Real ftol = 1e-2;
   Real vtol = 0.25;
   Real ltol = 0.25;
@@ -161,7 +161,7 @@ int main(int argc, char *argv[]) {
   cout.setf(ios::fixed);
   cout.precision(sigdig);
 
-  Array<AutoString> label;
+  Array<std::string> label;
   Structure str1;
   {
     Array<Arrayint> labellookup;

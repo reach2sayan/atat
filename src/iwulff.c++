@@ -1,15 +1,15 @@
 #include <fstream>
-
+#include <numbers>
 #include "getvalue.h"
 #include "parse.h"
 #include "version.h"
 
-char *helpstring = "Insert more help here";
+const char *helpstring = "Insert more help here";
 
 int main(int argc, char *argv[]) {
   // parsing command line. See getvalue.hh for details;
-  char *strfilename = "str.out";
-  char *procfilename = "";
+  const char *strfilename = "str.out";
+  const char *procfilename = "";
   Real r = 10;
   int nbneigh = 0;
   int sigdig = 5;
@@ -52,7 +52,7 @@ int main(int argc, char *argv[]) {
   // parsing lattice and structure files. See parse.hh for detail;
   Structure str;
   Array<Arrayint> labellookup;
-  Array<AutoString> label;
+  Array<std::string> label;
   rMatrix3d axes;
   {
     ifstream strfile(strfilename);
@@ -154,10 +154,10 @@ int main(int argc, char *argv[]) {
   }
   org = org / (Real)nbat;
 
-  Real du = 2. * M_PI / (Real)nbu;
-  Real dv = M_PI / (Real)nbv;
-  for (Real u = 0; u < 2. * M_PI + du / 2.; u += du) {
-    for (Real v = 0; v < M_PI + dv / 2; v += dv) {
+  Real du = 2. * std::numbers::pi / (Real)nbu;
+  Real dv = std::numbers::pi / (Real)nbv;
+  for (Real u = 0; u < 2. * std::numbers::pi + du / 2.; u += du) {
+    for (Real v = 0; v < std::numbers::pi + dv / 2; v += dv) {
       rVector3d dir(cos(u) * sin(v), sin(u) * sin(v), cos(v));
       Real maxp = 0;
       for (int at = 0; at < str.atom_pos.get_size(); at++) {

@@ -1,4 +1,6 @@
 #include <fstream>
+#include <filesystem>
+#include <numbers>
 #include <sys/stat.h>
 #include "phonlib.h"
 #include "getvalue.h"
@@ -210,7 +212,7 @@ class IdenticalPairSpring {
 };
 
 
-void print_fc(ostream &file, const LinkedList<SpringGeneral> &spring_data, const Array<Real> &beta, const Structure &str, const Array<AutoString> &label, const rMatrix3d &axes) {
+void print_fc(ostream &file, const LinkedList<SpringGeneral> &spring_data, const Array<Real> &beta, const Structure &str, const Array<std::string> &label, const rMatrix3d &axes) {
   LinkedListIterator<SpringGeneral> i_sg(spring_data);
   int c=0;
   for (; i_sg; i_sg++) {
@@ -315,11 +317,11 @@ void make_forcek(LinkedList<PairSpring> *p_pair, const Structure &str_relax, con
   //  cerr << p_pair->get_size() << endl;
 }
 
-void read_mass_file(Array<Real> *masses, istream &file, const Array<AutoString> &label) {
+void read_mass_file(Array<Real> *masses, istream &file, const Array<std::string> &label) {
   masses->resize(label.get_size());
   for (int i=0; i<masses->get_size(); i++) {(*masses)(i)=-1.;}
   while (skip_delim(file)) {
-    AutoString curlab;
+    std::string curlab;
     get_string(&curlab,file);
     Real m;
     file >> m;
@@ -334,7 +336,7 @@ void read_mass_file(Array<Real> *masses, istream &file, const Array<AutoString> 
   }
 }
 
-void read_mass_file(Array<Real> *pmasses, const char *massfilename, const Structure &rel_str, const Array<AutoString> &label) {
+void read_mass_file(Array<Real> *pmasses, const char *massfilename, const Structure &rel_str, const Array<std::string> &label) {
   pmasses->resize(rel_str.atom_type.get_size());
   {
     ifstream massfile;
@@ -346,7 +348,7 @@ void read_mass_file(Array<Real> *pmasses, const char *massfilename, const Struct
       }
     }
     else {
-      AutoString configfilename(getenv("HOME"));
+      std::string configfilename(getenv("HOME"));
       configfilename+="/.atat.rc";
       ifstream configfile(configfilename);
       if (!configfile) {
@@ -354,7 +356,7 @@ void read_mass_file(Array<Real> *pmasses, const char *massfilename, const Struct
       }
       while (configfile.get()!='=') {};
       skip_delim(configfile," \t");
-      AutoString massfilename2;
+      std::string massfilename2;
       get_string(&massfilename2,configfile);
       massfilename2+="/data/masses.in";
       massfile.open(massfilename2);
@@ -512,7 +514,7 @@ int generate_mode(Array<Structure> *pmodestr, const Structure &str, const rVecto
   disp(1).resize((*pmodestr)(0).atom_pos.get_size()*3);
   rMatrix3d invcell=!(str.cell);
   for (int at=0; at<(*pmodestr)(0).atom_pos.get_size(); at++) {
-    Real phase=2.*M_PI*k*((*pmodestr)(0).atom_pos(at));
+    Real phase=2.*std::numbers::pi*k*((*pmodestr)(0).atom_pos(at));
     int atincell=which_atom(str.atom_pos,(*pmodestr)(0).atom_pos(at),invcell);
     for (int i=0; i<3; i++) {
       int j=3*atincell+i;
@@ -693,7 +695,7 @@ int main(int argc, char *argv[]) {
     strainfile >> extrastrain;
   }
   Structure str;
-  Array<AutoString> atom_label;
+  Array<std::string> atom_label;
   rMatrix3d axes;
   Real r1nn=0.;
   {
@@ -747,7 +749,14 @@ int main(int argc, char *argv[]) {
       else {
 	volname << "vol_" << strain*100 << '\0';
       }
-      mkdir(volname.str().c_str(),S_IRWXU | S_IRWXG | S_IRWXO);
+	  std::filesystem::create_directory(volname.str());
+	  std::filesystem::permissions(
+		  volname.str(),
+		  std::filesystem::perms::owner_all |
+		  std::filesystem::perms::group_all |
+		  std::filesystem::perms::others_all,
+		  std::filesystem::perm_options::replace
+	  );
       chdir_robust(volname.str().c_str());
       Structure s_str_relax;
       stretch_str(&s_str_relax,str_relax,strain);
@@ -774,7 +783,7 @@ int main(int argc, char *argv[]) {
       int atleastone=0;
       while (skip_delim(volfile)) {
 	atleastone=1;
-        AutoString dirname;
+        std::string dirname;
         get_string(&dirname,volfile);
         chdir_robust(dirname);
 	cerr << dirname << endl;
@@ -805,7 +814,14 @@ int main(int argc, char *argv[]) {
 	    else {
 	      pertname << "p+0" << "_" << enclosed_radius << "_0" << '\0';
 	    }
-            mkdir(pertname.str().c_str(),S_IRWXU | S_IRWXG | S_IRWXO);
+		std::filesystem::create_directory(pertname.str());
+		std::filesystem::permissions(
+			pertname.str(),
+			std::filesystem::perms::owner_all |
+			std::filesystem::perms::group_all |
+			std::filesystem::perms::others_all,
+			std::filesystem::perm_options::replace
+		);
             chdir_robust(pertname.str().c_str());
 	    if (!file_exists("str.out")) {
               cerr << " " << pertname.str().c_str() << endl;
@@ -883,7 +899,7 @@ int main(int argc, char *argv[]) {
     {
       ifstream volfile("vollist.out");
       while (skip_delim(volfile)) {
-        AutoString volname;
+        std::string volname;
         get_string(&volname,volfile);
 	cerr << volname << endl;
         chdir_robust(volname);
@@ -924,7 +940,7 @@ int main(int argc, char *argv[]) {
         system("ls p*/force.out 2> /dev/null | sed 's+/force.out++g' > pertlist.out");
         ifstream pertfile("pertlist.out");
         while (skip_delim(pertfile)) {
-          AutoString dirname;
+          std::string dirname;
           get_string(&dirname,pertfile);
 	  cerr << " " << dirname << endl;
           chdir_robust(dirname);
@@ -1139,7 +1155,15 @@ int main(int argc, char *argv[]) {
 		      else {
 			dirname << "p_uns_" << cur_displ << "_" << kpts(0) << "_" << kpts(1) << "_" << kpts(2) << "_" << gen_unstable << '\0';
 		      }
-		      mkdir(dirname.str().c_str(),S_IRWXU | S_IRWXG | S_IRWXO);
+			  std::filesystem::create_directory(dirname.str());
+			  std::filesystem::permissions(
+				  dirname.str(),
+				  std::filesystem::perms::owner_all |
+				  std::filesystem::perms::group_all |
+				  std::filesystem::perms::others_all,
+				  std::filesystem::perm_options::replace
+			  );
+
 		      chdir_robust(dirname.str().c_str());
 		      
 		      Array<Structure> pertstr(2);

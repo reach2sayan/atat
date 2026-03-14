@@ -1,5 +1,5 @@
 #include <fstream>
-#include <strstream>
+#include <sstream>
 
 #include "getvalue.h"
 #include "lstsqr.h"
@@ -14,9 +14,9 @@ int unroll_tri(int s, int t) {
 }
 
 int main(int argc, char *argv[]) {
-  char *delim = "\t";
+  const char *delim = "\t";
   int dohelp = 0;
-  char *strfilename = "str.out";
+  const char *strfilename = "str.out";
   int sigdig = 5;
   Real kr = 0.5;
   int nosym = 0;
@@ -44,7 +44,7 @@ int main(int argc, char *argv[]) {
 
   Structure str;
   Array<Arrayint> labellookup;
-  Array<AutoString> label;
+  Array<std::string> label;
   rMatrix3d axes;
   {
     ifstream strfile(strfilename);
@@ -145,9 +145,9 @@ int main(int argc, char *argv[]) {
     }
     mass = !mass;
     {
-      ostrstream filename;
-      filename << carrier[b] << "mass" << '\0';
-      ofstream file(filename.str());
+      std::ostringstream filename;
+      filename << carrier[b] << "mass";
+      ofstream file(filename.str().c_str());
       file.setf(ios::fixed);
       file.precision(sigdig);
       for (int t = 0; t < 3; t++) {

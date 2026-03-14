@@ -26,7 +26,7 @@ Real calc_structure_cost(const Structure &str, const rMatrix3d &cell,
 
 ClusterExpansion::ClusterExpansion(const Structure &_parent_lattice,
                                    const Array<Arrayint> &_site_type_list,
-                                   const Array<AutoString> &_atom_label,
+                                   const Array<std::string> &_atom_label,
                                    const SpaceGroup &_spacegroup)
     : pclusters(), equiv_cluster(), spacegroup(_spacegroup),
       structures(_parent_lattice, _site_type_list, spacegroup), weight(),
@@ -104,8 +104,8 @@ void ClusterExpansion::update_correlations(StructureInfo *str) {
     }
     label_list.add(new int(cur_label), i_label_list);
     ostringstream tmp;
-    tmp << cur_label << '\0';
-    str->label.set(tmp.str().c_str());
+    tmp << cur_label;
+    str->label = tmp.str();
   }
   // set structure cost, if needed;
   if (str->cost == 0)
@@ -689,7 +689,7 @@ void ClusterExpansion::find_best_cluster_choice(CEFitInfo *pfitinfo) {
                                                        StructureInfo::error))) {
             s++;
           }
-          const char *slabel = s->label;
+          const char *slabel = s->label.c_str();
           Real c = (1. + all_concentration(i)) / 2.;
           Real form_e = s->energy / volume -
                         (1 - c) * pfitinfo->pure_energy(0) -
@@ -747,7 +747,7 @@ void ClusterExpansion::reset_structure(void) {
   LinkedListIterator<StructureInfo> j(structures.get_structure_list());
   for (; j; j++) {
     int index = -1;
-    istringstream tmp((const char *)(j->label));
+    istringstream tmp(j->label);
     tmp >> index;
     if (index != -1) {
       LinkedListIterator<int> i(label_list);

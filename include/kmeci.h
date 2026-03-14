@@ -10,7 +10,7 @@ class KSpaceECI {
 public:
   virtual void init(const Structure &_lattice,
                     const Array<Array<int>> &_site_type_list,
-                    const Array<AutoString> &atom_label,
+                    const Array<std::string> &atom_label,
                     const iVector3d &_supercell,
                     const Array<Array<Array<Real>>> &_corrfunc) {}
   virtual void

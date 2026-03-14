@@ -5,11 +5,11 @@
 #include "parse.h"
 #include "version.h"
 
-char *helpstring = "Insert more help here";
+const char *helpstring = "Insert more help here";
 
 int main(int argc, char *argv[]) {
   // parsing command line. See getvalue.hh for details;
-  char *latfilename = "lat.in";
+  const char *latfilename = "lat.in";
   int n = 0;
   int s = 100;
   Real v = 1.;
@@ -43,7 +43,7 @@ int main(int argc, char *argv[]) {
   // parsing lattice and structure files. See parse.hh for detail;
   Structure lat;
   Array<Arrayint> labellookup;
-  Array<AutoString> label;
+  Array<std::string> label;
   rMatrix3d axes;
   {
     ifstream latfile(latfilename);

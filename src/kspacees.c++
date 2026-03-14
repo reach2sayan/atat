@@ -26,7 +26,7 @@ class ES_KSpaceECI : public KSpaceECI {
   // read in parameters from the file es.in;
   void init(const Structure &_lattice,
 	    const Array<Array<int> > &_site_type_list,
-	    const Array<AutoString> &atom_label, const iVector3d &_supercell,
+	    const Array<std::string> &atom_label, const iVector3d &_supercell,
 	    const Array<Array<Array<Real> > > &_corrfunc) {
     lattice = _lattice;
     site_type_list = _site_type_list;
@@ -40,12 +40,12 @@ class ES_KSpaceECI : public KSpaceECI {
       ifstream file("es.in");
       if (!file) ERRORQUIT("Unable to open es.in file.");
       while (!file.eof()) {
-	AutoString specie;
+	std::string specie;
 	skip_delim(file, " \t=\n");
 	get_string(&specie, file, " \t=");
 	skip_delim(file, " \t=");
 	if (file.eof()) break;
-	if (specie == AutoString("scrn")) {
+	if (specie == std::string("scrn")) {
 	  file >> scrn;
 	} else {
 	  int wspecie = index_in_array(atom_label, specie);

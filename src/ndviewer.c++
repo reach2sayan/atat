@@ -2,7 +2,7 @@
 
 #include <fstream>
 #include <iostream>
-#include <strstream>
+#include <sstream>
 
 #include "arraylist.h"
 #include "getvalue.h"
@@ -339,12 +339,11 @@ class ViewerData {
       if (data) {
 	glReadPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, data);
       }
-      ostrstream filename;
+      std::ostringstream filename;
       filename << "dumpndviewer" << setfill('0') << setw(4) << fileindex
-	       << ".pam"
-	       << "\0";
+	       << ".pam";
       {
-	ofstream dumpfile(filename.str());
+	ofstream dumpfile(filename.str().c_str());
 	dumpfile << "P7" << endl;
 	dumpfile << "WIDTH " << width << endl;
 	dumpfile << "HEIGHT " << height << endl;
@@ -354,7 +353,7 @@ class ViewerData {
 	dumpfile << "ENDHDR" << endl;
 	dumpfile.write((char *)data, bufsize);
       }
-      delete data;
+      delete[] data;
       fileindex++;
       cerr << "Done writing frame" << endl;
     }

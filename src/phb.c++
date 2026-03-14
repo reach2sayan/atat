@@ -1,5 +1,6 @@
 #include <fstream>
 #include <sstream>
+#include <filesystem>
 #include "mclib.h"
 #include "drawpd.h"
 #include "parse.h"
@@ -108,13 +109,12 @@ int main(int argc, char *argv[]) {
   Real e_scale[2];
 
   for (int phase=0; phase<2; phase++) {
-    char cur_dir[MAX_LINE_LEN];
-    getcwd(cur_dir,MAX_LINE_LEN);
+    auto cur_dir = std::filesystem::current_path().c_str();
     chdir_robust(lat_dir[phase]);
 
     Structure lattice;
     Array<Arrayint> labellookup;
-    Array<AutoString> label;
+    Array<std::string> label;
     rMatrix3d axes;
     {
       ifstream latticefile("lat.in");
@@ -232,7 +232,7 @@ int main(int argc, char *argv[]) {
     else {
       mc[phase]=new MonteCarlo(lattice_only,simple_supercell,spacegroup,clusterlist);
     }
-    chdir_robust(cur_dir);
+    chdir_robust(std::filesystem::current_path().string());
   }
   if (maxdmu==MAXFLOAT) {maxdmu=MAX(fabs(e_scale[0]),fabs(e_scale[1]))/100.;}
 

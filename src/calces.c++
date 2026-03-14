@@ -3,10 +3,11 @@
 #include "phonlib.h"
 #include "version.h"
 #include <fstream>
+#include <numbers>
 
 Real calc_ewald(const Structure &str, const Array<Real> &charges,
                 Real eta = -1.0, Real prec = 1e-25) {
-  rMatrix3d rcell = 2. * M_PI * !(~str.cell);
+  rMatrix3d rcell = 2. * std::numbers::pi * !(~str.cell);
   LatticePointIterator lat(str.cell, 1);
   Real rmin = norm((rVector3d)lat);
   LatticePointIterator rlat(rcell, 1);
@@ -14,7 +15,7 @@ Real calc_ewald(const Structure &str, const Array<Real> &charges,
   Real omega = fabs(det(str.cell));
   if (eta < 0) {
     eta = sqrt(0.5 * (kmin / rmin) *
-               sqrt(log(prec) / log((prec * omega) / (4 * M_PI))));
+               sqrt(log(prec) / log((prec * omega) / (4 * std::numbers::pi))));
     // cerr << eta << endl;
   }
   Real E = 0.;
@@ -36,7 +37,7 @@ Real calc_ewald(const Structure &str, const Array<Real> &charges,
       }
       // cerr << "nReal=" << nt << endl;
       rlat.init(rcell, 1);
-      Real maxk2 = 4. * sqr(eta) * (-log(omega * prec / (4. * M_PI)));
+      Real maxk2 = 4. * sqr(eta) * (-log(omega * prec / (4. * std::numbers::pi)));
       nt = 0;
       while (1) {
         rVector3d k = (rVector3d)rlat;
@@ -44,14 +45,14 @@ Real calc_ewald(const Structure &str, const Array<Real> &charges,
         if (k2 > maxk2)
           break;
         E += qq * cos(k * dr) * doublecount * exp(-k2 / (4. * sqr(eta))) * 4. *
-             M_PI / omega / k2;
+             std::numbers::pi / omega / k2;
         rlat++;
         nt++;
       }
       // cerr << "nReciprocal=" << nt << endl;
-      E -= doublecount * qq * M_PI / sqr(eta) / omega;
+      E -= doublecount * qq * std::numbers::pi / sqr(eta) / omega;
       if (i == j) {
-        E -= qq * eta / sqrt(M_PI);
+        E -= qq * eta / sqrt(std::numbers::pi);
       }
     }
   }
@@ -59,8 +60,8 @@ Real calc_ewald(const Structure &str, const Array<Real> &charges,
 }
 
 int main(int argc, char *argv[]) {
-  char *unrelfilename = "str.out";
-  char *chargefilename = "charges.in";
+  const char *unrelfilename = "str.out";
+  const char *chargefilename = "charges.in";
   Real eta = -1.0;
   Real prec = 1e-25;
   int defval = 0;
@@ -75,16 +76,16 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
-  Array<AutoString> species_name;
+  Array<std::string> species_name;
   Array<Real> species_charge;
   {
     ifstream chargefile(chargefilename);
     if (!chargefile)
       ERRORQUIT("Unable to open charges.in file.");
-    LinkedList<AutoString> specieslist;
+    LinkedList<std::string> specieslist;
     LinkedList<Real> chargelist;
     while (!chargefile.eof()) {
-      AutoString specie;
+      std::string specie;
       Real charge;
       skip_delim(chargefile, " \t=\n");
       get_string(&specie, chargefile, " \t=");
@@ -92,7 +93,7 @@ int main(int argc, char *argv[]) {
       if (chargefile.eof())
         break;
       chargefile >> charge;
-      specieslist << new AutoString(specie);
+      specieslist << new std::string(specie);
       chargelist << new Real(charge);
     }
     LinkedList_to_Array(&species_name, specieslist);
@@ -110,7 +111,7 @@ int main(int argc, char *argv[]) {
       break;
     Structure ustr;
     Array<Arrayint> site_type_list;
-    Array<AutoString> atom_label;
+    Array<std::string> atom_label;
     rMatrix3d axes;
     parse_lattice_file(&ustr.cell, &ustr.atom_pos, &ustr.atom_type,
                        &site_type_list, &atom_label, file, &axes);

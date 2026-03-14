@@ -1,22 +1,41 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.17)
 
-SET(CMAKE_C_COMPILER "gcc")
-SET(CMAKE_CXX_COMPILER "clang++")
 PROJECT(ATAT
 	VERSION 1.0
 	LANGUAGES C CXX
 	)
-ADD_COMPILE_OPTIONS(-Wall -Wpedantic)
 
-SET(CMAKE_CXX_STANDARD 17)
+SET(CMAKE_CXX_STANDARD 20)
+SET(CMAKE_CXX_STANDARD_REQUIRED ON)
+SET(CMAKE_CXX_EXTENSIONS OFF)
 SET(CMAKE_EXPORT_COMPILE_COMMANDS ON )
+
+IF(MSVC)
+	ADD_COMPILE_OPTIONS(/W3 /EHsc)
+ELSE()
+	ADD_COMPILE_OPTIONS(-Wall -Wpedantic)
+ENDIF()
+
+SET(ATAT_LIB_TYPE STATIC)
 
 SET(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 SET(CMAKE_PYTHON_DIRECTORY ${PROJECT_SOURCE_DIR}/python)
 
-OPTION(MAKENDVIEWER "Build ndviewer? Requires OpenGL" ON)
+IF(WIN32)
+	OPTION(MAKENDVIEWER "Build ndviewer? Requires OpenGL" OFF)
+	OPTION(USEGSL "Build with GSL" OFF)
+	OPTION(ATAT_BUILD_CVM "Build CVM tools that depend on IFOPT/IPOPT" OFF)
+	OPTION(ATAT_BUILD_TESTS "Build tests and fetch Catch2" OFF)
+ELSE()
+	OPTION(MAKENDVIEWER "Build ndviewer? Requires OpenGL" ON)
+	OPTION(USEGSL "Build with GSL" ON)
+	OPTION(ATAT_BUILD_CVM "Build CVM tools that depend on IFOPT/IPOPT" ON)
+	OPTION(ATAT_BUILD_TESTS "Build tests and fetch Catch2" ON)
+ENDIF()
+OPTION(ATAT_ALLOW_FETCHCONTENT "Allow CMake to download missing dependencies" ON)
+
 IF(MAKENDVIEWER)
 	ADD_DEFINITIONS(-DMAKE_NDVIEWER)
 	FIND_PACKAGE(OpenGL REQUIRED)
@@ -27,9 +46,6 @@ ENDIF()
 INCLUDE(FetchContent)
 SET(FETCHCONTENT_QUIET FALSE)
 
-FIND_PACKAGE(Git REQUIRED)
-
-OPTION(USEGSL "Build with GSL" ON)
 IF(USEGSL)
 	ADD_DEFINITIONS(-DUSE_GSL)
 	FIND_PACKAGE(GSL REQUIRED)
@@ -65,7 +81,11 @@ FIND_PACKAGE(Eigen3 NO_MODULE)
 IF(${Eigen3_FOUND})
 	MESSAGE(STATUS "Found Eigen")
 ELSE()
-	MESSAGE(STATUS "Eigen3 Not Found. Downloading from Source")
+	IF(NOT ATAT_ALLOW_FETCHCONTENT)
+		MESSAGE(FATAL_ERROR "Eigen3 not found. Set Eigen3_DIR or enable ATAT_ALLOW_FETCHCONTENT.")
+	ENDIF()
+	FIND_PACKAGE(Git REQUIRED)
+	MESSAGE(STATUS "Eigen3 not found. Downloading from source")
 	FETCHCONTENT_DECLARE(Eigen3
 		GIT_REPOSITORY    https://gitlab.com/libeigen/eigen.git
 		GIT_PROGRESS		  TRUE
@@ -77,15 +97,21 @@ ELSE()
 	ENDIF()
 ENDIF()
 
-MESSAGE(STATUS "Downloading IFOPT (Eigen wrapper with IPOPT)")
-FETCHCONTENT_DECLARE(ifopt
-	GIT_REPOSITORY    https://github.com/ethz-adrl/ifopt
-	GIT_PROGRESS		  TRUE
-	)
-IF(NOT ifopt_POPULATED)
-	FETCHCONTENT_POPULATE(ifopt)
-	FETCHCONTENT_MAKEAVAILABLE(ifopt)
-	ADD_SUBDIRECTORY(${ifopt_SOURCE_DIR} ${ifopt_BUILD_DIR})
+IF(ATAT_BUILD_CVM)
+	IF(NOT ATAT_ALLOW_FETCHCONTENT)
+		MESSAGE(FATAL_ERROR "ATAT_BUILD_CVM requires IFOPT. Enable ATAT_ALLOW_FETCHCONTENT or disable ATAT_BUILD_CVM.")
+	ENDIF()
+	FIND_PACKAGE(Git REQUIRED)
+	MESSAGE(STATUS "Downloading IFOPT (Eigen wrapper with IPOPT)")
+	FETCHCONTENT_DECLARE(ifopt
+		GIT_REPOSITORY    https://github.com/ethz-adrl/ifopt
+		GIT_PROGRESS		  TRUE
+		)
+	IF(NOT ifopt_POPULATED)
+		FETCHCONTENT_POPULATE(ifopt)
+		FETCHCONTENT_MAKEAVAILABLE(ifopt)
+		ADD_SUBDIRECTORY(${ifopt_SOURCE_DIR} ${ifopt_BUILD_DIR})
+	ENDIF()
 ENDIF()
 
 IF( EXISTS "${CMAKE_CURRENT_BINARY_DIR}/compile_commands.json" )
@@ -95,74 +121,78 @@ IF( EXISTS "${CMAKE_CURRENT_BINARY_DIR}/compile_commands.json" )
   )
 ENDIF()
 
-INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/include ${ifopt_SOURCE_DIR}
-	${ifopt_BUILD_DIR})
+INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/include)
+IF(ATAT_BUILD_CVM)
+	INCLUDE_DIRECTORIES(${ifopt_SOURCE_DIR} ${ifopt_BUILD_DIR})
+ENDIF()
 
 
-ADD_LIBRARY(cvmclushelp SHARED ${PROJECT_SOURCE_DIR}/src/cvmclushelp.c++)
-ADD_LIBRARY(cvhelp SHARED ${PROJECT_SOURCE_DIR}/src/cvhelp.c++)
-ADD_LIBRARY(corrdumphelp SHARED ${PROJECT_SOURCE_DIR}/src/corrdumphelp.c++)
-ADD_LIBRARY(mcsqshelp SHARED ${PROJECT_SOURCE_DIR}/src/mcsqshelp.c++)
-ADD_LIBRARY(gensqshelp SHARED ${PROJECT_SOURCE_DIR}/src/gensqshelp.c++)
-ADD_LIBRARY(mapshelp SHARED ${PROJECT_SOURCE_DIR}/src/mapshelp.c++)
-ADD_LIBRARY(phbhelp SHARED	${PROJECT_SOURCE_DIR}/src/phbhelp.c++)
-ADD_LIBRARY(apbhelp SHARED	${PROJECT_SOURCE_DIR}/src/apbhelp.c++)
-ADD_LIBRARY(mmapshelp SHARED ${PROJECT_SOURCE_DIR}/src/mmapshelp.c++)
-ADD_LIBRARY(emc2help SHARED ${PROJECT_SOURCE_DIR}/src/emc2help.c++)
-ADD_LIBRARY(memc2help SHARED ${PROJECT_SOURCE_DIR}/src/memc2help.c++)
-ADD_LIBRARY(gcehelp SHARED ${PROJECT_SOURCE_DIR}/src/gcehelp.c++)
-ADD_LIBRARY(fitsvslhelp SHARED ${PROJECT_SOURCE_DIR}/src/fitsvslhelp.c++)
-ADD_LIBRARY(svslhelp SHARED ${PROJECT_SOURCE_DIR}/src/svslhelp.c++)
-ADD_LIBRARY(fitfchelp SHARED ${PROJECT_SOURCE_DIR}/src/fitfchelp.c++)
-ADD_LIBRARY(felechelp SHARED ${PROJECT_SOURCE_DIR}/src/felechelp.c++)
-ADD_LIBRARY(fempmaghelp SHARED ${PROJECT_SOURCE_DIR}/src/fempmaghelp.c++)
-ADD_LIBRARY(predcshelp SHARED ${PROJECT_SOURCE_DIR}/src/predcshelp.c++)
-ADD_LIBRARY(infdethelp SHARED ${PROJECT_SOURCE_DIR}/src/infdethelp.c++)
-ADD_LIBRARY(mindisthelp SHARED ${PROJECT_SOURCE_DIR}/src/mindisthelp.c++)
-ADD_LIBRARY(epichelp SHARED ${PROJECT_SOURCE_DIR}/src/epichelp.c++)
+ADD_LIBRARY(cvmclushelp ${ATAT_LIB_TYPE} ${PROJECT_SOURCE_DIR}/src/cvmclushelp.c++)
+ADD_LIBRARY(cvhelp ${ATAT_LIB_TYPE} ${PROJECT_SOURCE_DIR}/src/cvhelp.c++)
+ADD_LIBRARY(corrdumphelp ${ATAT_LIB_TYPE} ${PROJECT_SOURCE_DIR}/src/corrdumphelp.c++)
+ADD_LIBRARY(mcsqshelp ${ATAT_LIB_TYPE} ${PROJECT_SOURCE_DIR}/src/mcsqshelp.c++)
+ADD_LIBRARY(gensqshelp ${ATAT_LIB_TYPE} ${PROJECT_SOURCE_DIR}/src/gensqshelp.c++)
+ADD_LIBRARY(mapshelp ${ATAT_LIB_TYPE} ${PROJECT_SOURCE_DIR}/src/mapshelp.c++)
+ADD_LIBRARY(phbhelp ${ATAT_LIB_TYPE} ${PROJECT_SOURCE_DIR}/src/phbhelp.c++)
+ADD_LIBRARY(apbhelp ${ATAT_LIB_TYPE} ${PROJECT_SOURCE_DIR}/src/apbhelp.c++)
+ADD_LIBRARY(mmapshelp ${ATAT_LIB_TYPE} ${PROJECT_SOURCE_DIR}/src/mmapshelp.c++)
+ADD_LIBRARY(emc2help ${ATAT_LIB_TYPE} ${PROJECT_SOURCE_DIR}/src/emc2help.c++)
+ADD_LIBRARY(memc2help ${ATAT_LIB_TYPE} ${PROJECT_SOURCE_DIR}/src/memc2help.c++)
+ADD_LIBRARY(gcehelp ${ATAT_LIB_TYPE} ${PROJECT_SOURCE_DIR}/src/gcehelp.c++)
+ADD_LIBRARY(fitsvslhelp ${ATAT_LIB_TYPE} ${PROJECT_SOURCE_DIR}/src/fitsvslhelp.c++)
+ADD_LIBRARY(svslhelp ${ATAT_LIB_TYPE} ${PROJECT_SOURCE_DIR}/src/svslhelp.c++)
+ADD_LIBRARY(fitfchelp ${ATAT_LIB_TYPE} ${PROJECT_SOURCE_DIR}/src/fitfchelp.c++)
+ADD_LIBRARY(felechelp ${ATAT_LIB_TYPE} ${PROJECT_SOURCE_DIR}/src/felechelp.c++)
+ADD_LIBRARY(fempmaghelp ${ATAT_LIB_TYPE} ${PROJECT_SOURCE_DIR}/src/fempmaghelp.c++)
+ADD_LIBRARY(predcshelp ${ATAT_LIB_TYPE} ${PROJECT_SOURCE_DIR}/src/predcshelp.c++)
+ADD_LIBRARY(infdethelp ${ATAT_LIB_TYPE} ${PROJECT_SOURCE_DIR}/src/infdethelp.c++)
+ADD_LIBRARY(mindisthelp ${ATAT_LIB_TYPE} ${PROJECT_SOURCE_DIR}/src/mindisthelp.c++)
+ADD_LIBRARY(epichelp ${ATAT_LIB_TYPE} ${PROJECT_SOURCE_DIR}/src/epichelp.c++)
 
-ADD_LIBRARY(linearops SHARED
+ADD_LIBRARY(linearops ${ATAT_LIB_TYPE}
 	${PROJECT_SOURCE_DIR}/src/linalg.c++
 	${PROJECT_SOURCE_DIR}/src/linsolve.c++
 	${PROJECT_SOURCE_DIR}/src/lstsqr.c++
 	)
 
 IF(USEGSL)
-	ADD_LIBRARY(gslcurvefit SHARED
+	ADD_LIBRARY(gslcurvefit ${ATAT_LIB_TYPE}
 		${PROJECT_SOURCE_DIR}/src/gslcurvefit.c++
 		${PROJECT_SOURCE_DIR}/src/thermofunctions.c++
 		)
 	TARGET_LINK_LIBRARIES(gslcurvefit PUBLIC GSL::gsl GSL::gslcblas)
 ENDIF()
 
-ADD_LIBRARY(cvm SHARED
-	${PROJECT_SOURCE_DIR}/src/CVMDataHolder.c++
-	${PROJECT_SOURCE_DIR}/src/CVMModel.c++
-	${PROJECT_SOURCE_DIR}/src/CVMLogger.c++
-	)
-SET(CVMLIBS Eigen3::Eigen
-	ifopt_core
-	ifopt_ipopt
-	findsym
-	calccorr
-	linearops
-	clus_str
-	)
-IF(USEGSL)
-	LIST(APPEND CVMLIBS gslcurvefit)
-ENDIF()
-TARGET_LINK_LIBRARIES(cvm PUBLIC ${CVMLIBS})
+IF(ATAT_BUILD_CVM)
+	ADD_LIBRARY(cvm ${ATAT_LIB_TYPE}
+		${PROJECT_SOURCE_DIR}/src/CVMDataHolder.c++
+		${PROJECT_SOURCE_DIR}/src/CVMModel.c++
+		${PROJECT_SOURCE_DIR}/src/CVMLogger.c++
+		)
+	SET(CVMLIBS Eigen3::Eigen
+		ifopt_core
+		ifopt_ipopt
+		findsym
+		calccorr
+		linearops
+		clus_str
+		)
+	IF(USEGSL)
+		LIST(APPEND CVMLIBS gslcurvefit)
+	ENDIF()
+	TARGET_LINK_LIBRARIES(cvm PUBLIC ${CVMLIBS})
 
-ADD_EXECUTABLE(cvmclus ${PROJECT_SOURCE_DIR}/src/cvmclus.c++)
-SET(CVMCLUSLIBS cvmclushelp parseops xtalutil cvm	Eigen3::Eigen)
-IF(USEPYTHON)
-	LIST(APPEND CVMCLUSLIBS pybind11::embed)
-	PYBIND11_ADD_MODULE(pycvm ${PROJECT_SOURCE_DIR}/src/CVMDataHolder.c++)
-	TARGET_LINK_LIBRARIES(pycvm PUBLIC cvm)
+	ADD_EXECUTABLE(cvmclus ${PROJECT_SOURCE_DIR}/src/cvmclus.c++)
+	SET(CVMCLUSLIBS cvmclushelp parseops xtalutil cvm Eigen3::Eigen)
+	IF(USEPYTHON)
+		LIST(APPEND CVMCLUSLIBS pybind11::embed)
+		PYBIND11_ADD_MODULE(pycvm ${PROJECT_SOURCE_DIR}/src/CVMDataHolder.c++)
+		TARGET_LINK_LIBRARIES(pycvm PUBLIC cvm)
+	ENDIF()
+	TARGET_LINK_LIBRARIES(cvmclus PUBLIC ${CVMCLUSLIBS})
 ENDIF()
-TARGET_LINK_LIBRARIES(cvmclus PUBLIC ${CVMCLUSLIBS})
 
-ADD_LIBRARY(parseops SHARED
+ADD_LIBRARY(parseops ${ATAT_LIB_TYPE}
 	${PROJECT_SOURCE_DIR}/src/stringo.c++
 	${PROJECT_SOURCE_DIR}/src/integer.c++
 	${PROJECT_SOURCE_DIR}/src/parse.c++
@@ -170,66 +200,66 @@ ADD_LIBRARY(parseops SHARED
 	${PROJECT_SOURCE_DIR}/src/xtalutil.c++
 	)
 
-ADD_LIBRARY(strinterf SHARED ${PROJECT_SOURCE_DIR}/src/strinterf.c++)
+ADD_LIBRARY(strinterf ${ATAT_LIB_TYPE} ${PROJECT_SOURCE_DIR}/src/strinterf.c++)
 
-ADD_LIBRARY(xtalutil SHARED ${PROJECT_SOURCE_DIR}/src/xtalutil.c++)
+ADD_LIBRARY(xtalutil ${ATAT_LIB_TYPE} ${PROJECT_SOURCE_DIR}/src/xtalutil.c++)
 
-ADD_LIBRARY(mesh SHARED ${PROJECT_SOURCE_DIR}/src/meshutil.c++
+ADD_LIBRARY(mesh ${ATAT_LIB_TYPE} ${PROJECT_SOURCE_DIR}/src/meshutil.c++
 	${PROJECT_SOURCE_DIR}/src/meshcalc.c++)
 
-ADD_LIBRARY(findsym SHARED ${PROJECT_SOURCE_DIR}/src/findsym.c++)
+ADD_LIBRARY(findsym ${ATAT_LIB_TYPE} ${PROJECT_SOURCE_DIR}/src/findsym.c++)
 
-ADD_LIBRARY(opti SHARED ${PROJECT_SOURCE_DIR}/src/opti.c++)
+ADD_LIBRARY(opti ${ATAT_LIB_TYPE} ${PROJECT_SOURCE_DIR}/src/opti.c++)
 
-ADD_LIBRARY(calccorr SHARED ${PROJECT_SOURCE_DIR}/src/calccorr.c++)
+ADD_LIBRARY(calccorr ${ATAT_LIB_TYPE} ${PROJECT_SOURCE_DIR}/src/calccorr.c++)
 TARGET_LINK_LIBRARIES(calccorr PUBLIC linearops clus_str)
 
-ADD_LIBRARY(gstate SHARED ${PROJECT_SOURCE_DIR}/src/gstate.c++)
+ADD_LIBRARY(gstate ${ATAT_LIB_TYPE} ${PROJECT_SOURCE_DIR}/src/gstate.c++)
 
-ADD_LIBRARY(refine SHARED ${PROJECT_SOURCE_DIR}/src/refine.c++)
+ADD_LIBRARY(refine ${ATAT_LIB_TYPE} ${PROJECT_SOURCE_DIR}/src/refine.c++)
 TARGET_LINK_LIBRARIES(refine PUBLIC calccorr gstate)
 
-ADD_LIBRARY(mrefine SHARED ${PROJECT_SOURCE_DIR}/src/mrefine.c++)
+ADD_LIBRARY(mrefine ${ATAT_LIB_TYPE} ${PROJECT_SOURCE_DIR}/src/mrefine.c++)
 
-ADD_LIBRARY(clus_str SHARED ${PROJECT_SOURCE_DIR}/src/clus_str.c++)
+ADD_LIBRARY(clus_str ${ATAT_LIB_TYPE} ${PROJECT_SOURCE_DIR}/src/clus_str.c++)
 
-ADD_LIBRARY(lattype SHARED ${PROJECT_SOURCE_DIR}/src/lattype.c++)
+ADD_LIBRARY(lattype ${ATAT_LIB_TYPE} ${PROJECT_SOURCE_DIR}/src/lattype.c++)
 
-ADD_LIBRARY(chull SHARED ${PROJECT_SOURCE_DIR}/src/chull.c++)
+ADD_LIBRARY(chull ${ATAT_LIB_TYPE} ${PROJECT_SOURCE_DIR}/src/chull.c++)
 TARGET_LINK_LIBRARIES(chull PUBLIC linearops)
 
-ADD_LIBRARY(mpiinterf SHARED ${PROJECT_SOURCE_DIR}/src/mpiinterf.c++)
+ADD_LIBRARY(mpiinterf ${ATAT_LIB_TYPE} ${PROJECT_SOURCE_DIR}/src/mpiinterf.c++)
 
-ADD_LIBRARY(eci SHARED ${PROJECT_SOURCE_DIR}/src/teci.c++
+ADD_LIBRARY(eci ${ATAT_LIB_TYPE} ${PROJECT_SOURCE_DIR}/src/teci.c++
 	${PROJECT_SOURCE_DIR}/src/keci.c++)
 
-ADD_LIBRARY(drawpd SHARED ${PROJECT_SOURCE_DIR}/src/drawpd.c++)
+ADD_LIBRARY(drawpd ${ATAT_LIB_TYPE} ${PROJECT_SOURCE_DIR}/src/drawpd.c++)
 TARGET_LINK_LIBRARIES(drawpd PUBLIC calccorr)
-ADD_LIBRARY(normal SHARED ${PROJECT_SOURCE_DIR}/src/normal.c++)
-ADD_LIBRARY(calcmf SHARED ${PROJECT_SOURCE_DIR}/src/calcmf.c++)
-ADD_LIBRARY(equil SHARED ${PROJECT_SOURCE_DIR}/src/equil.c++)
-ADD_LIBRARY(fft SHARED ${PROJECT_SOURCE_DIR}/src/anyfft.c++ ${PROJECT_SOURCE_DIR}/src/fftn.c++)
-ADD_LIBRARY(mclib SHARED ${PROJECT_SOURCE_DIR}/src/mclib.c++)
+ADD_LIBRARY(normal ${ATAT_LIB_TYPE} ${PROJECT_SOURCE_DIR}/src/normal.c++)
+ADD_LIBRARY(calcmf ${ATAT_LIB_TYPE} ${PROJECT_SOURCE_DIR}/src/calcmf.c++)
+ADD_LIBRARY(equil ${ATAT_LIB_TYPE} ${PROJECT_SOURCE_DIR}/src/equil.c++)
+ADD_LIBRARY(fft ${ATAT_LIB_TYPE} ${PROJECT_SOURCE_DIR}/src/anyfft.c++ ${PROJECT_SOURCE_DIR}/src/fftn.c++)
+ADD_LIBRARY(mclib ${ATAT_LIB_TYPE} ${PROJECT_SOURCE_DIR}/src/mclib.c++)
 TARGET_LINK_LIBRARIES(mclib PUBLIC fft)
-ADD_LIBRARY(mmclib SHARED ${PROJECT_SOURCE_DIR}/src/mmclib.c++)
+ADD_LIBRARY(mmclib ${ATAT_LIB_TYPE} ${PROJECT_SOURCE_DIR}/src/mmclib.c++)
 TARGET_LINK_LIBRARIES(mmclib PUBLIC fft)
 
-ADD_LIBRARY(kspacees SHARED ${PROJECT_SOURCE_DIR}/src/kspacees.c++)
-ADD_LIBRARY(morsepot SHARED ${PROJECT_SOURCE_DIR}/src/morsepot.c++
+ADD_LIBRARY(kspacees ${ATAT_LIB_TYPE} ${PROJECT_SOURCE_DIR}/src/kspacees.c++)
+ADD_LIBRARY(morsepot ${ATAT_LIB_TYPE} ${PROJECT_SOURCE_DIR}/src/morsepot.c++
 	${PROJECT_SOURCE_DIR}/src/morsepotc3.c++)
 TARGET_LINK_LIBRARIES(morsepot PUBLIC linearops)
-ADD_LIBRARY(kspacecs SHARED ${PROJECT_SOURCE_DIR}/src/kspacecs.c++)
-ADD_LIBRARY(tlambda SHARED ${PROJECT_SOURCE_DIR}/src/tlambda.c++)
-ADD_LIBRARY(ridge SHARED ${PROJECT_SOURCE_DIR}/src/ridge.c++)
+ADD_LIBRARY(kspacecs ${ATAT_LIB_TYPE} ${PROJECT_SOURCE_DIR}/src/kspacecs.c++)
+ADD_LIBRARY(tlambda ${ATAT_LIB_TYPE} ${PROJECT_SOURCE_DIR}/src/tlambda.c++)
+ADD_LIBRARY(ridge ${ATAT_LIB_TYPE} ${PROJECT_SOURCE_DIR}/src/ridge.c++)
 
-ADD_LIBRARY(pred SHARED
+ADD_LIBRARY(pred ${ATAT_LIB_TYPE}
 	${PROJECT_SOURCE_DIR}/src/predcs.c++
 	${PROJECT_SOURCE_DIR}/src/predes.c++
 	${PROJECT_SOURCE_DIR}/src/predrs.c++
 	)
 
 
-ADD_LIBRARY(gceutil SHARED ${PROJECT_SOURCE_DIR}/src/gceutil.c++
+ADD_LIBRARY(gceutil ${ATAT_LIB_TYPE} ${PROJECT_SOURCE_DIR}/src/gceutil.c++
 	${PROJECT_SOURCE_DIR}/src/tensorsym.c++
 	${PROJECT_SOURCE_DIR}/src/phonlib.c++
 	${PROJECT_SOURCE_DIR}/src/multipoly.c++
@@ -618,18 +648,23 @@ IF(MAKENDVIEWER)
 		)
 ENDIF()
 
-FETCHCONTENT_DECLARE(
-  Catch2
-  GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-  GIT_TAG        v3.4.0 # or a later release
-)
-FETCHCONTENT_MAKEAVAILABLE(Catch2)
+IF(ATAT_BUILD_TESTS)
+	IF(NOT ATAT_ALLOW_FETCHCONTENT)
+		MESSAGE(FATAL_ERROR "ATAT_BUILD_TESTS requires Catch2. Enable ATAT_ALLOW_FETCHCONTENT or disable ATAT_BUILD_TESTS.")
+	ENDIF()
+	FIND_PACKAGE(Git REQUIRED)
+	FETCHCONTENT_DECLARE(
+	  Catch2
+	  GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+	  GIT_TAG        v3.4.0
+	)
+	FETCHCONTENT_MAKEAVAILABLE(Catch2)
 
+	ENABLE_TESTING()
+	LIST(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
 
-ENABLE_TESTING()
-LIST(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
-
-INCLUDE(CTest)
-INCLUDE(Catch)
-#CATCH_DISCOVER_TESTS(functoolstests)
+	INCLUDE(CTest)
+	INCLUDE(Catch)
+	#CATCH_DISCOVER_TESTS(functoolstests)
+ENDIF()
 

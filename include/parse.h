@@ -11,7 +11,7 @@
 #include <iostream>
 #include <sstream>
 
-typedef Array<AutoString> ArrayAutoString;
+using ArrayString = Array<std::string>;
 typedef Array<int> Arrayint;
 
 int is_eol(istream &file);
@@ -78,13 +78,13 @@ void read_cell(rMatrix3d *pcell, istream &file);
 void parse_lattice_file(rMatrix3d *pcell, Array<rVector3d> *patom_pos,
                         Array<int> *psite_type,
                         Array<Arrayint> *psite_type_list,
-                        Array<AutoString> *patom_label, istream &file,
+                        Array<std::string> *patom_label, istream &file,
                         rMatrix3d *paxes = NULL);
 // variant that reads occupations (probabilities) - experimental ;
 void parse_rndstr_file(rMatrix3d *pcell, Array<rVector3d> *patom_pos,
                        Array<int> *psite_type, Array<Array<Real>> *pprob,
                        Array<Arrayint> *psite_type_list,
-                       Array<AutoString> *patom_label, istream &file,
+                       Array<std::string> *patom_label, istream &file,
                        rMatrix3d *paxes);
 
 // reads in a structure from a file;
@@ -141,7 +141,7 @@ void parse_rndstr_file(rMatrix3d *pcell, Array<rVector3d> *patom_pos,
 // End of example;
 int parse_structure_file(rMatrix3d *pcell, Array<rVector3d> *patom_pos,
                          Array<int> *patom_type,
-                         const Array<AutoString> &atom_label, istream &file,
+                         const Array<std::string> &atom_label, istream &file,
                          rMatrix3d *paxes = NULL);
 
 // takes a structure as read by parse_structure_file and makes it conform;
@@ -162,15 +162,15 @@ void write_axes(const rMatrix3d &axes, ostream &file, int doabc);
 
 void write_structure(const Structure &str, const Structure &lat,
                      const Array<Arrayint> &site_type_list,
-                     const Array<AutoString> &atom_label, const rMatrix3d &axes,
+                     const Array<std::string> &atom_label, const rMatrix3d &axes,
                      ostream &file, int doabc = 0);
-void write_structure(const Structure &str, const Array<AutoString> &atom_label,
+void write_structure(const Structure &str, const Array<std::string> &atom_label,
                      const rMatrix3d &axes, ostream &file, int doabc = 0);
 
 void skip_to_next_structure(istream &strfile);
 
 void write_lattice(const Structure &lat, const Array<Arrayint> &site_type_list,
-                   const Array<AutoString> &atom_label, const rMatrix3d &axes,
+                   const Array<std::string> &atom_label, const rMatrix3d &axes,
                    ostream &file, int doabc = 0);
 
 Real read_clusters_and_eci(LinkedList<Cluster> *clusterlist,
