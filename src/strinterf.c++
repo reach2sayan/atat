@@ -1,6 +1,7 @@
 #include "strinterf.h"
 #include "parse.h"
-
+#include <thread>
+#include <chrono>
 int num_strain_dim(int n) {
   n=n%4;
   return (n*(n+1)/2);
@@ -163,7 +164,7 @@ void OptimizedStructure::set_arg(const Array<Real> &x) {
   }
   {ofstream flag("busy");}
   while (file_exists("busy")) {
-    sleep(sleeptime);//
+    std::this_thread::sleep_for(std::chrono::seconds(sleeptime));
   }
   {
     ifstream efile("energy");

@@ -1,4 +1,4 @@
-char *helpstring =
+const char *helpstring =
     ""
     "This is Monte Carlo code which automatically follows a given phase "
     "boundary.\n"

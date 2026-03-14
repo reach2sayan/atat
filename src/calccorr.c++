@@ -2,7 +2,7 @@
 #include "clus_str.h"
 #include "lstsqr.h"
 #include "plugin.h"
-
+#include <numbers>
 //#include "parse.h"
 
 void find_equivalent_clusters(Array<ArrayrVector3d> *pclusters,
@@ -170,10 +170,10 @@ void TrigoCorrFuncTable::init(int comp) {
     }
     for (int s = 0; s < m; s++) {
       for (int t = 1; t <= (m / 2); t++) {
-        table(m - 2)(2 * t - 2)(s) = -cos(2 * M_PI * s * t / m);
+        table(m - 2)(2 * t - 2)(s) = -cos(2 * std::numbers::pi * s * t / m);
       }
       for (int t = 1; t <= ((m + 1) / 2 - 1); t++) {
-        table(m - 2)(2 * t - 1)(s) = -sin(2 * M_PI * s * t / m);
+        table(m - 2)(2 * t - 1)(s) = -sin(2 * std::numbers::pi * s * t / m);
       }
     }
   }

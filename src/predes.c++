@@ -1,4 +1,5 @@
 #include <fstream>
+#include <numbers>
 
 #include "getvalue.h"
 #include "mrefine.h"
@@ -8,7 +9,7 @@
 Real calc_ewald(const rMatrix3d &cell, const Array<rVector3d> &atom_pos,
 		const Array<Real> &charges, Real eta = -1.0,
 		Real prec = 1e-25) {
-  rMatrix3d rcell = 2. * M_PI * !(~cell);
+  rMatrix3d rcell = 2. * std::numbers::pi * !(~cell);
   LatticePointIterator lat(cell, 1);
   Real rmin = norm((rVector3d)lat);
   LatticePointIterator rlat(rcell, 1);
@@ -16,7 +17,7 @@ Real calc_ewald(const rMatrix3d &cell, const Array<rVector3d> &atom_pos,
   Real omega = fabs(det(cell));
   if (eta < 0) {
     eta = sqrt(0.5 * (kmin / rmin) *
-	       sqrt(log(prec) / log((prec * omega) / (4 * M_PI))));
+	       sqrt(log(prec) / log((prec * omega) / (4 * std::numbers::pi))));
     //      cerr << eta << endl;
   }
   Real E = 0.;
@@ -37,21 +38,21 @@ Real calc_ewald(const rMatrix3d &cell, const Array<rVector3d> &atom_pos,
       }
       // cerr << "nReal=" << nt << endl;
       rlat.init(rcell, 1);
-      Real maxk2 = 4. * sqr(eta) * (-log(omega * prec / (4. * M_PI)));
+      Real maxk2 = 4. * sqr(eta) * (-log(omega * prec / (4. * std::numbers::pi)));
       nt = 0;
       while (1) {
 	rVector3d k = (rVector3d)rlat;
 	Real k2 = norm2(k);
 	if (k2 > maxk2) break;
 	E += qq * cos(k * dr) * doublecount * exp(-k2 / (4. * sqr(eta))) * 4. *
-	     M_PI / omega / k2;
+	     std::numbers::pi / omega / k2;
 	rlat++;
 	nt++;
       }
       // cerr << "nReciprocal=" << nt << endl;
-      E -= doublecount * qq * M_PI / sqr(eta) / omega;
+      E -= doublecount * qq * std::numbers::pi / sqr(eta) / omega;
       if (i == j) {
-	E -= qq * eta / sqrt(M_PI);
+	E -= qq * eta / sqrt(std::numbers::pi);
       }
     }
   }

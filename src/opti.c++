@@ -1,4 +1,5 @@
 #include "opti.h"
+#include <numbers>
 
 OptimizerParam::OptimizerParam(void) {
   gradtol = 1e-3;
@@ -89,7 +90,7 @@ void FunctionAlongGreatCircle::set_arg(Real u) {
   Array<Real> vgrad;
   pfunc->get_grad(&vgrad);
   Array<Real> dx;
-  scalar_to_vector(&dx, u + M_PI / 2.);
+  scalar_to_vector(&dx, u + std::numbers::pi / 2.);
   product(&dx, dx, 1. / cdir);
   grad = inner_product(vgrad, dx);
 }

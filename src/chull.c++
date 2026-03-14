@@ -1,7 +1,7 @@
 #include "chull.h"
 #include "lstsqr.h"
 #include "getvalue.h"
-
+#include <numbers>
 class EdgeFlag {
 public:
   int done;
@@ -31,7 +31,7 @@ void recurse_convex_hull(LinkedList<PolytopeFace> *hull, LinkedList<EdgeFlag> *e
     sum(&midedge,midedge,x(edge(j)));
   }
   product(&midedge,midedge,1./(Real)(edge.get_size()));
-  Real best_theta=-M_PI;
+  Real best_theta=-std::numbers::pi;
   Real best_dist=0.;
   int best_i=-1;
   for (int i=0; i<x.get_size(); i++) {
@@ -187,7 +187,7 @@ void calc_convex_hull(LinkedList<PolytopeFace> *hull, const Array<Array<Real> > 
   Array2d<Real> proj_onto;
   for (int d=1; d<dim; d++) {
     int ibest=-1;
-    Real best_theta=M_PI;
+    Real best_theta=std::numbers::pi;
     for (int i=0; i<x.get_size(); i++) {
       Array<Real> dx,pdx;
       diff(&dx,x(i),x(ixmax));

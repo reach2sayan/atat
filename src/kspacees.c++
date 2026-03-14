@@ -1,4 +1,5 @@
 #include <fstream>
+#include <numbers>
 
 #include "calccorr.h"
 #include "kmeci.h"
@@ -65,7 +66,7 @@ class ES_KSpaceECI : public KSpaceECI {
     Real sinkc = sin(kc);
     return (-15. * coskc * pow(kc, -2.) + 75. * sinkc * pow(kc, -3.) +
 	    180. * coskc * pow(kc, -4.) - 180. * sinkc * pow(kc, -5.)) *
-	   4. * M_PI / k2;
+	   4. * std::numbers::pi / k2;
   }
   void get_k_space_eci(Array<Array<Array<Array<Array<Complex> > > > > *p_ft_eci,
 		       const Array<Real> &x) {
@@ -134,7 +135,7 @@ class ES_KSpaceECI : public KSpaceECI {
 	      if (!readdump) {
 		MultiDimIterator<iVector3d> h(-maxh, maxh);
 		for (; h; h++) {
-		  rVector3d k = 2. * M_PI * (k0 + k_big_mesh * to_real(h));
+		  rVector3d k = 2. * std::numbers::pi * (k0 + k_big_mesh * to_real(h));
 		  Real phase =
 		      (k * (lattice.atom_pos(t) - lattice.atom_pos(s)));
 		  Complex exp_phase(cos(phase), sin(phase));

@@ -1,4 +1,4 @@
-char *helpstring =
+const char *helpstring =
     ""
     "-> What does this program do?\n"
     "\n"

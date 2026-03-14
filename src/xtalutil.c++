@@ -1,4 +1,5 @@
 #include "xtalutil.h"
+#include <numbers>
 
 int in01(rVector3d v) {
   for (int i = 0; i < 3; i++) {
@@ -34,7 +35,7 @@ int which_atom(const Array<rVector3d> &atom_pos, const rVector3d &pos) {
 }
 
 rVector3d wrap_inside_cell(const rVector3d &v, const rMatrix3d &cell) {
-  rVector3d shift = rVector3d(1., 1., 1.) * M_PI * zero_tolerance * 0.1;
+  rVector3d shift = rVector3d(1., 1., 1.) * std::numbers::pi * zero_tolerance * 0.1;
   return (cell * (mod1((!cell) * v - shift) + shift));
 }
 
@@ -43,7 +44,7 @@ void wrap_inside_cell(Array<rVector3d> *dest, const Array<rVector3d> &src,
   if (dest->get_size() != src.get_size()) {
     dest->resize(src.get_size());
   }
-  rVector3d shift = rVector3d(1, 1, 1) * M_PI * zero_tolerance * 0.1;
+  rVector3d shift = rVector3d(1, 1, 1) * std::numbers::pi * zero_tolerance * 0.1;
   rMatrix3d inv_cell = !cell;
   for (int i = 0; i < src.get_size(); i++) {
     (*dest)(i) = cell * (mod1(inv_cell * src(i) - shift) + shift);
@@ -98,7 +99,7 @@ iVector3d make_miller(rVector3d normal) {
 
 void calc_lattice_vectors(rMatrix3d *lattice_vector,
                           const rVector3d &cell_length, rVector3d cell_angle) {
-  cell_angle = cell_angle * M_PI / 180.;
+  cell_angle = cell_angle * std::numbers::pi / 180.;
   rVector3d a = rVector3d(1., 0., 0.) * cell_length(0);
   rVector3d b =
       rVector3d(cos(cell_angle(2)), sin(cell_angle(2)), 0.) * cell_length(1);
@@ -128,7 +129,7 @@ void calc_lattice_vectors(rVector3d *cell_length, rVector3d *cell_angle,
         acos(lattice_vector.get_column((i + 1) % 3) *
              lattice_vector.get_column((i + 2) % 3) /
              (((*cell_length)((i + 1) % 3)) * ((*cell_length)((i + 2) % 3)))) *
-        180.0 / M_PI;
+        180.0 / std::numbers::pi;
   }
 }
 
@@ -264,7 +265,7 @@ void LatticePointInCellIterator::init(const rMatrix3d &_cell,
   cell = _cell;
   cell_to_super = (!_supercell) * _cell;
   shift = rVector3d(1., 1., 1.) * zero_tolerance * 0.1 *
-          M_PI; // some irrational number;
+          std::numbers::pi; // some irrational number;
 
   rMatrix3d super_to_cell = !cell_to_super;
   BoundingBox<Real, 3> box;

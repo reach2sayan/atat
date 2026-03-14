@@ -3,12 +3,12 @@
 #include "keci.h"
 #include "linalg.h"
 #include "plugin.h"
-
+#include <numbers>
 // Kubic Harmonics
 // l=0,1,2,3 gives K_0,K_4,K_6,K_8;
 Real kubic_harm(const rVector3d &k, int l) {
   Real r2=norm2(k);
-  Real A=sqrt(1./(4.*M_PI));
+  Real A=sqrt(1./(4.*std::numbers::pi));
   switch (l) {
   case 0: return(A);
   case 1: return(A*sqrt(21./4.)*(1.-5.*(ipow(k(0),2)*ipow(k(1),2) + ipow(k(0),2)*ipow(k(2),2) + ipow(k(1),2)*ipow(k(2),2)) / ipow(r2,2)));

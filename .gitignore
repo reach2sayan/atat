@@ -120,3 +120,7 @@ cython_debug/
 
 # Ignore Catch header
 catch.hpp
+/.vs/atat/FileContentIndex
+/.vs/atat/v17/ipch/AutoPCH
+/.vs/atat/v17
+/.vs
