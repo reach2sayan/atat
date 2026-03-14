@@ -4,7 +4,7 @@
 #include "version.h"
 
 // write extra help as plain text in *help.hlp
-extern char *helpstring;
+extern const char *helpstring;
 
 int main(int argc, char *argv[]) {
   // parsing command line. See getvalue.hh for details;

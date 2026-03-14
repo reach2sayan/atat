@@ -22,7 +22,7 @@ Real calc_empirical_mag_free_energy(Real spin, Real T, Real Tc, Real kB,
   return (kB * Tc * tauf * log(spin + 1));
 }
 
-extern char *helpstring;
+extern const char *helpstring;
 
 int main(int argc, char *argv[]) {
   const char *strfilename = "str.out";

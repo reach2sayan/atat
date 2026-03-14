@@ -231,7 +231,8 @@ TARGET_LINK_LIBRARIES(chull PUBLIC linearops)
 ADD_LIBRARY(mpiinterf ${ATAT_LIB_TYPE} ${PROJECT_SOURCE_DIR}/src/mpiinterf.c++)
 
 ADD_LIBRARY(eci ${ATAT_LIB_TYPE} ${PROJECT_SOURCE_DIR}/src/teci.c++
-	${PROJECT_SOURCE_DIR}/src/keci.c++)
+	${PROJECT_SOURCE_DIR}/src/keci.c++
+	${PROJECT_SOURCE_DIR}/src/kmeci.c++)
 
 ADD_LIBRARY(drawpd ${ATAT_LIB_TYPE} ${PROJECT_SOURCE_DIR}/src/drawpd.c++)
 TARGET_LINK_LIBRARIES(drawpd PUBLIC calccorr)

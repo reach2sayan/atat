@@ -140,7 +140,7 @@ class MyFunc : public FunctionWithGrad {
 
 // end dummy functions;
 
-extern char *helpstring;
+extern const char *helpstring;
 
 int main(int argc, char *argv[]) {
   // parse command line arguments or display help (see getvalue.h);
